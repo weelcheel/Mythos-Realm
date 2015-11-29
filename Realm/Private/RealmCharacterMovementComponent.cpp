@@ -1,5 +1,6 @@
 #include "Realm.h"
 #include "RealmCharacterMovementComponent.h"
+#include "GameCharacter.h"
 
 URealmCharacterMovementComponent::URealmCharacterMovementComponent(const FObjectInitializer& objectInitializer)
 : Super(objectInitializer)
@@ -23,6 +24,10 @@ void URealmCharacterMovementComponent::TickComponent(float DeltaTime, enum ELeve
 			bCharacterDashing = false;
 			StopMovementImmediately();
 			SetMovementMode(MOVE_Walking);
+
+			AGameCharacter* gc = Cast<AGameCharacter>(CharacterOwner);
+			if (IsValid(gc))
+				gc->CharacterDashFinished();
 		}
 		else
 			GetCharacterOwner()->SetActorLocation(FMath::VInterpConstantTo(GetCharacterOwner()->GetActorLocation(), targetDashLocation, DeltaTime, MaxFlySpeed*2.f));

@@ -752,7 +752,6 @@ void AGameCharacter::CharacterDash(FVector dashEndLocation)
 	if (rmc)
 	{
 		rmc->DashLaunch(dashEndLocation);
-
 		CharacterDashStarted();
 	}
 }

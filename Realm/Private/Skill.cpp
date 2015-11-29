@@ -146,8 +146,6 @@ void ASkill::CooldownFinished()
 
 void ASkill::SkillFinished()
 {
-	characterOwner->UseFlare(cost);
-
 	StartCooldown();
 }
 
@@ -164,4 +162,9 @@ ESkillState ASkill::GetSkillState() const
 void ASkill::SetSkillState(ESkillState newState)
 {
 	skillState = newState;
+}
+
+void ASkill::ServerSkillPerformed_Implementation(FVector mouseHitLoc, AGameCharacter* targetUnit /* = NULL */)
+{
+	characterOwner->UseFlare(cost);
 }

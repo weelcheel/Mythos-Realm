@@ -75,7 +75,7 @@ public:
 		void ClientSkillPerformed(FVector mouseHitLoc, AGameCharacter* targetUnit = NULL);
 
 	/* [SERVER] skill specific logic that happens when this skill is activated on the server side (important logic here) */
-	UFUNCTION(BlueprintImplementableEvent, Category = Skill)
+	UFUNCTION(BlueprintNativeEvent, Category = Skill)
 		void ServerSkillPerformed(FVector mouseHitLoc, AGameCharacter* targetUnit = NULL);
 
 	/* start cooldown for the skill */
