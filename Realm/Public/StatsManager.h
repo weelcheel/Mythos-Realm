@@ -184,4 +184,7 @@ public:
 
 	/* get flare */
 	float GetFlare() const;
+
+	/* level up stats */
+	void CharacterLevelUp();
 };

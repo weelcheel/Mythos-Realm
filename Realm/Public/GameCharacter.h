@@ -8,6 +8,10 @@
 #include "Mod.h"
 #include "GameCharacter.generated.h"
 
+/* max level for characters */
+const static int32 MAX_LEVEL = 15;
+const static float EXP_CONST = FMath::Sqrt(128.f) / 64.f;
+
 UCLASS(ABSTRACT, Blueprintable)
 class AGameCharacter : public ARealmCharacter
 {
@@ -66,6 +70,18 @@ protected:
 	/** Time at which point the last take hit info for the actor times out and won't be replicated; Used to stop join-in-progress effects all over the screen */
 	float lastTakeHitTimeTimeout;
 
+	/* amount of experience this character has */
+	UPROPERTY(replicated)
+	int32 experienceAmount;
+
+	/* what level this character currently is */
+	UPROPERTY(replicated)
+	int32 level;
+
+	/* amount of skill points this character has to put on skills */
+	UPROPERTY(BlueprintReadOnly, Category = Exp)
+	int32 skillPoints;
+
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 
@@ -85,6 +101,9 @@ protected:
 
 	/** notification when killed, for both the server and client. */
 	virtual void OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser);
+
+	/* perform level up */
+	void LevelUp();
 
 public:
 
@@ -247,4 +266,12 @@ public:
 	/* blueprint hook for when the dash is finished */
 	UFUNCTION(BlueprintImplementableEvent, Category = Dash)
 	void CharacterDashFinished();
+
+	/* get the amount of experience needed for the next level */
+	UFUNCTION(BlueprintCallable, Category = Exp)
+	int32 GetNextLevelExperience() const;
+
+	/* give this character experience */
+	UFUNCTION(BlueprintCallable, Category = Exp)
+	void GiveCharacterExperience(int32 amount);
 };

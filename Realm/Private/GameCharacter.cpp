@@ -14,6 +14,10 @@ AGameCharacter::AGameCharacter(const FObjectInitializer& objectInitializer)
 {
 	AIControllerClass = AAIController::StaticClass();
 	bAlwaysRelevant = true;
+
+	level = 1;
+	experienceAmount = 0;
+	skillPoints = 0;
 }
 
 void AGameCharacter::BeginPlay()
@@ -729,6 +733,32 @@ void AGameCharacter::CharacterDash(FVector dashEndLocation)
 
 		CharacterDashStarted();
 	}
+}
+
+int32 AGameCharacter::GetNextLevelExperience() const
+{
+	return level + 1 <= MAX_LEVEL ? FMath::Square(level + 1) / FMath::Square(EXP_CONST) : 0;
+}
+
+void AGameCharacter::GiveCharacterExperience(int32 amount)
+{
+	if (level < MAX_LEVEL)
+	{
+		experienceAmount += amount;
+		if (experienceAmount >= GetNextLevelExperience())
+			LevelUp();
+	}
+	else
+		experienceAmount = EXP_CONST;
+}
+
+void AGameCharacter::LevelUp()
+{
+	level++;
+	skillPoints++;
+
+	if (IsValid(statsManager))
+		statsManager->CharacterLevelUp();
 }
 
 void AGameCharacter::PreReplication(IRepChangedPropertyTracker & ChangedPropertyTracker)
