@@ -10,7 +10,7 @@
 
 /* max level for characters */
 const static int32 MAX_LEVEL = 15;
-const static float EXP_CONST = FMath::Sqrt(128.f) / 64.f;
+const static float EXP_CONST = 2.f / FMath::Sqrt(128.f);
 
 UCLASS(ABSTRACT, Blueprintable)
 class AGameCharacter : public ARealmCharacter
@@ -71,16 +71,24 @@ protected:
 	float lastTakeHitTimeTimeout;
 
 	/* amount of experience this character has */
-	UPROPERTY(replicated)
+	UPROPERTY(replicated, BlueprintReadOnly, Category=Exp)
 	int32 experienceAmount;
 
 	/* what level this character currently is */
-	UPROPERTY(replicated)
+	UPROPERTY(replicated, BlueprintReadOnly, Category = Exp)
 	int32 level;
 
 	/* amount of skill points this character has to put on skills */
 	UPROPERTY(BlueprintReadOnly, Category = Exp)
 	int32 skillPoints;
+
+	/*base amount of experience that this character is worth when killed */
+	UPROPERTY(EditDefaultsOnly, Category = Exp)
+	int32 baseExpReward;
+
+	/* range that this character gives off experience */
+	UPROPERTY(EditDefaultsOnly, Category = Exp)
+	float experienceRewardRange;
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
@@ -273,5 +281,5 @@ public:
 
 	/* give this character experience */
 	UFUNCTION(BlueprintCallable, Category = Exp)
-	void GiveCharacterExperience(int32 amount);
+	virtual void GiveCharacterExperience(int32 amount);
 };

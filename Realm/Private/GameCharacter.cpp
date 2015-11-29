@@ -18,6 +18,8 @@ AGameCharacter::AGameCharacter(const FObjectInitializer& objectInitializer)
 	level = 1;
 	experienceAmount = 0;
 	skillPoints = 0;
+	baseExpReward = 21;
+	experienceRewardRange = 1500.f;
 }
 
 void AGameCharacter::BeginPlay()
@@ -552,6 +554,26 @@ void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& Dam
 	if (Role == ROLE_Authority)
 	{
 		ReplicateHit(KillingDamage, DamageEvent, PawnInstigator, DamageCauser, true);
+
+		TArray<APlayerCharacter*> gcs;
+		for (TActorIterator<APlayerCharacter> gcitr(GetWorld()); gcitr; ++gcitr)
+		{
+			APlayerCharacter* gc = (*gcitr);
+			if (!IsValid(gc))
+				continue;
+
+			float distsq = (gc->GetActorLocation() - GetActorLocation()).SizeSquared2D();
+			if (distsq <= FMath::Square(experienceRewardRange) && GetTeamIndex() != gc->GetTeamIndex())
+				gcs.AddUnique(gc);
+		}
+
+		for (APlayerCharacter* gcc : gcs)
+		{
+			if (gcc->level == 1)
+				gcc->GiveCharacterExperience(baseExpReward / gcs.Num());
+			else
+				gcc->GiveCharacterExperience((baseExpReward + (level * 2.45f)) / gcs.Num());
+		}
 	}
 
 	GetWorldTimerManager().ClearTimer(flareRegen);
