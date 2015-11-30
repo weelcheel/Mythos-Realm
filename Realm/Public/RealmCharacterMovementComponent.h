@@ -23,4 +23,7 @@ public:
 	/* override launch for our use */
 	void DashLaunch(FVector const& endLocation);
 	virtual bool HandlePendingLaunch() override;
+
+	UFUNCTION(BlueprintCallable, Category = Dash)
+	void EndDash();
 };

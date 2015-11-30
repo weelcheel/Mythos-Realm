@@ -10,6 +10,7 @@
 #include "PlayerCharacter.h"
 #include "LaneManager.h"
 #include "GameCharacter.h"
+#include "RealmPlayerStart.h"
 
 ARealmGameMode::ARealmGameMode(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
@@ -200,4 +201,18 @@ void ARealmGameMode::PlayerDied(ARealmPlayerController* killedPlayer, ARealmPlay
 	if (IsValid(pc))
 		pc->ChangeCredits(playerKillWorth);
 
+}
+
+AActor* ARealmGameMode::FindPlayerStart(AController* Player, const FString& IncomingName)
+{
+	ARealmPlayerStart* ps = nullptr;
+	for (TActorIterator<ARealmPlayerStart> plyitr(GetWorld()); plyitr; ++plyitr)
+	{
+		ps = (*plyitr);
+		ARealmPlayerState* pls = Cast<ARealmPlayerState>(Player->PlayerState);
+		if (IsValid(ps) && IsValid(pls) && ps->teamIndex == pls->GetTeamIndex() && ps->indSpawnIndex == pls->GetTeamPlayerIndex())
+			return ps;
+	}
+
+	return ps;
 }

@@ -46,7 +46,7 @@ float AStatsManager::GetUnaffectedValueForStat(EStat stat) const
 	return baseStats[(uint8)stat] + modStats[(uint8)stat];
 }
 
-void AStatsManager::AddEffect(FString effectName, FString effectDescription, FString effectKey, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration /* = 0.f */)
+void AStatsManager::AddEffect(FString effectName, FString effectDescription, FString effectKey, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration /* = 0.f */, bool bStacking /*= false*/)
 {
 	for (int32 i = 0; i < effects.Num(); i++)
 	{
@@ -62,6 +62,8 @@ void AStatsManager::AddEffect(FString effectName, FString effectDescription, FSt
 	newEffect.uiName = effectName;
 	newEffect.duration = effectDuration;
 	newEffect.effectKey = effectKey;
+	newEffect.bStacking = bStacking;
+	newEffect.stackAmount = 0;
 
 	if (Role == ROLE_Authority)
 	{
@@ -77,6 +79,27 @@ void AStatsManager::AddEffect(FString effectName, FString effectDescription, FSt
 
 	if (effectDuration > 0.f)
 		GetWorldTimerManager().SetTimer(effects[eInd].effectTimer, FTimerDelegate::CreateUObject(this, &AStatsManager::EffectFinished, newEffect.effectKey), effectDuration, false);
+}
+
+void AStatsManager::AddEffectStacks(const FString& effectKey, int32 stackAmount)
+{
+	for (int32 i = 0; i < effects.Num(); i++)
+	{
+		if (effectKey == effects[i].effectKey)
+			effects[i].stackAmount += stackAmount;
+	}
+}
+
+void AStatsManager::GetEffect(const FString& effectKey, FEffect& effect)
+{
+	for (int32 i = 0; i < effects.Num(); i++)
+	{
+		if (effectKey == effects[i].effectKey)
+		{
+			effect = effects[i];
+			return;
+		}
+	}
 }
 
 void AStatsManager::RemoveHealth(float amount)

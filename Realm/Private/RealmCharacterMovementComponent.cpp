@@ -20,15 +20,7 @@ void URealmCharacterMovementComponent::TickComponent(float DeltaTime, enum ELeve
 	if (bCharacterDashing)
 	{
 		if ((GetCharacterOwner()->GetActorLocation() - targetDashLocation).IsNearlyZero(15.f))
-		{
-			bCharacterDashing = false;
-			StopMovementImmediately();
-			SetMovementMode(MOVE_Walking);
-
-			AGameCharacter* gc = Cast<AGameCharacter>(CharacterOwner);
-			if (IsValid(gc))
-				gc->CharacterDashFinished();
-		}
+			EndDash();
 		else
 			GetCharacterOwner()->SetActorLocation(FMath::VInterpConstantTo(GetCharacterOwner()->GetActorLocation(), targetDashLocation, DeltaTime, MaxFlySpeed*2.f));
 	}
@@ -40,6 +32,20 @@ void URealmCharacterMovementComponent::DashLaunch(FVector const& endLocation)
 	PendingLaunchVelocity = endLocation;
 	targetDashLocation = endLocation;
 	targetDashLocation.Z = GetCharacterOwner()->GetActorLocation().Z;
+}
+
+void URealmCharacterMovementComponent::EndDash()
+{
+	if (!bCharacterDashing)
+		return;
+
+	bCharacterDashing = false;
+	StopMovementImmediately();
+	SetMovementMode(MOVE_Walking);
+
+	AGameCharacter* gc = Cast<AGameCharacter>(CharacterOwner);
+	if (IsValid(gc))
+		gc->CharacterDashFinished();
 }
 
 bool URealmCharacterMovementComponent::HandlePendingLaunch()

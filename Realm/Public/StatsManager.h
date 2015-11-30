@@ -64,6 +64,14 @@ struct FEffect
 	UPROPERTY(BlueprintReadOnly, Category = Effect)
 	float duration;
 
+	/* whether or not this is a stacking effect */
+	UPROPERTY(BlueprintReadOnly, Category = Effect)
+	bool bStacking;
+
+	/* amount of stacks this effect has (if can stack) */
+	UPROPERTY(BlueprintReadOnly, Category = Effect)
+	int32 stackAmount;
+
 	/* timer handle for the effect */
 	UPROPERTY(BlueprintReadOnly, Category = Effect)
 	FTimerHandle effectTimer;
@@ -136,10 +144,13 @@ public:
 	void UpdateModStats(TArray<AMod*>& mods);
 
 	/* add buff/debuff to the player's stats */
-	void AddEffect(FString effectName, FString effectDescription, FString effectKey, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration = 0.f);
+	void AddEffect(FString effectName, FString effectDescription, FString effectKey, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration = 0.f, bool bStacking = false);
+
+	/* add stacks to an effect */
+	void AddEffectStacks(const FString& effectKey, int32 stackAmount);
 
 	/* when an effect with a duration finishes */
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category=Effect)
 	void EffectFinished(FString key)
 	{
 		int32 effectInd = -1;
@@ -172,6 +183,10 @@ public:
 	{
 		outEffects = effects;
 	}
+
+	/* get the effects array */
+	UFUNCTION(BlueprintCallable, Category = Effects)
+	void GetEffect(const FString& effectKey, FEffect& effect);
 
 	/* take damage and update health accordingly */
 	void RemoveHealth(float amount);

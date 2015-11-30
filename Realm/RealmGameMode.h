@@ -121,4 +121,7 @@ public:
 
 	/* called when a player dies */
 	void PlayerDied(ARealmPlayerController* killedPlayer, ARealmPlayerController* playerKiller);
+
+	/* find player start */
+	virtual AActor* FindPlayerStart(AController* Player, const FString& IncomingName = TEXT(""));
 };

@@ -98,7 +98,7 @@ public:
 	void ClientOpenPlayerHUD();
 
 	/* [CLIENT] try to buy a mod */
-	UFUNCTION(reliable, server, WithValidation)
+	UFUNCTION(reliable, server, WithValidation, BlueprintCallable, Category=Mods)
 	void ServerBuyPlayerMod(TSubclassOf<AMod> wantedMod);
 
 	/* [CLIENT] try to sell a mod */

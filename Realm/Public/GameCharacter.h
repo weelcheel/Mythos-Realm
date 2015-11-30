@@ -184,7 +184,13 @@ public:
 
 	/* add buff/debuff to the player's stats */
 	UFUNCTION(NetMulticast, reliable, WithValidation, BlueprintCallable, Category = Stat)
-	void AddEffect(const FString& effectName, const FString& effectDescription, const FString& effectKey, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration = 0.f);
+	void AddEffect(const FString& effectName, const FString& effectDescription, const FString& effectKey, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration = 0.f, bool bStacking = false);
+
+	UFUNCTION(NetMulticast, reliable, WithValidation, BlueprintCallable, Category = Stat)
+	void AddEffectStacks( const FString& effectKey,  int32 stackAmount);
+
+	UFUNCTION(NetMulticast, reliable, WithValidation, BlueprintCallable, Category = Stat)
+	void EndEffect(const FString& effectKey);
 
 	/** Take damage, handle death */
 	UFUNCTION(BlueprintCallable, Category=Damage)
@@ -267,6 +273,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Dash)
 	void CharacterDash(FVector dashVelocity);
 
+	/* tries to end a character dash */
+	UFUNCTION(BlueprintCallable, Category = Dash)
+	void EndCharacterDash();
+
 	/* blueprint hook for when the dash begins */
 	UFUNCTION(BlueprintImplementableEvent, Category = Dash)
 	void CharacterDashStarted();
@@ -274,6 +284,10 @@ public:
 	/* blueprint hook for when the dash is finished */
 	UFUNCTION(BlueprintImplementableEvent, Category = Dash)
 	void CharacterDashFinished();
+
+	/* blueprint event caller for when this character takes damage */
+	UFUNCTION(BlueprintImplementableEvent, Category = Damage)
+	void CharacterDamaged(int32 dmgAmount, TSubclassOf<UDamageType> damageType, AGameCharacter* dmgCauser, AActor* actorCauser);
 
 	/* get the amount of experience needed for the next level */
 	UFUNCTION(BlueprintCallable, Category = Exp)
