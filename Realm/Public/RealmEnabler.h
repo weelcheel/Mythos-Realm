@@ -13,7 +13,7 @@ class ARealmEnabler : public ARealmObjective
 protected:
 
 	/* effect we give to all of our in range allies */
-	FEffect enablerAuraEffect;
+	AEffect* enablerAuraEffect;
 	
 	/* range from location this enabler protects allies */
 	UPROPERTY(EditDefaultsOnly, Category = Enabler)

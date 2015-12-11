@@ -183,13 +183,13 @@ public:
 	float GetUnaffectedValueForStat(EStat stat) const;
 
 	/* add buff/debuff to the player's stats */
-	UFUNCTION(NetMulticast, reliable, WithValidation, BlueprintCallable, Category = Stat)
+	UFUNCTION(BlueprintCallable, Category = Stat)
 	void AddEffect(const FString& effectName, const FString& effectDescription, const FString& effectKey, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration = 0.f, bool bStacking = false);
 
-	UFUNCTION(NetMulticast, reliable, WithValidation, BlueprintCallable, Category = Stat)
+	UFUNCTION(BlueprintCallable, Category = Stat)
 	void AddEffectStacks( const FString& effectKey,  int32 stackAmount);
 
-	UFUNCTION(NetMulticast, reliable, WithValidation, BlueprintCallable, Category = Stat)
+	UFUNCTION(BlueprintCallable, Category = Stat)
 	void EndEffect(const FString& effectKey);
 
 	/** Take damage, handle death */

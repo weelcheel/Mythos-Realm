@@ -4,6 +4,7 @@
 
 class AMod;
 class AGameCharacter;
+class AEffect;
 
 UENUM(BlueprintType)
 enum class EStat : uint8
@@ -38,55 +39,11 @@ enum class EStat : uint8
 	ES_Max UMETA(Hidden)
 };
 
-USTRUCT(BlueprintType)
-struct FEffect
-{
-	GENERATED_USTRUCT_BODY()
-
-	/* effect name */
-	UPROPERTY(BlueprintReadOnly, Category = Effect)
-	FString uiName;
-
-	/* effect description */
-	UPROPERTY(BlueprintReadOnly, Category = Effect)
-	FString effectKey;
-
-	/* effect description */
-	UPROPERTY(BlueprintReadOnly, Category = Effect)
-	FString description;
-
-	/* stat(s) this effect affects */
-	TArray<TEnumAsByte<EStat> > stats;
-	
-	/* amounts of stats this effects */
-	TArray<float> amounts;
-
-	/* duration of the effect */
-	UPROPERTY(BlueprintReadOnly, Category = Effect)
-	float duration;
-
-	/* whether or not this is a stacking effect */
-	UPROPERTY(BlueprintReadOnly, Category = Effect)
-	bool bStacking;
-
-	/* amount of stacks this effect has (if can stack) */
-	UPROPERTY(BlueprintReadOnly, Category = Effect)
-	int32 stackAmount;
-
-	/* timer handle for the effect */
-	UPROPERTY(BlueprintReadOnly, Category = Effect)
-	FTimerHandle effectTimer;
-
-	FEffect()
-	{
-
-	}
-};
-
 UCLASS()
 class AStatsManager : public AActor
 {
 	friend class AAutoAttackManager;
+	friend class AEffect;
 
 	GENERATED_UCLASS_BODY()
 
@@ -121,8 +78,11 @@ protected:
 	AGameCharacter* owningCharacter;
 
 	/* dynamic array of effects that are currently affecting this character */
-	UPROPERTY(ReplicatedUsing=OnRepUpdateEffects)
-	TMap<FString, FEffect> effects;
+	UPROPERTY(ReplicatedUsing = OnRepUpdateEffects)
+	TArray<AEffect*> effectsList;
+
+	/* map for faster effect lookup */
+	TMap<FString, AEffect*> effectsMap;
 
 	UFUNCTION()
 	void OnRepUpdateEffects();
@@ -154,6 +114,10 @@ public:
 	/* add buff/debuff to the player's stats */
 	void AddEffect(FString effectName, FString effectDescription, FString effectKey, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration = 0.f, bool bStacking = false);
 
+	/* add an already created effect */
+	UFUNCTION(BlueprintCallable, Category = Stat)
+	void AddCreatedEffect(AEffect* newEffect);
+
 	/* add stacks to an effect */
 	void AddEffectStacks(const FString& effectKey, int32 stackAmount);
 
@@ -163,19 +127,14 @@ public:
 
 	/* get the effects array */
 	UFUNCTION(BlueprintCallable, Category = Effects)
-	void GetEffects(TArray<FEffect>& outEffects)
+	void GetEffects(TArray<AEffect*>& outEffects)
 	{
-		TArray<FEffect> theEffects;
-
-		for (auto it = effects.CreateIterator(); it; ++it)
-			theEffects.Add(it.Value());
-
-		outEffects = theEffects;
+		outEffects = effectsList;
 	}
 
 	/* get the effects array */
 	UFUNCTION(BlueprintCallable, Category = Effects)
-	void GetEffect(const FString& effectKey, FEffect& effect);
+	AEffect* GetEffect(const FString& effectKey);
 
 	/* take damage and update health accordingly */
 	void RemoveHealth(float amount);

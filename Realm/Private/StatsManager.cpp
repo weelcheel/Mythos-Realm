@@ -3,6 +3,7 @@
 #include "UnrealNetwork.h"
 #include "Mod.h"
 #include "GameCharacter.h"
+#include "Effect.h"
 
 AStatsManager::AStatsManager(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
@@ -51,16 +52,16 @@ float AStatsManager::GetUnaffectedValueForStat(EStat stat) const
 
 void AStatsManager::AddEffect(FString effectName, FString effectDescription, FString effectKey, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration /* = 0.f */, bool bStacking /*= false*/)
 {
-	FEffect newEffect;
+	AEffect* newEffect = GetWorld()->SpawnActor<AEffect>(AEffect::StaticClass());
 
-	newEffect.amounts = amounts;
-	newEffect.stats = stats;
-	newEffect.description = effectDescription;
-	newEffect.uiName = effectName;
-	newEffect.duration = effectDuration;
-	newEffect.effectKey = effectKey;
-	newEffect.bStacking = bStacking;
-	newEffect.stackAmount = 0;
+	newEffect->amounts = amounts;
+	newEffect->stats = stats;
+	newEffect->description = effectDescription;
+	newEffect->uiName = effectName;
+	newEffect->duration = effectDuration;
+	newEffect->effectKey = effectKey;
+	newEffect->bStacking = bStacking;
+	newEffect->stackAmount = 0;
 
 	if (Role == ROLE_Authority)
 	{
@@ -72,10 +73,11 @@ void AStatsManager::AddEffect(FString effectName, FString effectDescription, FSt
 		}
 	}
 
-	effects.Add(effectKey, newEffect);
+	effectsMap.Add(effectKey, newEffect);
+	effectsList.AddUnique(newEffect);
 
 	if (effectDuration > 0.f)
-		GetWorldTimerManager().SetTimer(effects[effectKey].effectTimer, FTimerDelegate::CreateUObject(this, &AStatsManager::EffectFinished, newEffect.effectKey), effectDuration, false);
+		GetWorldTimerManager().SetTimer(newEffect->effectTimer, FTimerDelegate::CreateUObject(this, &AStatsManager::EffectFinished, newEffect->effectKey), effectDuration, false);
 
 	if ((GetWorld()->GetNetMode() == NM_Standalone || GetWorld()->GetNetMode() == NM_ListenServer) && IsValid(owningCharacter))
 		owningCharacter->EffectsUpdated();
@@ -83,7 +85,7 @@ void AStatsManager::AddEffect(FString effectName, FString effectDescription, FSt
 
 void AStatsManager::EffectFinished(FString key)
 {
-	FEffect* effect = effects.Find(key);
+	AEffect* effect = (*effectsMap.Find(key));
 
 	if (!effect)
 		return;
@@ -98,7 +100,10 @@ void AStatsManager::EffectFinished(FString key)
 		}
 	}
 
-	effects.Remove(key);
+	effectsMap.Remove(key);
+	effectsList.Remove(effect);
+
+	effect->Destroy(true);
 
 	if ((GetWorld()->GetNetMode() == NM_Standalone || GetWorld()->GetNetMode() == NM_ListenServer) && IsValid(owningCharacter))
 		owningCharacter->EffectsUpdated();
@@ -106,25 +111,21 @@ void AStatsManager::EffectFinished(FString key)
 
 void AStatsManager::AddEffectStacks(const FString& effectKey, int32 stackAmount)
 {
-	if (effects.Contains(effectKey))
+	if (effectsMap.Contains(effectKey))
 	{
-		effects[effectKey].stackAmount += stackAmount;
+		effectsMap[effectKey]->stackAmount += stackAmount;
 
 		if ((GetWorld()->GetNetMode() == NM_Standalone || GetWorld()->GetNetMode() == NM_ListenServer) && IsValid(owningCharacter))
 			owningCharacter->EffectsUpdated();
 	}
 }
 
-void AStatsManager::GetEffect(const FString& effectKey, FEffect& effect)
+AEffect* AStatsManager::GetEffect(const FString& effectKey)
 {
-	FEffect invalid;
-
-	invalid.effectKey = "invalid";
-
-	if (effects.Contains(effectKey))
-		effect = effects[effectKey];
+	if (effectsMap.Contains(effectKey))
+		return effectsMap[effectKey];
 	else
-		effect = invalid;
+		return nullptr;
 }
 
 void AStatsManager::RemoveHealth(float amount)
@@ -181,8 +182,46 @@ void AStatsManager::CharacterLevelUp()
 
 void AStatsManager::OnRepUpdateEffects()
 {
+	//check for removed effects
+	for (auto it = effectsMap.CreateIterator(); it; ++it)
+	{
+		bool bEffectFound = false;
+		for (int32 i = 0; i < effectsList.Num(); i++)
+			bEffectFound = effectsList[i]->effectKey == it.Key();
+
+		if (!bEffectFound)
+			effectsMap.Remove(it.Key());
+	}
+
+	//add new effects
+	for (int32 i = 0; i < effectsList.Num(); i++)
+	{
+		AEffect* eff = effectsList[i];
+		if (!IsValid(eff))
+			continue;
+
+		if (eff->effectKey == "")
+			continue;
+
+		bool bEffectFound = false;
+		for (auto it = effectsMap.CreateIterator(); it; ++it)
+			bEffectFound = it.Key() == effectsList[i]->effectKey;
+
+		if (!bEffectFound)
+			effectsMap.Add(effectsList[i]->effectKey, effectsList[i]);
+	}
+
 	if (IsValid(owningCharacter))
 		owningCharacter->EffectsUpdated();
+}
+
+void AStatsManager::AddCreatedEffect(AEffect* newEffect)
+{
+	if (IsValid(newEffect))
+	{
+		effectsList.AddUnique(newEffect);
+		effectsMap.Add(newEffect->effectKey, newEffect);
+	}
 }
 
 void AStatsManager::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
@@ -195,6 +234,6 @@ void AStatsManager::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Out
 	DOREPLIFETIME(AStatsManager, bonusStats);
 	DOREPLIFETIME(AStatsManager, health);
 	DOREPLIFETIME(AStatsManager, flare);
-	DOREPLIFETIME(AStatsManager, effects);
+	DOREPLIFETIME(AStatsManager, effectsList);
 	DOREPLIFETIME(AStatsManager, owningCharacter);
 }

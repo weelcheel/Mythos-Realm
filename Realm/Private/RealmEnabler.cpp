@@ -3,20 +3,12 @@
 #include "RealmPlayerController.h"
 #include "RealmGameMode.h"
 #include "PlayerCharacter.h"
+#include "Effect.h"
 
 ARealmEnabler::ARealmEnabler(const FObjectInitializer& objectInitializer)
 : Super(objectInitializer)
 {
-	//effect descriptions
-	enablerAuraEffect.uiName = "Enabler Protection Aura";
-	enablerAuraEffect.description = "This unit is under protection from their Enabler and has increased Health and Flare regeneration.";
-	enablerAuraEffect.effectKey = "enablerAura";
 	
-	//effect stat changes
-	enablerAuraEffect.stats.AddUnique(EStat::ES_HPRegen);
-	enablerAuraEffect.stats.AddUnique(EStat::ES_FlareRegen);
-	enablerAuraEffect.amounts.Add(50.f);
-	enablerAuraEffect.amounts.Add(50.f);
 }
 
 void ARealmEnabler::PlayerOpenedStore(ARealmPlayerController* pc)
@@ -27,6 +19,19 @@ void ARealmEnabler::PlayerOpenedStore(ARealmPlayerController* pc)
 void ARealmEnabler::BeginPlay()
 {
 	Super::BeginPlay();
+
+	enablerAuraEffect = GetWorld()->SpawnActor<AEffect>(AEffect::StaticClass());
+
+	//effect descriptions
+	enablerAuraEffect->uiName = "Enabler Protection Aura";
+	enablerAuraEffect->description = "This unit is under protection from their Enabler and has increased Health and Flare regeneration.";
+	enablerAuraEffect->effectKey = "enablerAura";
+
+	//effect stat changes
+	enablerAuraEffect->stats.AddUnique(EStat::ES_HPRegen);
+	enablerAuraEffect->stats.AddUnique(EStat::ES_FlareRegen);
+	enablerAuraEffect->amounts.Add(50.f);
+	enablerAuraEffect->amounts.Add(50.f);
 
 	FTimerHandle h;
 	GetWorldTimerManager().SetTimer(h, this, &ARealmEnabler::OnTargetsUpdate, 0.25f, true);
@@ -44,10 +49,10 @@ void ARealmEnabler::OnTargetsUpdate()
 		if (distanceSq > FMath::Square(auraRange))
 		{
 			if (IsValid(pc->GetStatsManager()) && protectedPlayers.Remove(pc) > 0)
-				pc->GetStatsManager()->EffectFinished(enablerAuraEffect.effectKey);
+				pc->GetStatsManager()->EffectFinished(enablerAuraEffect->effectKey);
 		}
 		else if (protectedPlayers.AddUnique(pc) >= 0)
-			pc->AddEffect(enablerAuraEffect.uiName, enablerAuraEffect.description, enablerAuraEffect.effectKey, enablerAuraEffect.stats, enablerAuraEffect.amounts);
+			pc->GetStatsManager()->AddCreatedEffect(enablerAuraEffect);
 	}
 }
 

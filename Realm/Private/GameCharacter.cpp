@@ -360,34 +360,19 @@ float AGameCharacter::GetUnaffectedValueForStat(EStat stat) const
 		return -1.f;
 }
 
-bool AGameCharacter::AddEffect_Validate(const FString& effectName, const FString& effectDescription, const FString& effectKey, UPARAM(ref) const TArray<TEnumAsByte<EStat> >& stats, UPARAM(ref) const TArray<float>& amounts, float effectDuration /* = 0.f */, bool bStacking /*= false*/)
-{
-	return effectKey != "";
-}
-
-void AGameCharacter::AddEffect_Implementation(const FString& effectName, const FString& effectDescription, const FString& effectKey, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration /* = 0.f */, bool bStacking /*= false*/)
+void AGameCharacter::AddEffect(const FString& effectName, const FString& effectDescription, const FString& effectKey, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration /* = 0.f */, bool bStacking /*= false*/)
 {
 	if (Role == ROLE_Authority && statsManager)
 		statsManager->AddEffect(effectName, effectDescription, effectKey, stats, amounts, effectDuration);
 }
 
-bool AGameCharacter::AddEffectStacks_Validate(const FString& effectKey, int32 stackAmount)
-{
-	return effectKey != "";
-}
-
-void AGameCharacter::AddEffectStacks_Implementation(const FString& effectKey, int32 stackAmount)
+void AGameCharacter::AddEffectStacks(const FString& effectKey, int32 stackAmount)
 {
 	if (Role == ROLE_Authority && IsValid(statsManager))
 		statsManager->AddEffectStacks(effectKey, stackAmount);
 }
 
-bool AGameCharacter::EndEffect_Validate(const FString& effectKey)
-{
-	return effectKey != "";
-}
-
-void AGameCharacter::EndEffect_Implementation(const FString& effectKey)
+void AGameCharacter::EndEffect(const FString& effectKey)
 {
 	if (Role == ROLE_Authority && IsValid(statsManager))
 		statsManager->EffectFinished(effectKey);
