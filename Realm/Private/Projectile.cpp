@@ -77,6 +77,8 @@ void AProjectile::OnHit(class AActor* OtherActor, class UPrimitiveComponent* Oth
 	{
 		FDamageEvent damageEvent(damageType);
 		homingTarget->TakeDamage(damage, damageEvent, projectileSpawner->GetRealmController(), this);
+		projectileSpawner->DamagedOtherCharacter(homingTarget, damage, bAutoAttackProjectile);
+
 		Destroy();
 	}
 	else if (!homingTarget)
@@ -90,6 +92,8 @@ void AProjectile::OnHit(class AActor* OtherActor, class UPrimitiveComponent* Oth
 
 		FDamageEvent damageEvent(damageType);
 		gc->TakeDamage(damage, damageEvent, projectileSpawner->GetRealmController(), this);
+		projectileSpawner->DamagedOtherCharacter(gc, damage, bAutoAttackProjectile);
+
 		Destroy();
 	}
 }

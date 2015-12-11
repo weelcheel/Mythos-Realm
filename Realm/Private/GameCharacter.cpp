@@ -230,6 +230,7 @@ void AGameCharacter::LaunchAutoAttack()
 
 		if (IsValid(attackProjectile))
 		{
+			attackProjectile->bAutoAttackProjectile = true;
 			attackProjectile->InitializeProjectile(dir.Vector(), statsManager->GetCurrentValueForStat(EStat::ES_Atk), UPhysicalDamage::StaticClass(), this, currentTarget);
 		}
 	}
@@ -240,6 +241,7 @@ void AGameCharacter::LaunchAutoAttack()
 		FDamageEvent de(UPhysicalDamage::StaticClass());
 
 		currentTarget->TakeDamage(dmg, de, GetRealmController(), this);
+		DamagedOtherCharacter(currentTarget, dmg, true);
 	}
 
 	bAutoAttackLaunching = false;

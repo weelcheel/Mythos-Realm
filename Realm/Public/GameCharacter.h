@@ -289,6 +289,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = Damage)
 	void CharacterDamaged(int32 dmgAmount, TSubclassOf<UDamageType> damageType, AGameCharacter* dmgCauser, AActor* actorCauser);
 
+	/* blueprint hook for when this character damages another */
+	UFUNCTION(BlueprintImplementableEvent, Category = Damage)
+	void DamagedOtherCharacter(AGameCharacter* hitCharacter, int32 damageAmount = 0, bool bAutoAttack = false);
+
 	/* get the amount of experience needed for the next level */
 	UFUNCTION(BlueprintCallable, Category = Exp)
 	int32 GetNextLevelExperience() const;

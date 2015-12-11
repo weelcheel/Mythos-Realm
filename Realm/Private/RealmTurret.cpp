@@ -157,6 +157,6 @@ void ATurret::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, 
 
 void ATurret::ReceiveCallForHelp(AGameCharacter* distressedUnit, AGameCharacter* enemyTarget)
 {
-	if (distressedUnit->IsA(APlayerCharacter::StaticClass()) && enemyTarget->IsA(APlayerCharacter::StaticClass()))
+	if (distressedUnit->IsA(APlayerCharacter::StaticClass()))
 		currentTarget = enemyTarget;
 }

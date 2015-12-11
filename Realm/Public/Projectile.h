@@ -61,6 +61,9 @@ protected:
 
 public:
 
+	/* whether or not this projectile is used for an auto attack */
+	bool bAutoAttackProjectile = false;
+
 	/* initialize and launch the projectile */
 	void InitializeProjectile(const FVector& AimDir, float damage, TSubclassOf<UDamageType> projDamage, AGameCharacter* projSpawner = nullptr, AGameCharacter* projTarget = nullptr);
 
