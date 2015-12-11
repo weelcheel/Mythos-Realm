@@ -2,6 +2,7 @@
 #include "StatsManager.h"
 #include "UnrealNetwork.h"
 #include "Mod.h"
+#include "GameCharacter.h"
 
 AStatsManager::AStatsManager(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
@@ -20,7 +21,7 @@ void AStatsManager::SetMaxFlare()
 	flare = GetCurrentValueForStat(EStat::ES_Flare);
 }
 
-void AStatsManager::InitializeStats(float* initBaseStats)
+void AStatsManager::InitializeStats(float* initBaseStats, AGameCharacter* ownerChar)
 {
 	if (bInitialized)
 		return;
@@ -29,6 +30,8 @@ void AStatsManager::InitializeStats(float* initBaseStats)
 		baseStats[i] = initBaseStats[i];
 
 	bInitialized = true;
+
+	owningCharacter = ownerChar;
 }
 
 float AStatsManager::GetCurrentValueForStat(EStat stat) const
@@ -48,12 +51,6 @@ float AStatsManager::GetUnaffectedValueForStat(EStat stat) const
 
 void AStatsManager::AddEffect(FString effectName, FString effectDescription, FString effectKey, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration /* = 0.f */, bool bStacking /*= false*/)
 {
-	for (int32 i = 0; i < effects.Num(); i++)
-	{
-		if (effects[i].effectKey == effectKey)
-			return;
-	}
-
 	FEffect newEffect;
 
 	newEffect.amounts = amounts;
@@ -75,31 +72,59 @@ void AStatsManager::AddEffect(FString effectName, FString effectDescription, FSt
 		}
 	}
 
-	int32 eInd = effects.Add(newEffect);
+	effects.Add(effectKey, newEffect);
 
 	if (effectDuration > 0.f)
-		GetWorldTimerManager().SetTimer(effects[eInd].effectTimer, FTimerDelegate::CreateUObject(this, &AStatsManager::EffectFinished, newEffect.effectKey), effectDuration, false);
+		GetWorldTimerManager().SetTimer(effects[effectKey].effectTimer, FTimerDelegate::CreateUObject(this, &AStatsManager::EffectFinished, newEffect.effectKey), effectDuration, false);
+
+	if ((GetWorld()->GetNetMode() == NM_Standalone || GetWorld()->GetNetMode() == NM_ListenServer) && IsValid(owningCharacter))
+		owningCharacter->EffectsUpdated();
+}
+
+void AStatsManager::EffectFinished(FString key)
+{
+	FEffect* effect = effects.Find(key);
+
+	if (!effect)
+		return;
+
+	if (Role == ROLE_Authority)
+	{
+		int32 ind = 0;
+		for (TEnumAsByte<EStat> eStat : effect->stats)
+		{
+			bonusStats[(uint8)eStat.GetValue()] -= effect->amounts[ind];
+			ind++;
+		}
+	}
+
+	effects.Remove(key);
+
+	if ((GetWorld()->GetNetMode() == NM_Standalone || GetWorld()->GetNetMode() == NM_ListenServer) && IsValid(owningCharacter))
+		owningCharacter->EffectsUpdated();
 }
 
 void AStatsManager::AddEffectStacks(const FString& effectKey, int32 stackAmount)
 {
-	for (int32 i = 0; i < effects.Num(); i++)
+	if (effects.Contains(effectKey))
 	{
-		if (effectKey == effects[i].effectKey)
-			effects[i].stackAmount += stackAmount;
+		effects[effectKey].stackAmount += stackAmount;
+
+		if ((GetWorld()->GetNetMode() == NM_Standalone || GetWorld()->GetNetMode() == NM_ListenServer) && IsValid(owningCharacter))
+			owningCharacter->EffectsUpdated();
 	}
 }
 
 void AStatsManager::GetEffect(const FString& effectKey, FEffect& effect)
 {
-	for (int32 i = 0; i < effects.Num(); i++)
-	{
-		if (effectKey == effects[i].effectKey)
-		{
-			effect = effects[i];
-			return;
-		}
-	}
+	FEffect invalid;
+
+	invalid.effectKey = "invalid";
+
+	if (effects.Contains(effectKey))
+		effect = effects[effectKey];
+	else
+		effect = invalid;
 }
 
 void AStatsManager::RemoveHealth(float amount)
@@ -154,6 +179,12 @@ void AStatsManager::CharacterLevelUp()
 	baseStats[(uint8)EStat::ES_AtkSp] += GetCurrentValueForStat(EStat::ES_AtkSpPL);
 }
 
+void AStatsManager::OnRepUpdateEffects()
+{
+	if (IsValid(owningCharacter))
+		owningCharacter->EffectsUpdated();
+}
+
 void AStatsManager::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -164,4 +195,6 @@ void AStatsManager::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Out
 	DOREPLIFETIME(AStatsManager, bonusStats);
 	DOREPLIFETIME(AStatsManager, health);
 	DOREPLIFETIME(AStatsManager, flare);
+	DOREPLIFETIME(AStatsManager, effects);
+	DOREPLIFETIME(AStatsManager, owningCharacter);
 }

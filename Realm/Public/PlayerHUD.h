@@ -3,6 +3,8 @@
 #include "DamageInstance.h"
 #include "PlayerHUD.generated.h"
 
+class AGameCharacter;
+
 USTRUCT()
 struct FUIDamage
 {
@@ -50,4 +52,7 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = Pregame)
 	void OpenPlayerHUD();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = Effects)
+	void CharacterEffectsUpdated(AGameCharacter* updatedCharacter);
 };

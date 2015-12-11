@@ -33,7 +33,7 @@ void AGameCharacter::BeginPlay()
 		skillManager = GetWorld()->SpawnActor<ASkillManager>(GetActorLocation(), GetActorRotation());
 
 		//initialize stats
-		statsManager->InitializeStats(baseStats);
+		statsManager->InitializeStats(baseStats, this);
 		autoAttackManager->InitializeManager(autoAttacks, statsManager);
 		autoAttackManager->SetOwner(playerController);
 		statsManager->AttachRootComponentToActor(this);
@@ -365,7 +365,7 @@ bool AGameCharacter::AddEffect_Validate(const FString& effectName, const FString
 
 void AGameCharacter::AddEffect_Implementation(const FString& effectName, const FString& effectDescription, const FString& effectKey, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration /* = 0.f */, bool bStacking /*= false*/)
 {
-	if (statsManager)
+	if (Role == ROLE_Authority && statsManager)
 		statsManager->AddEffect(effectName, effectDescription, effectKey, stats, amounts, effectDuration);
 }
 
@@ -376,7 +376,7 @@ bool AGameCharacter::AddEffectStacks_Validate(const FString& effectKey, int32 st
 
 void AGameCharacter::AddEffectStacks_Implementation(const FString& effectKey, int32 stackAmount)
 {
-	if (IsValid(statsManager))
+	if (Role == ROLE_Authority && IsValid(statsManager))
 		statsManager->AddEffectStacks(effectKey, stackAmount);
 }
 
@@ -387,7 +387,7 @@ bool AGameCharacter::EndEffect_Validate(const FString& effectKey)
 
 void AGameCharacter::EndEffect_Implementation(const FString& effectKey)
 {
-	if (IsValid(statsManager))
+	if (Role == ROLE_Authority && IsValid(statsManager))
 		statsManager->EffectFinished(effectKey);
 }
 
@@ -810,6 +810,15 @@ void AGameCharacter::LevelUp()
 
 	if (IsValid(statsManager))
 		statsManager->CharacterLevelUp();
+}
+
+void AGameCharacter::EffectsUpdated()
+{
+	for (TActorIterator<APlayerHUD> huds(GetWorld()); huds; ++huds)
+	{
+		APlayerHUD* ph = (*huds);
+		ph->CharacterEffectsUpdated(this);
+	}
 }
 
 void AGameCharacter::PreReplication(IRepChangedPropertyTracker & ChangedPropertyTracker)

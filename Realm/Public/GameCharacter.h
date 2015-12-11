@@ -296,4 +296,7 @@ public:
 	/* give this character experience */
 	UFUNCTION(BlueprintCallable, Category = Exp)
 	virtual void GiveCharacterExperience(int32 amount);
+
+	/* blueprint hook for when effects change or update (for HUDs) */
+	void EffectsUpdated();
 };

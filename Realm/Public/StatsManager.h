@@ -3,6 +3,7 @@
 #include "StatsManager.generated.h"
 
 class AMod;
+class AGameCharacter;
 
 UENUM(BlueprintType)
 enum class EStat : uint8
@@ -37,7 +38,7 @@ enum class EStat : uint8
 	ES_Max UMETA(Hidden)
 };
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FEffect
 {
 	GENERATED_USTRUCT_BODY()
@@ -115,9 +116,16 @@ protected:
 	UPROPERTY(replicated)
 	float flare;
 
-	/* dynamic array of effects that are currently affecting this character */
+	/* reference to the character that uses this managger */
 	UPROPERTY(replicated)
-	TArray<FEffect> effects;
+	AGameCharacter* owningCharacter;
+
+	/* dynamic array of effects that are currently affecting this character */
+	UPROPERTY(ReplicatedUsing=OnRepUpdateEffects)
+	TMap<FString, FEffect> effects;
+
+	UFUNCTION()
+	void OnRepUpdateEffects();
 
 public:
 
@@ -126,7 +134,7 @@ public:
 	void SetMaxFlare();
 
 	/* initialize the stats manager with a character's base stats */
-	void InitializeStats(float* initBaseStats);
+	void InitializeStats(float* initBaseStats, AGameCharacter* ownerChar);
 
 	/* gets the current value of the specified stat */
 	UFUNCTION(BlueprintCallable, Category = Stat)
@@ -150,38 +158,19 @@ public:
 	void AddEffectStacks(const FString& effectKey, int32 stackAmount);
 
 	/* when an effect with a duration finishes */
-	UFUNCTION(BlueprintCallable, Category=Effect)
-	void EffectFinished(FString key)
-	{
-		int32 effectInd = -1;
-
-		for (int32 i = 0; i < effects.Num(); i++)
-		{
-			if (effects[i].effectKey == key)
-				effectInd = i;
-		}
-
-		if (effectInd < 0)
-			return;
-
-		if (Role == ROLE_Authority)
-		{
-			int32 ind = 0;
-			for (TEnumAsByte<EStat> eStat : effects[effectInd].stats)
-			{
-				bonusStats[(uint8)eStat.GetValue()] -= effects[effectInd].amounts[ind];
-				ind++;
-			}
-		}
-
-		effects.RemoveAt(effectInd);
-	}
+	UFUNCTION(BlueprintCallable, Category = Effect)
+	void EffectFinished(FString key);
 
 	/* get the effects array */
 	UFUNCTION(BlueprintCallable, Category = Effects)
 	void GetEffects(TArray<FEffect>& outEffects)
 	{
-		outEffects = effects;
+		TArray<FEffect> theEffects;
+
+		for (auto it = effects.CreateIterator(); it; ++it)
+			theEffects.Add(it.Value());
+
+		outEffects = theEffects;
 	}
 
 	/* get the effects array */
