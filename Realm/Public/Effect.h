@@ -16,10 +16,6 @@ public:
 
 	/* effect description */
 	UPROPERTY(replicated, BlueprintReadOnly, Category = Effect)
-	FString effectKey;
-
-	/* effect description */
-	UPROPERTY(replicated, BlueprintReadOnly, Category = Effect)
 	FString description;
 
 	/* stat(s) this effect affects */
@@ -44,4 +40,11 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = Effect)
 	FTimerHandle effectTimer;
 
+	/* name of the effect for game reasons */
+	UPROPERTY(BlueprintReadOnly, Category = Effect)
+	FString keyName;
+
+	/* whether or not this effect can be added multiple times to one character */
+	UPROPERTY(BlueprintReadOnly, Category = Effect)
+	bool bCanBeInflictedMultipleTimes;
 };

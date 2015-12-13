@@ -20,25 +20,16 @@ void ARealmEnabler::BeginPlay()
 {
 	Super::BeginPlay();
 
-	enablerAuraEffect = GetWorld()->SpawnActor<AEffect>(AEffect::StaticClass());
-
-	//effect descriptions
-	enablerAuraEffect->uiName = "Enabler Protection Aura";
-	enablerAuraEffect->description = "This unit is under protection from their Enabler and has increased Health and Flare regeneration.";
-	enablerAuraEffect->effectKey = "enablerAura";
-
-	//effect stat changes
-	enablerAuraEffect->stats.AddUnique(EStat::ES_HPRegen);
-	enablerAuraEffect->stats.AddUnique(EStat::ES_FlareRegen);
-	enablerAuraEffect->amounts.Add(50.f);
-	enablerAuraEffect->amounts.Add(50.f);
-
-	FTimerHandle h;
-	GetWorldTimerManager().SetTimer(h, this, &ARealmEnabler::OnTargetsUpdate, 0.25f, true);
+	if (Role == ROLE_Authority)
+	{
+		FTimerHandle h;
+		GetWorldTimerManager().SetTimer(h, this, &ARealmEnabler::OnTargetsUpdate, 0.25f, true);
+	}
 }
 
 void ARealmEnabler::OnTargetsUpdate()
 {
+	
 	for (TActorIterator<APlayerCharacter> plyitr(GetWorld()); plyitr; ++plyitr)
 	{
 		APlayerCharacter* pc = (*plyitr);
@@ -48,11 +39,41 @@ void ARealmEnabler::OnTargetsUpdate()
 		float distanceSq = (pc->GetActorLocation() - GetActorLocation()).SizeSquared2D();
 		if (distanceSq > FMath::Square(auraRange))
 		{
-			if (IsValid(pc->GetStatsManager()) && protectedPlayers.Remove(pc) > 0)
-				pc->GetStatsManager()->EffectFinished(enablerAuraEffect->effectKey);
+			if (IsValid(pc->GetStatsManager()) && protectedPlayers.Contains(pc) && protectedPlayers.Remove(pc) > 0)
+				EnablerEffectFinished(pc);
 		}
-		else if (protectedPlayers.AddUnique(pc) >= 0)
+		else if (!protectedPlayers.Contains(pc) && protectedPlayers.AddUnique(pc) >= 0)
+		{
+			enablerAuraEffect = GetWorld()->SpawnActor<AEffect>(AEffect::StaticClass());
+
+			//effect descriptions
+			enablerAuraEffect->uiName = "Enabler Protection Aura";
+			enablerAuraEffect->description = "This unit is under protection from their Enabler and has increased Health and Flare regeneration.";
+			enablerAuraEffect->keyName = "enablerprotection";
+			enablerAuraEffect->bCanBeInflictedMultipleTimes = false;
+
+			//effect stat changes
+			enablerAuraEffect->stats.AddUnique(EStat::ES_HPRegen);
+			enablerAuraEffect->stats.AddUnique(EStat::ES_FlareRegen);
+			enablerAuraEffect->amounts.Add(50.f);
+			enablerAuraEffect->amounts.Add(50.f);
+
 			pc->GetStatsManager()->AddCreatedEffect(enablerAuraEffect);
+		}
+	}
+}
+
+void ARealmEnabler::EnablerEffectFinished(AGameCharacter* gc)
+{
+	if (IsValid(gc))
+	{
+		AStatsManager* sm = gc->GetStatsManager();
+		if (IsValid(sm))
+		{
+			AEffect* effect = sm->GetEffect("enablerprotection");
+			if (IsValid(effect))
+				sm->EffectFinished(effect->keyName);
+		}
 	}
 }
 

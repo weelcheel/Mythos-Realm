@@ -14,7 +14,6 @@ void AEffect::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifeti
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(AEffect, uiName, COND_InitialOnly);
-	DOREPLIFETIME_CONDITION(AEffect, effectKey, COND_InitialOnly);
 	DOREPLIFETIME_CONDITION(AEffect, description, COND_InitialOnly);
 	DOREPLIFETIME_CONDITION(AEffect, duration, COND_InitialOnly);
 	DOREPLIFETIME_CONDITION(AEffect, bStacking, COND_InitialOnly);

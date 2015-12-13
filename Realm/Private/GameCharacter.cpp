@@ -360,10 +360,12 @@ float AGameCharacter::GetUnaffectedValueForStat(EStat stat) const
 		return -1.f;
 }
 
-void AGameCharacter::AddEffect(const FString& effectName, const FString& effectDescription, const FString& effectKey, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration /* = 0.f */, bool bStacking /*= false*/)
+AEffect* AGameCharacter::AddEffect(const FString& effectName, const FString& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration /* = 0.f */, FString keyName, bool bStacking /*= false*/, bool bMultipleInfliction)
 {
 	if (Role == ROLE_Authority && statsManager)
-		statsManager->AddEffect(effectName, effectDescription, effectKey, stats, amounts, effectDuration);
+		return statsManager->AddEffect(effectName, effectDescription, stats, amounts, effectDuration, keyName, bStacking, bMultipleInfliction);
+	else
+		return nullptr;
 }
 
 void AGameCharacter::AddEffectStacks(const FString& effectKey, int32 stackAmount)

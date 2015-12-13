@@ -32,6 +32,9 @@ protected:
 	virtual void BeginPlay() override;
 	void OnTargetsUpdate();
 
+	/* function to go through and remove all aura effects */
+	void EnablerEffectFinished(AGameCharacter* gc);
+
 public:
 
 	/* called whenever the player clicks on the store. we send back details of what to load and a reference to us */

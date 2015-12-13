@@ -112,7 +112,7 @@ public:
 	void UpdateModStats(TArray<AMod*>& mods);
 
 	/* add buff/debuff to the player's stats */
-	void AddEffect(FString effectName, FString effectDescription, FString effectKey, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration = 0.f, bool bStacking = false);
+	AEffect* AddEffect(FString effectName, FString effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration = 0.f, FString keyName = "", bool bStacking = false, bool bMultipleInfliction = false);
 
 	/* add an already created effect */
 	UFUNCTION(BlueprintCallable, Category = Stat)
@@ -127,9 +127,12 @@ public:
 
 	/* get the effects array */
 	UFUNCTION(BlueprintCallable, Category = Effects)
-	void GetEffects(TArray<AEffect*>& outEffects)
+	void GetEffects(UPARAM(ref) TArray<AEffect*>& outEffects)
 	{
-		outEffects = effectsList;
+		outEffects.Empty();
+
+		for (int32 i = 0; i < effectsList.Num(); i++)
+			outEffects.Add(effectsList[i]);
 	}
 
 	/* get the effects array */

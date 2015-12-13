@@ -50,8 +50,11 @@ float AStatsManager::GetUnaffectedValueForStat(EStat stat) const
 	return baseStats[(uint8)stat] + modStats[(uint8)stat];
 }
 
-void AStatsManager::AddEffect(FString effectName, FString effectDescription, FString effectKey, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration /* = 0.f */, bool bStacking /*= false*/)
+AEffect* AStatsManager::AddEffect(FString effectName, FString effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration /* = 0.f */, FString keyName, bool bStacking /*= false*/, bool bMultipleInfliction)
 {
+	if (effectsMap.Contains(keyName) && !bMultipleInfliction) //return if this effect is already inflicted and can't be inflicted multiple times
+		return nullptr;
+
 	AEffect* newEffect = GetWorld()->SpawnActor<AEffect>(AEffect::StaticClass());
 
 	newEffect->amounts = amounts;
@@ -59,9 +62,10 @@ void AStatsManager::AddEffect(FString effectName, FString effectDescription, FSt
 	newEffect->description = effectDescription;
 	newEffect->uiName = effectName;
 	newEffect->duration = effectDuration;
-	newEffect->effectKey = effectKey;
 	newEffect->bStacking = bStacking;
 	newEffect->stackAmount = 0;
+	newEffect->keyName = keyName;
+	newEffect->bCanBeInflictedMultipleTimes = bMultipleInfliction;
 
 	if (Role == ROLE_Authority)
 	{
@@ -73,21 +77,26 @@ void AStatsManager::AddEffect(FString effectName, FString effectDescription, FSt
 		}
 	}
 
-	effectsMap.Add(effectKey, newEffect);
+	effectsMap.Add(keyName, newEffect);
 	effectsList.AddUnique(newEffect);
 
 	if (effectDuration > 0.f)
-		GetWorldTimerManager().SetTimer(newEffect->effectTimer, FTimerDelegate::CreateUObject(this, &AStatsManager::EffectFinished, newEffect->effectKey), effectDuration, false);
+		GetWorldTimerManager().SetTimer(newEffect->effectTimer, FTimerDelegate::CreateUObject(this, &AStatsManager::EffectFinished, keyName), effectDuration, false);
 
 	if ((GetWorld()->GetNetMode() == NM_Standalone || GetWorld()->GetNetMode() == NM_ListenServer) && IsValid(owningCharacter))
 		owningCharacter->EffectsUpdated();
+
+	return newEffect;
 }
 
 void AStatsManager::EffectFinished(FString key)
 {
+	if (!effectsMap.Contains(key))
+		return;
+
 	AEffect* effect = (*effectsMap.Find(key));
 
-	if (!effect)
+	if (!IsValid(effect))
 		return;
 
 	if (Role == ROLE_Authority)
@@ -187,7 +196,7 @@ void AStatsManager::OnRepUpdateEffects()
 	{
 		bool bEffectFound = false;
 		for (int32 i = 0; i < effectsList.Num(); i++)
-			bEffectFound = effectsList[i]->effectKey == it.Key();
+			bEffectFound = effectsList[i]->GetName() == it.Key();
 
 		if (!bEffectFound)
 			effectsMap.Remove(it.Key());
@@ -200,15 +209,12 @@ void AStatsManager::OnRepUpdateEffects()
 		if (!IsValid(eff))
 			continue;
 
-		if (eff->effectKey == "")
-			continue;
-
 		bool bEffectFound = false;
 		for (auto it = effectsMap.CreateIterator(); it; ++it)
-			bEffectFound = it.Key() == effectsList[i]->effectKey;
+			bEffectFound = it.Key() == effectsList[i]->GetName();
 
 		if (!bEffectFound)
-			effectsMap.Add(effectsList[i]->effectKey, effectsList[i]);
+			effectsMap.Add(effectsList[i]->GetName(), effectsList[i]);
 	}
 
 	if (IsValid(owningCharacter))
@@ -219,8 +225,27 @@ void AStatsManager::AddCreatedEffect(AEffect* newEffect)
 {
 	if (IsValid(newEffect))
 	{
+		if (effectsMap.Contains(newEffect->keyName) && !newEffect->bCanBeInflictedMultipleTimes)
+			return;
+
+		if (Role == ROLE_Authority)
+		{
+			int32 ind = 0;
+			for (TEnumAsByte<EStat> eStat : newEffect->stats)
+			{
+				bonusStats[(uint8)eStat.GetValue()] += newEffect->amounts[ind];
+				ind++;
+			}
+		}
+
 		effectsList.AddUnique(newEffect);
-		effectsMap.Add(newEffect->effectKey, newEffect);
+		effectsMap.Add(newEffect->keyName, newEffect);
+
+		if (newEffect->duration > 0.f)
+			GetWorldTimerManager().SetTimer(newEffect->effectTimer, FTimerDelegate::CreateUObject(this, &AStatsManager::EffectFinished, newEffect->keyName), newEffect->duration, false);
+
+		if ((GetWorld()->GetNetMode() == NM_Standalone || GetWorld()->GetNetMode() == NM_ListenServer) && IsValid(owningCharacter))
+			owningCharacter->EffectsUpdated();
 	}
 }
 
