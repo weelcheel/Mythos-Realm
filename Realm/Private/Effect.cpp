@@ -9,6 +9,12 @@ AEffect::AEffect(const FObjectInitializer& objectInitializer)
 	bAlwaysRelevant = true;
 }
 
+void AEffect::OnRepDuration()
+{
+	if (duration > 0.f)
+		GetWorldTimerManager().SetTimer(effectTimer, duration, false);
+}
+
 void AEffect::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

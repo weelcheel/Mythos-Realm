@@ -124,4 +124,6 @@ public:
 
 	/* find player start */
 	virtual AActor* FindPlayerStart(AController* Player, const FString& IncomingName = TEXT(""));
+
+	virtual void RestartPlayer(class AController* NewPlayer);
 };

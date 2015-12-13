@@ -15,11 +15,11 @@ ARealmPlayerController::ARealmPlayerController(const FObjectInitializer& objectI
 	bShowMouseCursor = true;
 
 	//debug code
-	static ConstructorHelpers::FClassFinder<APlayerCharacter> PlayerPawnBPClass(TEXT("/Game/Realm/Characters/PCs/Leighton/Leighton"));
-	if (PlayerPawnBPClass.Class != NULL)
-	{
-		defaultCharacterClass = PlayerPawnBPClass.Class;
-	}
+	//static ConstructorHelpers::FClassFinder<APlayerCharacter> PlayerPawnBPClass(TEXT("/Game/Realm/Characters/PCs/Leighton/Leighton"));
+	//if (PlayerPawnBPClass.Class != NULL)
+	//{
+		//defaultCharacterClass = PlayerPawnBPClass.Class;
+	//}
 }
 
 void ARealmPlayerController::BeginPlay()

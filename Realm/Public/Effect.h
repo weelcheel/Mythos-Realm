@@ -8,6 +8,11 @@ class AEffect : public AActor
 {
 	GENERATED_UCLASS_BODY()
 
+protected:
+
+	UFUNCTION()
+	void OnRepDuration();
+
 public:
 
 	/* effect name */
@@ -25,7 +30,7 @@ public:
 	TArray<float> amounts;
 
 	/* duration of the effect */
-	UPROPERTY(replicated, BlueprintReadOnly, Category = Effect)
+	UPROPERTY(replicated, BlueprintReadOnly, Category = Effect, ReplicatedUsing = OnRepDuration)
 	float duration;
 
 	/* whether or not this is a stacking effect */

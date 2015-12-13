@@ -53,6 +53,91 @@ void ARealmGameMode::StartMatch()
 	GetWorldTimerManager().SetTimer(h, this, &ARealmGameMode::StartCreditIncome, 5.f, false);
 }
 
+void ARealmGameMode::RestartPlayer(class AController* NewPlayer)
+{
+	if (NewPlayer == NULL || NewPlayer->IsPendingKillPending())
+	{
+		return;
+	}
+
+	if (NewPlayer->PlayerState && NewPlayer->PlayerState->bOnlySpectator)
+	{
+		return;
+	}
+
+	AActor* StartSpot = FindPlayerStart(NewPlayer);
+
+	// if a start spot wasn't found,
+	if (StartSpot == NULL)
+	{
+		// check for a previously assigned spot
+		if (NewPlayer->StartSpot != NULL)
+		{
+			StartSpot = NewPlayer->StartSpot.Get();
+		}
+		else
+		{
+			// otherwise abort
+			return;
+		}
+	}
+	// try to create a pawn to use of the default class for this player
+	if (NewPlayer->GetPawn() == NULL && GetDefaultPawnClassForController(NewPlayer) != NULL)
+	{
+		NewPlayer->SetPawn(SpawnDefaultPawnFor(NewPlayer, StartSpot));
+	}
+
+	if (NewPlayer->GetPawn() == NULL)
+	{
+		NewPlayer->FailedToSpawnPawn();
+	}
+	else
+	{
+		// initialize and start it up
+		InitStartSpot(StartSpot, NewPlayer);
+
+		// @todo: this was related to speedhack code, which is disabled.
+		/*
+		if ( NewPlayer->GetAPlayerController() )
+		{
+		NewPlayer->GetAPlayerController()->TimeMargin = -0.1f;
+		}
+		*/
+		NewPlayer->Possess(NewPlayer->GetPawn());
+
+		// If the Pawn is destroyed as part of possession we have to abort
+		if (NewPlayer->GetPawn() == nullptr)
+		{
+			NewPlayer->FailedToSpawnPawn();
+		}
+		else
+		{
+			// set initial control rotation to player start's rotation
+			NewPlayer->ClientSetRotation(NewPlayer->GetPawn()->GetActorRotation(), true);
+
+			FRotator NewControllerRot = StartSpot->GetActorRotation();
+			NewControllerRot.Roll = 0.f;
+			NewPlayer->SetControlRotation(NewControllerRot);
+
+			SetPlayerDefaults(NewPlayer->GetPawn());
+
+			K2_OnRestartPlayer(NewPlayer);
+		}
+	}
+
+#if !UE_WITH_PHYSICS
+	if (NewPlayer->GetPawn() != NULL)
+	{
+		UCharacterMovementComponent* CharacterMovement = Cast<UCharacterMovementComponent>(NewPlayer->GetPawn()->GetMovementComponent());
+		if (CharacterMovement)
+		{
+			CharacterMovement->bCheatFlying = true;
+			CharacterMovement->SetMovementMode(MOVE_Flying);
+		}
+	}
+#endif	//!UE_WITH_PHYSICS
+}
+
 void ARealmGameMode::StartCreditIncome()
 {
 	for (TActorIterator<APlayerCharacter> plyitr(GetWorld()); plyitr; ++plyitr)
@@ -177,19 +262,25 @@ void ARealmGameMode::PlayerSelectedCharacter(ARealmPlayerController* player, TSu
 
 void ARealmGameMode::CheckForAllCharactersSelected()
 {
-	bool bAllPlayersHaveCharacter = false;
+	bool bPlayerNoSelect = false;
 	for (FConstPlayerControllerIterator plyrItr = GetWorld()->GetPlayerControllerIterator(); plyrItr; ++plyrItr)
 	{
 		ARealmPlayerController* pc = Cast<ARealmPlayerController>((*plyrItr));
-		if (IsValid(pc))
-		{
-			bAllPlayersHaveCharacter = pc->GetDefaultCharacterClass() != nullptr;
-			pc->ClientOpenPlayerHUD();
-		}
+		if (IsValid(pc) && !bPlayerNoSelect)
+			bPlayerNoSelect = pc->GetDefaultCharacterClass() == nullptr;
 	}
 
-	if (bAllPlayersHaveCharacter)
+	if (!bPlayerNoSelect)
+	{
 		StartMatch();
+
+		for (FConstPlayerControllerIterator plyrItr = GetWorld()->GetPlayerControllerIterator(); plyrItr; ++plyrItr)
+		{
+			ARealmPlayerController* pc = Cast<ARealmPlayerController>((*plyrItr));
+			if (IsValid(pc))
+				pc->ClientOpenPlayerHUD();
+		}
+	}
 }
 
 void ARealmGameMode::PlayerDied(ARealmPlayerController* killedPlayer, ARealmPlayerController* playerKiller)
