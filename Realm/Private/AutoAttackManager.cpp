@@ -74,6 +74,12 @@ float AAutoAttackManager::GetAutoAttackLaunchTime() const
 		return -1.f;
 }
 
+void AAutoAttackManager::SetAutoAttackIndex(int32 newIndex)
+{
+	if (newIndex >= 0 && newIndex < autoAttacks.Num())
+		currentAttackIndex = newIndex;
+}
+
 void AAutoAttackManager::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

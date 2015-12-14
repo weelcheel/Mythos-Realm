@@ -80,4 +80,8 @@ public:
 	/* get the attack's current launch time */
 	UFUNCTION(BlueprintCallable, Category = AutoAttack)
 	float GetAutoAttackLaunchTime() const;
+
+	/* lets the auto attack index of the character to be set */
+	UFUNCTION(BlueprintCallable, Category = AutoAttack)
+	void SetAutoAttackIndex(int32 newIndex);
 };

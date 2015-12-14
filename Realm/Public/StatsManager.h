@@ -44,6 +44,7 @@ class AStatsManager : public AActor
 {
 	friend class AAutoAttackManager;
 	friend class AEffect;
+	friend class AGameCharacter;
 
 	GENERATED_UCLASS_BODY()
 
@@ -65,7 +66,7 @@ protected:
 	UPROPERTY(replicated)
 	float bonusStats[(uint8)EStat::ES_Max];
 
-	/* current health for the character */
+	/* current health for t	he character */
 	UPROPERTY(replicated)
 	float health;
 

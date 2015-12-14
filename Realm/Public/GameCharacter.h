@@ -147,6 +147,10 @@ public:
 	/* this is called every 20th while the auto attack is launched to make sure were still in range */
 	virtual void CheckAutoAttack();
 
+	/* called to reset the cooldown timer for auto attacks (for skills) */
+	UFUNCTION(BlueprintCallable, Category = AA)
+	void ResetAutoAttack();
+
 	/* stop auto attack cooldown */
 	void OnFinishAATimer();
 

@@ -78,7 +78,9 @@ void AGameCharacter::Tick(float DeltaSeconds)
 	if (Role == ROLE_Authority)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = GetCurrentValueForStat(EStat::ES_Move);
-		//SetUnitStat("aaRange", GetCurrentAutoAttack().range);
+
+		if (IsValid(GetStatsManager()) && IsValid(GetAutoAttackManager()))
+			GetStatsManager()->baseStats[(uint8)EStat::ES_AARange] = GetAutoAttackManager()->GetCurrentAutoAttackRange();
 	}
 }
 
@@ -189,7 +191,7 @@ void AGameCharacter::StartAutoAttack()
 	GetWorldTimerManager().SetTimer(aaRangeTimer, this, &AGameCharacter::CheckAutoAttack, 1.f / 20.f, true);
 
 	float distance = (GetActorLocation() - currentTarget->GetActorLocation()).Size2D();
-	if (distance <= autoAttackManager->GetCurrentAutoAttackRange())
+	if (distance <= statsManager->GetCurrentValueForStat(EStat::ES_AARange))
 	{
 
 		float scale = statsManager->GetCurrentValueForStat(EStat::ES_AtkSp) / statsManager->GetBaseValueForStat(EStat::ES_AtkSp);
@@ -267,7 +269,7 @@ void AGameCharacter::CheckAutoAttack()
 	}
 
 	float distance = (GetActorLocation() - currentTarget->GetActorLocation()).Size2D();
-	if (distance > autoAttackManager->GetCurrentAutoAttackRange())
+	if (distance > statsManager->GetCurrentValueForStat(EStat::ES_AARange))
 	{
 		StopAnimMontage();
 		GetWorldTimerManager().ClearTimer(aaLaunchTimer);
@@ -291,6 +293,11 @@ void AGameCharacter::CheckAutoAttack()
 
 		bAutoAttackLaunching = true;
 	}
+}
+
+void AGameCharacter::ResetAutoAttack()
+{
+	OnFinishAATimer();
 }
 
 void AGameCharacter::OnFinishAATimer()

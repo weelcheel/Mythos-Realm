@@ -177,7 +177,7 @@ void ARealmPlayerController::GetPlayerInAutoAttackRange()
 	}
 
 	float distanceSq = (playerCharacter->GetActorLocation() - playerCharacter->GetCurrentTarget()->GetActorLocation()).SizeSquared2D();
-	float aaRange = playerCharacter->GetAutoAttackManager()->GetCurrentAutoAttackRangeSquared();
+	float aaRange = FMath::Square(playerCharacter->GetStatsManager()->GetCurrentValueForStat(EStat::ES_AARange));
 	if (distanceSq <= aaRange)
 		playerCharacter->StartAutoAttack();
 	else

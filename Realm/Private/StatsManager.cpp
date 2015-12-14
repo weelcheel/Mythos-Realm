@@ -37,6 +37,9 @@ void AStatsManager::InitializeStats(float* initBaseStats, AGameCharacter* ownerC
 
 float AStatsManager::GetCurrentValueForStat(EStat stat) const
 {
+	if (stat == EStat::ES_AARange && bonusStats[(uint8)EStat::ES_AARange] > 0)
+		stat = EStat::ES_AARange;
+
 	return baseStats[(uint8)stat] + modStats[(uint8)stat] + bonusStats[(uint8)stat];
 }
 
