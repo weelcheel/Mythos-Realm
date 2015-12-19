@@ -12,6 +12,17 @@
 const static int32 MAX_LEVEL = 15;
 const static float EXP_CONST = 2.f / FMath::Sqrt(128.f);
 
+/* types for hard Crowd Control (Ailments) */
+UENUM(BlueprintType)
+enum class EAilment : uint8
+{
+	AL_None UMETA(DisplayName = "No Ailment"),
+	AL_Knockup UMETA(DisplayName = "Knocked Up"),
+	AL_Stun UMETA(DisplayName = "Stunned"),
+	AL_Neutral UMETA(DisplayName = "Neutralized"),
+	AL_Max UMETA(Hidden)
+};
+
 UCLASS(ABSTRACT, Blueprintable)
 class AGameCharacter : public ARealmCharacter
 {
@@ -90,6 +101,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = Exp)
 	float experienceRewardRange;
 
+	/* current ailment (if any) affecting this character */
+	UPROPERTY(ReplicatedUsing = OnRepAilment)
+	TEnumAsByte<EAilment> currentAilment;
+
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 
@@ -99,6 +114,10 @@ protected:
 	/** play hit or death on client */
 	UFUNCTION()
 	void OnRep_LastTakeHitInfo();
+
+	/* notify the client of Ailment */
+	UFUNCTION()
+	virtual void OnRepAilment();
 
 	/* regen functions */
 	void HealthRegen();
@@ -144,7 +163,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = AA)
 	virtual void StopAutoAttack();
 
-	/* this is called every 20th while the auto attack is launched to make sure were still in range */
+	/* this is called every 1/20th of a second while the auto attack is launched to make sure were still in range */
 	virtual void CheckAutoAttack();
 
 	/* called to reset the cooldown timer for auto attacks (for skills) */
@@ -307,4 +326,12 @@ public:
 
 	/* blueprint hook for when effects change or update (for HUDs) */
 	void EffectsUpdated();
+
+	/* called whenever something tries to give this character an Ailment */
+	UFUNCTION(BlueprintCallable, Category = CC)
+	void GiveCharacterAilment(EAilment newAilment);
+
+	/* called to get the current Ailment status of this character */
+	UFUNCTION(BlueprintCallable, Category = CC)
+	EAilment GetCharacterAilment() const; 
 };

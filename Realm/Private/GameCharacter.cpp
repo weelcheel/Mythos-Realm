@@ -817,6 +817,21 @@ void AGameCharacter::EffectsUpdated()
 	}
 }
 
+void AGameCharacter::OnRepAilment()
+{
+
+}
+
+void AGameCharacter::GiveCharacterAilment(EAilment newAilment)
+{
+	currentAilment = newAilment;
+}
+
+EAilment AGameCharacter::GetCharacterAilment() const
+{
+	return currentAilment;
+}
+
 void AGameCharacter::PreReplication(IRepChangedPropertyTracker & ChangedPropertyTracker)
 {
 	Super::PreReplication(ChangedPropertyTracker);
@@ -833,5 +848,6 @@ void AGameCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Ou
 	DOREPLIFETIME(AGameCharacter, autoAttackManager);
 	DOREPLIFETIME(AGameCharacter, skillManager);
 	DOREPLIFETIME(AGameCharacter, teamIndex);
+	DOREPLIFETIME(AGameCharacter, currentAilment);
 	DOREPLIFETIME_CONDITION(AGameCharacter, lastTakeHitInfo, COND_Custom);
 }
