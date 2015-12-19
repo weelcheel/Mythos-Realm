@@ -124,6 +124,21 @@ void AGameCharacter::OnRep_LastTakeHitInfo()
 	}
 }
 
+bool AGameCharacter::CanMove() const
+{
+	return (currentAilment.newAilment != EAilment::AL_Knockup && currentAilment.newAilment != EAilment::AL_Stun);
+}
+
+bool AGameCharacter::CanAutoAttack() const
+{
+	return currentAilment.newAilment == EAilment::AL_None;
+}
+
+bool AGameCharacter::CanPerformSkills() const
+{
+	return currentAilment.newAilment == EAilment::AL_None;
+}
+
 bool AGameCharacter::UseSkill_Validate(int32 index, FVector mouseHitLoc, AGameCharacter* unitTarget)
 {
 	return true;
@@ -822,14 +837,35 @@ void AGameCharacter::OnRepAilment()
 
 }
 
-void AGameCharacter::GiveCharacterAilment(EAilment newAilment, FString ailmentText, float ailmentDuration)
+void AGameCharacter::GiveCharacterAilment(FAilmentInfo info)
 {
-	currentAilment = newAilment;
+	if (Role < ROLE_Authority)
+		return;
+
+	if (currentAilment.newAilment != EAilment::AL_None)
+	{
+		ailmentQueue.Add(info);
+		return;
+	}
+
+	currentAilment = info;
+
+	switch (currentAilment.newAilment)
+	{
+	case EAilment::AL_Knockup: //a knockup is a stun that displaces the character a certain distance.
+		GetCharacterMovement()->AddImpulse(currentAilment.ailmentDir);
+		break;
+	}
 }
 
-EAilment AGameCharacter::GetCharacterAilment() const
+FAilmentInfo AGameCharacter::GetCharacterAilment() const
 {
 	return currentAilment;
+}
+
+void AGameCharacter::CurrentAilmentFinished()
+{
+
 }
 
 void AGameCharacter::PreReplication(IRepChangedPropertyTracker & ChangedPropertyTracker)

@@ -88,7 +88,10 @@ bool ARealmPlayerController::ServerMoveCommand_Validate(FVector targetLocation)
 
 void ARealmPlayerController::ServerMoveCommand_Implementation(FVector targetLocation)
 {
-	if (!IsValid(this))
+	if (!IsValid(this) || !IsValid(playerCharacter))
+		return;
+
+	if (!playerCharacter->CanMove())
 		return;
 	
 	ServerClearAttackCommands();
@@ -108,6 +111,9 @@ void ARealmPlayerController::ServerStartAutoAttack_Implementation(AGameCharacter
 		return;
 
 	if (playerCharacter->GetCurrentTarget() == target)
+		return;
+
+	if (!playerCharacter->CanAutoAttack())
 		return;
 
 	playerCharacter->SetCurrentTarget(target);
@@ -152,7 +158,8 @@ void ARealmPlayerController::ServerUseSkill_Implementation(int32 index, FVector 
 	if (!IsValid(playerCharacter))
 		return;
 
-	playerCharacter->UseSkill(index, mouseHitLoc, playerCharacter->currentTarget);
+	if (playerCharacter->CanPerformSkills())
+		playerCharacter->UseSkill(index, mouseHitLoc, playerCharacter->currentTarget);
 }
 
 bool ARealmPlayerController::ServerChooseCharacter_Validate(TSubclassOf<APlayerCharacter> chosenCharacter)

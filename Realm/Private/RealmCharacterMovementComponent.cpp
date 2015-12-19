@@ -69,3 +69,27 @@ bool URealmCharacterMovementComponent::HandlePendingLaunch()
 
 	return false;
 }
+
+void URealmCharacterMovementComponent::IgnoreMovement()
+{
+	//end any dashes this character may be performing
+	EndDash();
+
+	StopMovementImmediately();
+	SetMovementMode(MOVE_None);
+}
+
+void URealmCharacterMovementComponent::IgnoreMovementForDuration(float duration)
+{
+	GetCharacterOwner()->GetWorldTimerManager().SetTimer(ignoreMovementTimer, this, &URealmCharacterMovementComponent::ClearMovementIgnorance, duration);
+
+	IgnoreMovement();
+}
+
+void URealmCharacterMovementComponent::ClearMovementIgnorance()
+{
+	//clear any timers that have been set for clearing this (i.e. if someone gets rid of a stun before its duration is up)
+	GetCharacterOwner()->GetWorldTimerManager().ClearTimer(ignoreMovementTimer);
+
+	SetMovementMode(MOVE_Walking);
+}

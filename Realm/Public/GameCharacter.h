@@ -23,6 +23,25 @@ enum class EAilment : uint8
 	AL_Max UMETA(Hidden)
 };
 
+/* struct for holding all of the data that an ailment needs */
+USTRUCT()
+struct FAilmentInfo
+{
+	GENERATED_USTRUCT_BODY()
+
+	/* type of ailment this is */
+	EAilment newAilment;
+
+	/* text to represent the ailment */
+	FString ailmentText;
+
+	/* duration this ailment normally lasts for */
+	float ailmentDuration;
+
+	/* any directional and magnitude info associated with the ailment */
+	FVector ailmentDir;
+};
+
 UCLASS(ABSTRACT, Blueprintable)
 class AGameCharacter : public ARealmCharacter
 {
@@ -103,7 +122,14 @@ protected:
 
 	/* current ailment (if any) affecting this character */
 	UPROPERTY(ReplicatedUsing = OnRepAilment)
-	TEnumAsByte<EAilment> currentAilment;
+	FAilmentInfo currentAilment;
+
+	/* current text for the current ailment */
+	UPROPERTY(BlueprintReadOnly, Category = Ailment)
+	FString ailmentString;
+
+	/* array of ailments that need to be inflicted to the character (if there is an ailment currently being processed) */
+	TArray<FAilmentInfo> ailmentQueue;
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
@@ -143,6 +169,15 @@ public:
 
 	/* current target for this character */
 	AGameCharacter* currentTarget;
+
+	/* check whether or not this character has movement enabled */
+	bool CanMove() const;
+
+	/* check whether or not this character is able to perform skills */
+	bool CanPerformSkills() const;
+
+	/* check whether or not this character can auto attack */
+	bool CanAutoAttack() const;
 
 	/* perform the server version of the skill then perform the skill on all clients */
 	UFUNCTION(NetMulticast, reliable, WithValidation)
@@ -329,9 +364,21 @@ public:
 
 	/* called whenever something tries to give this character an Ailment */
 	UFUNCTION(BlueprintCallable, Category = CC)
-	void GiveCharacterAilment(EAilment newAilment, FString ailmentText = "", float ailmentDuration = 0.f);
+	void GiveCharacterAilment(FAilmentInfo info);
 
 	/* called to get the current Ailment status of this character */
 	UFUNCTION(BlueprintCallable, Category = CC)
-	EAilment GetCharacterAilment() const; 
+	FAilmentInfo GetCharacterAilment() const; 
+
+	/* called whenever an ailment currently affecting this character is finished */
+	UFUNCTION(BlueprintCallable, Category = CC)
+	void CurrentAilmentFinished();
+
+	/* blueprint hook for whenever this character enters combat */
+	UFUNCTION(BlueprintImplementableEvent, Category = Combat)
+	void CharacterEnteredCombat();
+
+	/* blueprint hook for whenever this character leaves combat */
+	UFUNCTION(BlueprintImplementableEvent, Category = Combat)
+	void CharacterLeftCombat();
 };
