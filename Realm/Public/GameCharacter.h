@@ -329,7 +329,7 @@ public:
 
 	/* called whenever something tries to give this character an Ailment */
 	UFUNCTION(BlueprintCallable, Category = CC)
-	void GiveCharacterAilment(EAilment newAilment);
+	void GiveCharacterAilment(EAilment newAilment, FString ailmentText = "", float ailmentDuration = 0.f);
 
 	/* called to get the current Ailment status of this character */
 	UFUNCTION(BlueprintCallable, Category = CC)

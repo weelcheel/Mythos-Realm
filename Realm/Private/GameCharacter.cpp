@@ -822,7 +822,7 @@ void AGameCharacter::OnRepAilment()
 
 }
 
-void AGameCharacter::GiveCharacterAilment(EAilment newAilment)
+void AGameCharacter::GiveCharacterAilment(EAilment newAilment, FString ailmentText, float ailmentDuration)
 {
 	currentAilment = newAilment;
 }
