@@ -19,6 +19,8 @@ enum class ESkillState : uint8
 UCLASS()
 class ASkill : public AActor
 {
+	friend class AGameCharacter;
+
 	GENERATED_UCLASS_BODY()
 
 protected:
@@ -41,6 +43,10 @@ protected:
 
 	/* timer for cooldowns */
 	FTimerHandle cooldownTimer;
+
+	/* whether or not this skill automatically enters the performing state on use */
+	UPROPERTY(EditDefaultsOnly, Category = Skill)
+	bool bAutoPerform;
 
 	/* minimum amount of time for cooldown for this skill */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Skill)
@@ -114,5 +120,6 @@ public:
 	ESkillState GetSkillState() const;
 
 	/* sets the current skill state */
+	UFUNCTION(BlueprintCallable, Category=Skill)
 	void SetSkillState(ESkillState newState);
 };

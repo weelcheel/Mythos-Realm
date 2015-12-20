@@ -7,6 +7,7 @@ ASkill::ASkill(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
 {
 	skillState = ESkillState::NoOwner;
+	bAutoPerform = true;
 
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.TickGroup = TG_PrePhysics;

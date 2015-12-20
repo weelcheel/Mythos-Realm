@@ -161,7 +161,8 @@ void AGameCharacter::UseSkill_Implementation(int32 index, FVector mouseHitLoc, A
 	if (diff < 0)
 		return;
 
-	skillManager->GetSkill(index)->SetSkillState(ESkillState::Performing);
+	if (skillManager->GetSkill(index)->bAutoPerform)
+		skillManager->GetSkill(index)->SetSkillState(ESkillState::Performing);
 
 	if (Role == ROLE_Authority)
 		skillManager->ServerPerformSkill(index, mouseHitLoc, unitTarget);
@@ -887,6 +888,18 @@ void AGameCharacter::CurrentAilmentFinished()
 		if (newInfo.newAilment != EAilment::AL_None)
 			GiveCharacterAilment(newInfo);
 	}
+}
+
+FAilmentInfo AGameCharacter::MakeAilmentInfo(EAilment ailment, FString ailmentString, float ailmentDuration, FVector ailmentDir)
+{
+	FAilmentInfo info;
+
+	info.newAilment = ailment;
+	info.ailmentText = ailmentString;
+	info.ailmentDuration = ailmentDuration;
+	info.ailmentDir = ailmentDir;
+
+	return info;
 }
 
 void AGameCharacter::PreReplication(IRepChangedPropertyTracker & ChangedPropertyTracker)

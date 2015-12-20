@@ -380,4 +380,8 @@ public:
 	/* blueprint hook for whenever this character leaves combat */
 	UFUNCTION(BlueprintImplementableEvent, Category = Combat)
 	void CharacterLeftCombat();
+
+	/* static function for creating ailments */
+	UFUNCTION(BlueprintCallable, Category = CC)
+	static FAilmentInfo MakeAilmentInfo(EAilment ailment, FString ailmentString, float ailmentDuration, FVector ailmentDir);
 };

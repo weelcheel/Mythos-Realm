@@ -13,6 +13,7 @@ AProjectile::AProjectile(const FObjectInitializer& objectInitializer)
 	collisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 	collisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	collisionComp->CanCharacterStepUpOn = ECB_No;
+	collisionComp->SetCanEverAffectNavigation(false);
 
 	RootComponent = collisionComp;
 
