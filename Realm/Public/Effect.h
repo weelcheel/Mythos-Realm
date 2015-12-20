@@ -36,6 +36,9 @@ public:
 	/* amounts of stats this effects */
 	TArray<float> amounts;
 
+	/* stats owner of this effect */
+	AStatsManager* statsManager;
+
 	/* duration of the effect */
 	UPROPERTY(replicated, BlueprintReadOnly, Category = Effect, ReplicatedUsing = OnRepDuration)
 	float duration;

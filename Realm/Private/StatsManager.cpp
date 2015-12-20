@@ -69,6 +69,7 @@ AEffect* AStatsManager::AddEffect(FString effectName, FString effectDescription,
 	newEffect->stackAmount = 0;
 	newEffect->keyName = keyName;
 	newEffect->bCanBeInflictedMultipleTimes = bMultipleInfliction;
+	newEffect->statsManager = this;
 
 	if (Role == ROLE_Authority)
 	{

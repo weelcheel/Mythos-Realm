@@ -28,7 +28,8 @@ void AEffect::ResetEffectTimer(float newTime /* = 0.f */)
 
 	bTimerReset = !bTimerReset;
 
-	GetWorldTimerManager().SetTimer(effectTimer, duration, false);
+	if (IsValid(statsManager))
+		GetWorldTimerManager().SetTimer(effectTimer, FTimerDelegate::CreateUObject(statsManager, &AStatsManager::EffectFinished, keyName), duration, false);
 }
 
 void AEffect::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
