@@ -87,15 +87,6 @@ bool ASkill::ConeTrace(AActor* actorToIgnore, const FVector& start, const FVecto
 	return true;
 }
 
-void ASkill::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(ASkill, characterOwner);
-	DOREPLIFETIME(ASkill, skillPoints);
-	DOREPLIFETIME(ASkill, skillState);
-}
-
 void ASkill::InitializeSkill(AGameCharacter* owner)
 {
 	if (Role < ROLE_Authority)
@@ -136,13 +127,19 @@ void ASkill::StartCooldown()
 {
 	skillState = ESkillState::OnCooldown;
 
-	float cd = SkillLevelScale(cooldownMin, cooldownMax, false);
-	GetWorldTimerManager().SetTimer(cooldownTimer, this, &ASkill::CooldownFinished, cd);
+	cooldownTime = SkillLevelScale(cooldownMin, cooldownMax, false);
+	GetWorldTimerManager().SetTimer(cooldownTimer, this, &ASkill::CooldownFinished, cooldownTime);
 }
 
 void ASkill::CooldownFinished()
 {
 	skillState = ESkillState::Ready;
+	cooldownTime = 0.f;
+}
+
+void ASkill::OnCooldownTimerSet()
+{
+	GetWorldTimerManager().SetTimer(cooldownTimer, this, &ASkill::CooldownFinished, cooldownTime);
 }
 
 void ASkill::SkillFinished()
@@ -168,4 +165,14 @@ void ASkill::SetSkillState(ESkillState newState)
 void ASkill::ServerSkillPerformed_Implementation(FVector mouseHitLoc, AGameCharacter* targetUnit /* = NULL */)
 {
 	characterOwner->UseFlare(cost);
+}
+
+void ASkill::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ASkill, characterOwner);
+	DOREPLIFETIME(ASkill, skillPoints);
+	DOREPLIFETIME(ASkill, skillState);
+	DOREPLIFETIME(ASkill, cooldownTime);
 }

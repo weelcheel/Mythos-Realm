@@ -15,6 +15,22 @@ void AEffect::OnRepDuration()
 		GetWorldTimerManager().SetTimer(effectTimer, duration, false);
 }
 
+void AEffect::OnRepTimerReset()
+{
+	if (duration > 0.f)
+		GetWorldTimerManager().SetTimer(effectTimer, duration, false);
+}
+
+void AEffect::ResetEffectTimer(float newTime /* = 0.f */)
+{
+	if (newTime != 0.f)
+		duration = newTime;
+
+	bTimerReset = !bTimerReset;
+
+	GetWorldTimerManager().SetTimer(effectTimer, duration, false);
+}
+
 void AEffect::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -24,4 +40,5 @@ void AEffect::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifeti
 	DOREPLIFETIME_CONDITION(AEffect, duration, COND_InitialOnly);
 	DOREPLIFETIME_CONDITION(AEffect, bStacking, COND_InitialOnly);
 	DOREPLIFETIME(AEffect, stackAmount);
+	DOREPLIFETIME(AEffect, bTimerReset);
 }

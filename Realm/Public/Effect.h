@@ -10,8 +10,15 @@ class AEffect : public AActor
 
 protected:
 
+	/* whether or not this timer needs to replicate */
+	UPROPERTY(ReplicatedUsing = OnRepTimerReset)
+	bool bTimerReset;
+
 	UFUNCTION()
 	void OnRepDuration();
+
+	UFUNCTION()
+	void OnRepTimerReset();
 
 public:
 
@@ -52,4 +59,8 @@ public:
 	/* whether or not this effect can be added multiple times to one character */
 	UPROPERTY(BlueprintReadOnly, Category = Effect)
 	bool bCanBeInflictedMultipleTimes;
+
+	/* reset this effect's timer and change it if needed */
+	UFUNCTION(BlueprintCallable, Category = Timer)
+	void ResetEffectTimer(float newTime = 0.f);
 };

@@ -44,6 +44,10 @@ protected:
 	/* timer for cooldowns */
 	FTimerHandle cooldownTimer;
 
+	/* for when the cooldown timer is set */
+	UPROPERTY(ReplicatedUsing = OnCooldownTimerSet)
+	float cooldownTime;
+
 	/* whether or not this skill automatically enters the performing state on use */
 	UPROPERTY(EditDefaultsOnly, Category = Skill)
 	bool bAutoPerform;
@@ -62,6 +66,9 @@ protected:
 
 	/* called when cooldown is finished */
 	void CooldownFinished();
+
+	UFUNCTION()
+	void OnCooldownTimerSet();
 
 public:
 

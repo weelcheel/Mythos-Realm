@@ -42,3 +42,8 @@ ASkill* ASkillManager::GetSkill(int32 index)
 	else
 		return nullptr;
 }
+
+void ASkillManager::GetSkills(TArray<ASkill*>& outSkills)
+{
+	outSkills = skills;
+}

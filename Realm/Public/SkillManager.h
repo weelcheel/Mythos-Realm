@@ -28,4 +28,8 @@ public:
 	/* get a skill at an index */
 	UFUNCTION(BlueprintCallable, Category=Skill)
 	ASkill* GetSkill(int32 index);
+
+	/* get the array of skills */
+	UFUNCTION(BlueprintCallable, Category = Skill)
+	void GetSkills(TArray<ASkill*>& outSkills);
 };
