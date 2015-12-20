@@ -169,20 +169,15 @@ void ARealmGameMode::PostLogin(APlayerController* NewPlayer)
 	}
 
 	//we should only be logging in while the server is in pregame, any other time and they're spectators
-	if (gameStatus == EGameStatus::GS_Pregame)
+	if (gameStatus == EGameStatus::GS_Pregame || gameStatus == EGameStatus::GS_CharacterSelect)
 	{
 		//@todo: whether or not the player has a party
 
-		int32 least = -1;
+		int32 least = 0;
 		for (int32 i = 0; i < teams.Num(); i++)
 		{
-			if (least == -1)
+			if (teams[i].players.Num() < teams[least].players.Num())
 				least = i;
-			else
-			{
-				if (teams[i].players.Num() < teams[least].players.Num())
-					least = i;
-			}
 		}
 
 		if (least >= 0 && teams[least].players.Num() + 1 <= teamSizeMax)
