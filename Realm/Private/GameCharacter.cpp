@@ -844,18 +844,28 @@ void AGameCharacter::GiveCharacterAilment(FAilmentInfo info)
 
 	if (currentAilment.newAilment != EAilment::AL_None)
 	{
-		ailmentQueue.Add(info);
+		ailmentQueue.Enqueue(info);
 		return;
 	}
 
 	currentAilment = info;
 
+	URealmCharacterMovementComponent* mc = Cast<URealmCharacterMovementComponent>(GetCharacterMovement());
+	if (!IsValid(mc))
+		return;
+
 	switch (currentAilment.newAilment)
 	{
 	case EAilment::AL_Knockup: //a knockup is a stun that displaces the character a certain distance.
-		GetCharacterMovement()->AddImpulse(currentAilment.ailmentDir);
+		mc->AddImpulse(currentAilment.ailmentDir);
+		break;
+
+	case EAilment::AL_Stun:
+		mc->IgnoreMovementForDuration(currentAilment.ailmentDuration);
 		break;
 	}
+
+	GetWorldTimerManager().SetTimer(ailmentTimer, this, &AGameCharacter::CurrentAilmentFinished, currentAilment.ailmentDuration);
 }
 
 FAilmentInfo AGameCharacter::GetCharacterAilment() const
@@ -865,7 +875,18 @@ FAilmentInfo AGameCharacter::GetCharacterAilment() const
 
 void AGameCharacter::CurrentAilmentFinished()
 {
+	GetWorldTimerManager().ClearTimer(ailmentTimer);
 
+	currentAilment.newAilment = EAilment::AL_None;
+
+	if (!ailmentQueue.IsEmpty())
+	{
+		FAilmentInfo newInfo;
+		ailmentQueue.Dequeue(newInfo);
+
+		if (newInfo.newAilment != EAilment::AL_None)
+			GiveCharacterAilment(newInfo);
+	}
 }
 
 void AGameCharacter::PreReplication(IRepChangedPropertyTracker & ChangedPropertyTracker)

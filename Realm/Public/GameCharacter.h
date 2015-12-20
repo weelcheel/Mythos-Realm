@@ -124,12 +124,11 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRepAilment)
 	FAilmentInfo currentAilment;
 
-	/* current text for the current ailment */
-	UPROPERTY(BlueprintReadOnly, Category = Ailment)
-	FString ailmentString;
-
 	/* array of ailments that need to be inflicted to the character (if there is an ailment currently being processed) */
-	TArray<FAilmentInfo> ailmentQueue;
+	TQueue<FAilmentInfo> ailmentQueue;
+
+	/* timer for handling aimlments */
+	FTimerHandle ailmentTimer;
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
