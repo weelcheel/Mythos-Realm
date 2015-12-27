@@ -76,7 +76,7 @@ AEffect* AStatsManager::AddEffect(FString effectName, FString effectDescription,
 		int32 ind = 0;
 		for (TEnumAsByte<EStat> eStat : stats)
 		{
-			bonusStats[(uint8)eStat.GetValue()] = FMath::Min<float>(0.f, bonusStats[(uint8)eStat.GetValue()] + amounts[ind]);
+			bonusStats[(uint8)eStat.GetValue()] += amounts[ind];
 			ind++;
 		}
 	}

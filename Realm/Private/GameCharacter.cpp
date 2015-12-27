@@ -435,9 +435,9 @@ float AGameCharacter::TakeDamage(float Damage, struct FDamageEvent const& Damage
 
 	float ActualDamage = Damage;
 
-	if (DamageEvent.DamageTypeClass == UPhysicalDamage::StaticClass())
+	if (DamageEvent.DamageTypeClass == UPhysicalDamage::StaticClass() && statsManager->GetCurrentValueForStat(EStat::ES_Def) >= 0)
 		ActualDamage -= statsManager->GetCurrentValueForStat(EStat::ES_Def);
-	else if (DamageEvent.DamageTypeClass == USpecialDamage::StaticClass())
+	else if (DamageEvent.DamageTypeClass == USpecialDamage::StaticClass() && statsManager->GetCurrentValueForStat(EStat::ES_SpDef) >= 0)
 		ActualDamage -= statsManager->GetCurrentValueForStat(EStat::ES_SpDef);
 
 	ActualDamage = FMath::Max(ActualDamage, 0.f);
