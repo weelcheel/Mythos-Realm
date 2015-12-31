@@ -30,4 +30,6 @@ public:
 	virtual void NeedsNewCommand();
 
 	virtual void CharacterDamaged(AGameCharacter* damageCauser);
+
+	virtual void CharacterInAttackRange();
 };

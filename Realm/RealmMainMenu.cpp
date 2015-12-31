@@ -134,7 +134,7 @@ void ARealmMainMenu::TCPSocketListener()
 	uint32 Size;
 	while (connectionSocket->HasPendingData(Size))
 	{
-		ReceivedData.Init(FMath::Min(Size, 65507u));
+		ReceivedData.SetNumUninitialized(FMath::Min(Size, 65507u));
 
 		int32 Read = 0;
 		connectionSocket->Recv(ReceivedData.GetData(), ReceivedData.Num(), Read);
@@ -163,12 +163,26 @@ void ARealmMainMenu::TCPSocketListener()
 	if (data.Num() > 0)
 	{
 		if (data[0].Equals("loginSuccess"))
-			UE_LOG(LogTemp, Warning, TEXT("Logged in successfully!"));
+		{
+			GetWorld()->GetFirstPlayerController()->SetName(data[8]);
+			PlayerLoginSuccessful(data[2], FCString::Atoi(*data[4]), FCString::Atoi(*data[6]), data[8]);
+			UE_LOG(LogTemp, Warning, TEXT("Logged in successfully as %s!"), *data[8]);
+		}
 		if (data[0].Equals("loginFailure"))
+		{
+			PlayerLoginNotSuccessful();
 			UE_LOG(LogTemp, Warning, TEXT("Failed to login!"));
+		}
 		if (data[0].Equals("createLoginSuccess"))
+		{
+			CreatePlayerLoginSuccessful();
 			UE_LOG(LogTemp, Warning, TEXT("Created new account successfully!"));
-
+		}
+		if (data[0].Equals("createLoginFailure"))
+		{
+			CreatePlayerLoginUnsuccessful(data[1]);
+			UE_LOG(LogTemp, Warning, TEXT("Couldn't create new account. Reason: %s"), *data[1]);
+		}
 		connectionSocket->Close();
 	}
 
@@ -181,7 +195,7 @@ void ARealmMainMenu::AttemptLogin(FString username, FString password)
 	//try to establish a connection to the login server
 	loginSocket = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(NAME_Stream, TEXT("login"), false);
 
-	FString address = TEXT("127.0.0.1");
+	FString address = TEXT("192.168.1.4");
 	int32 port = 3308;
 	FIPv4Address ip;
 	FIPv4Address::Parse(address, ip);
@@ -231,7 +245,7 @@ void ARealmMainMenu::AttemptCreateLogin(FString username, FString password, FStr
 	//try to establish a connection to the login server
 	loginSocket = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(NAME_Stream, TEXT("login"), false);
 
-	FString address = TEXT("127.0.0.1");
+	FString address = TEXT("192.168.1.4");
 	int32 port = 3308;
 	FIPv4Address ip;
 	FIPv4Address::Parse(address, ip);

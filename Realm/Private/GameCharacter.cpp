@@ -305,6 +305,10 @@ void AGameCharacter::CheckAutoAttack()
 		if (IsValid(aic))
 			aic->StopMovement();
 
+		ARealmMoveController* aicc = Cast<ARealmMoveController>(GetController());
+		if (IsValid(aicc))
+			aicc->CharacterInAttackRange();
+
 		GetWorldTimerManager().SetTimer(aaLaunchTimer, this, &AGameCharacter::LaunchAutoAttack, autoAttackManager->GetAutoAttackLaunchTime() / scale);
 
 		bAutoAttackLaunching = true;

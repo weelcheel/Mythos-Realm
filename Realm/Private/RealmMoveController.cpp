@@ -91,3 +91,8 @@ void ARealmMoveController::CharacterDamaged(AGameCharacter* damager)
 		}
 	}
 }
+
+void ARealmMoveController::CharacterInAttackRange()
+{
+
+}

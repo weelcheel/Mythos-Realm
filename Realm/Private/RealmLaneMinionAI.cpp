@@ -180,6 +180,38 @@ void ARealmLaneMinionAI::ReceiveCallForHelp(AGameCharacter* distressedUnit, AGam
 	}
 }
 
+void ARealmLaneMinionAI::CharacterInAttackRange()
+{
+	AMinionCharacter* mcc = Cast<AMinionCharacter>(GetCharacter());
+
+	//see if there are any friendlies in range
+	for (TActorIterator<AMinionCharacter> minion(GetWorld()); minion; ++minion)
+	{
+		AMinionCharacter* mc = *minion;
+		FVector targetVector = mc->GetActorLocation() - mcc->GetActorLocation();
+		float distance = targetVector.Size();
+		if (mc != mcc && mc->GetTeamIndex() == mcc->GetTeamIndex() && distance <= 65.f)
+		{
+			FTimerHandle handle;
+			GetWorldTimerManager().SetTimer(handle, this, &ARealmLaneMinionAI::CharacterInAttackRange, 0.5f);
+			bRepositioned = true;
+
+			FVector newLoc = targetVector.RotateAngleAxis(180.f, FVector(0.f, 0.f, 1.f));
+			mcc->StopAutoAttack();
+
+			MoveToLocation(mcc->GetActorLocation() + (newLoc.Rotation().Vector() * 65.f));
+
+			return;
+		}
+	}
+
+	if (bRepositioned)
+	{
+		bRepositioned = false;
+		ReevaluateTargets();
+	}
+}
+
 void ARealmLaneMinionAI::Destroy(bool bNetForce, bool bShouldModifyLevel)
 {
 	GetWorldTimerManager().ClearAllTimersForObject(this);

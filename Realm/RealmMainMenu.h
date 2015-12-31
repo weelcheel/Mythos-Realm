@@ -16,6 +16,22 @@ protected:
 
 	virtual void BeginPlay() override;
 
+	/* server sent back a successful login */
+	UFUNCTION(BlueprintImplementableEvent, Category = PlayerLogin)
+	void PlayerLoginSuccessful(const FString& userid, int32 experience, int32 mythosPoints, const FString& alias);
+
+	/* server sent back a failed login */
+	UFUNCTION(BlueprintImplementableEvent, Category = PlayerLogin)
+	void PlayerLoginNotSuccessful();
+
+	/* the server successfully created a new account */
+	UFUNCTION(BlueprintImplementableEvent, Category = PlayerLogin)
+	void CreatePlayerLoginSuccessful();
+
+	/* the server unsuccessfully created a new account */
+	UFUNCTION(BlueprintImplementableEvent, Category = PlayerLogin)
+	void CreatePlayerLoginUnsuccessful(const FString& reason);
+
 public:
 
 	FSocket* listenerSocket;

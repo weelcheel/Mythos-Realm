@@ -51,6 +51,8 @@ protected:
 	/* next target priority */
 	ELaneMinionTargetPriority nextTargetPriority;
 
+	bool bRepositioned;
+
 	/* target out of aggro range */
 	void ReevaluateTargets();
 
@@ -72,4 +74,6 @@ public:
 	void ReceiveCallForHelp(AGameCharacter* distressedUnit, AGameCharacter* enemyTarget);
 
 	virtual void Destroy(bool bNetForce /* = false */, bool bShouldModifyLevel /* = true */);
+
+	virtual void CharacterInAttackRange() override;
 };
