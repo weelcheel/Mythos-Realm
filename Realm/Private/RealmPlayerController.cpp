@@ -179,7 +179,8 @@ void ARealmPlayerController::GetPlayerInAutoAttackRange()
 
 	if (!playerCharacter->GetCurrentTarget()->IsAlive())
 	{
-		moveController->NeedsNewCommand();
+		ServerClearAttackCommands();
+		ServerClearMoveCommands();
 		return;
 	}
 
@@ -385,6 +386,18 @@ bool ARealmPlayerController::SelectUnitUnderMouse(ECollisionChannel TraceChannel
 	}
 
 	return false;
+}
+
+void ARealmPlayerController::ClientSetVisibleCharacters_Implementation(const TArray<AGameCharacter*>& characters)
+{
+	for (TActorIterator<AGameCharacter> gamechr(GetWorld()); gamechr; ++gamechr)
+	{
+		AGameCharacter* gc = *gamechr;
+		if (!IsValid(gc))
+			continue;
+
+		gc->SetActorHiddenInGame(!characters.Contains(gc));
+	}
 }
 
 void ARealmPlayerController::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const

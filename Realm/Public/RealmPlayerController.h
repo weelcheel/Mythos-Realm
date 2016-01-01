@@ -129,4 +129,8 @@ public:
 
 	/* get the move controller */
 	ARealmMoveController* GetMoveController() const;
+
+	/* [CLIENT] receive data from the server about what characters we can and cant see */
+	UFUNCTION(reliable, client)
+	void ClientSetVisibleCharacters(const TArray<AGameCharacter*>& characters);
 };

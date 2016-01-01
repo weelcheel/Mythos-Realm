@@ -37,16 +37,17 @@ void ARealmMoveController::NeedsNewCommand()
 
 	for (int32 i = 0; i < inRangeTargets.Num(); i++)
 	{
-		if (!IsValid(inRangeTargets[i]))
+		AGameCharacter* target = inRangeTargets[i];
+		if (!IsValid(target) || (IsValid(target) && !target->IsAlive()))
 		{
-			inRangeTargets.RemoveAt(i);
+			inRangeTargets.Remove(target);
 			continue;
 		}
 
-		float distanceSq = (inRangeTargets[i]->GetActorLocation() - mgc->GetActorLocation()).SizeSquared2D();
-		if (!inRangeTargets[i]->IsAlive() || distanceSq > FMath::Square(targetRadius->SightRadius))
+		float distanceSq = (target->GetActorLocation() - mgc->GetActorLocation()).SizeSquared2D();
+		if (!target->IsAlive() || distanceSq > FMath::Square(targetRadius->SightRadius))
 		{
-			inRangeTargets.RemoveAt(i);
+			inRangeTargets.Remove(target);
 			continue;
 		}
 

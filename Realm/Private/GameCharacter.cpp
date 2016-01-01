@@ -8,6 +8,8 @@
 #include "RealmPlayerController.h"
 #include "RealmGameMode.h"
 #include "RealmCharacterMovementComponent.h"
+#include "RealmLaneMinionAI.h"
+#include "RealmFogofWarManager.h"
 
 AGameCharacter::AGameCharacter(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer.SetDefaultSubobjectClass<URealmCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -20,6 +22,7 @@ AGameCharacter::AGameCharacter(const FObjectInitializer& objectInitializer)
 	skillPoints = 0;
 	baseExpReward = 21;
 	experienceRewardRange = 1500.f;
+	sightRadius = 850.f;
 }
 
 void AGameCharacter::BeginPlay()
@@ -81,6 +84,21 @@ void AGameCharacter::Tick(float DeltaSeconds)
 
 		if (IsValid(GetStatsManager()) && IsValid(GetAutoAttackManager()))
 			GetStatsManager()->baseStats[(uint8)EStat::ES_AARange] = GetAutoAttackManager()->GetCurrentAutoAttackRange();
+
+		if (IsAlive())
+		{
+			if (GetHealth() < GetCurrentValueForStat(EStat::ES_HP))
+			{
+				if (GetWorldTimerManager().GetTimerRemaining(healthRegen) <= 0.f)
+					GetWorldTimerManager().SetTimer(healthRegen, this, &AGameCharacter::HealthRegen, 0.25f, true);
+			}
+
+			if (GetFlare() < GetCurrentValueForStat(EStat::ES_Flare))
+			{
+				if (GetWorldTimerManager().GetTimerRemaining(flareRegen) <= 0.f)
+					GetWorldTimerManager().SetTimer(flareRegen, this, &AGameCharacter::FlareRegen, 0.25f, true);
+			}
+		}
 	}
 
 	if (IsValid(currentTarget) && currentTarget->IsAlive())
@@ -182,6 +200,9 @@ void AGameCharacter::UseSkill_Implementation(int32 index, FVector mouseHitLoc, A
 
 void AGameCharacter::PlayHit(float DamageTaken, struct FDamageEvent const& DamageEvent, class AGameCharacter* PawnInstigator, class AActor* DamageCauser)
 {
+	if (!IsValid(this))
+		return;
+
 	if (Role == ROLE_Authority)
 	{
 		ReplicateHit(DamageTaken, DamageEvent, PawnInstigator, DamageCauser, false);
@@ -210,11 +231,14 @@ void AGameCharacter::StartAutoAttack()
 	if (!IsValid(currentTarget) || !IsValid(autoAttackManager) || !IsValid(statsManager) || !IsAlive())
 		return;
 
-	if (bAutoAttackOnCooldown || bAutoAttackLaunching)
+	if (bAutoAttackLaunching) //bAutoAttackOnCooldown || bAutoAttackLaunching
 		return;
 
 	if (GetWorldTimerManager().GetTimerRemaining(aaRangeTimer) <= 0.f)
 		GetWorldTimerManager().SetTimer(aaRangeTimer, this, &AGameCharacter::CheckAutoAttack, 1.f / 20.f, true);
+
+	if (bAutoAttackOnCooldown)
+		return;
 
 	float distance = (GetActorLocation() - currentTarget->GetActorLocation()).Size2D();
 	if (distance <= statsManager->GetCurrentValueForStat(EStat::ES_AARange))
@@ -224,7 +248,7 @@ void AGameCharacter::StartAutoAttack()
 			aicc->CharacterInAttackRange();
 
 		float scale = statsManager->GetCurrentValueForStat(EStat::ES_AtkSp) / statsManager->GetBaseValueForStat(EStat::ES_AtkSp);
-		PlayAnimMontage(autoAttackManager->GetCurrentAttackAnimation(), scale);
+		AllPlayAnimMontage(autoAttackManager->GetCurrentAttackAnimation(), scale);
 
 		AAIController* aic = Cast<AAIController>(GetController());
 		if (IsValid(aic))
@@ -245,7 +269,7 @@ void AGameCharacter::LaunchAutoAttack()
 		SetCurrentTarget(nullptr);
 		bAutoAttackLaunching = false;
 
-		ARealmMoveController* aic = Cast<ARealmMoveController>(GetController());
+		ARealmLaneMinionAI* aic = Cast<ARealmLaneMinionAI>(GetController());
 		if (IsValid(aic))
 			aic->NeedsNewCommand();
 
@@ -286,11 +310,13 @@ void AGameCharacter::CheckAutoAttack()
 {
 	if (!IsValid(currentTarget) || !IsValid(GetController()) || !currentTarget->IsAlive())
 	{
+		AllStopAnimMontage(autoAttackManager->GetCurrentAttackAnimation());
+
 		SetCurrentTarget(nullptr);
 		GetWorldTimerManager().ClearTimer(aaLaunchTimer);
 		bAutoAttackLaunching = false;
 
-		ARealmMoveController* aic = Cast<ARealmMoveController>(GetController());
+		ARealmLaneMinionAI* aic = Cast<ARealmLaneMinionAI>(GetController());
 		if (IsValid(aic))
 			aic->NeedsNewCommand();
 
@@ -300,7 +326,7 @@ void AGameCharacter::CheckAutoAttack()
 	float distance = (GetActorLocation() - currentTarget->GetActorLocation()).Size2D();
 	if (distance > statsManager->GetCurrentValueForStat(EStat::ES_AARange))
 	{
-		StopAnimMontage();
+		AllStopAnimMontage(autoAttackManager->GetCurrentAttackAnimation());
 		GetWorldTimerManager().ClearTimer(aaLaunchTimer);
 		bAutoAttackLaunching = false;
 
@@ -312,7 +338,7 @@ void AGameCharacter::CheckAutoAttack()
 	else if (!bAutoAttackLaunching && !bAutoAttackOnCooldown)
 	{
 		float scale = statsManager->GetCurrentValueForStat(EStat::ES_AtkSp) / statsManager->GetBaseValueForStat(EStat::ES_AtkSp);
-		PlayAnimMontage(autoAttackManager->GetCurrentAttackAnimation(), scale);
+		AllPlayAnimMontage(autoAttackManager->GetCurrentAttackAnimation(), scale);
 
 		AAIController* aic = Cast<AAIController>(GetController());
 		if (IsValid(aic))
@@ -345,10 +371,39 @@ void AGameCharacter::OnFinishAATimer()
 void AGameCharacter::StopAutoAttack()
 {
 	SetCurrentTarget(nullptr);
-	StopAnimMontage();
+	AllStopAnimMontage(autoAttackManager->GetCurrentAttackAnimation());
 	GetWorldTimerManager().ClearTimer(aaLaunchTimer);
 	GetWorldTimerManager().ClearTimer(aaRangeTimer);
 	bAutoAttackLaunching = false;
+}
+
+bool AGameCharacter::AllPlayAnimMontage_Validate(class UAnimMontage* AnimMontage, float InPlayRate)
+{
+	return true;
+}
+
+bool AGameCharacter::AllStopAnimMontage_Validate(class UAnimMontage* AnimMontage)
+{
+	return true;
+}
+
+void AGameCharacter::AllPlayAnimMontage_Implementation(class UAnimMontage* AnimMontage, float InPlayRate)
+{
+	USkeletalMeshComponent* UseMesh = GetMesh();
+	if (AnimMontage && UseMesh && UseMesh->AnimScriptInstance)
+	{
+		UseMesh->AnimScriptInstance->Montage_Play(AnimMontage, InPlayRate);
+	}
+}
+
+void AGameCharacter::AllStopAnimMontage_Implementation(class UAnimMontage* AnimMontage)
+{
+	USkeletalMeshComponent* UseMesh = GetMesh();
+	if (AnimMontage && UseMesh && UseMesh->AnimScriptInstance &&
+		UseMesh->AnimScriptInstance->Montage_IsPlaying(AnimMontage))
+	{
+		UseMesh->AnimScriptInstance->Montage_Stop(AnimMontage->BlendOutTime);
+	}
 }
 
 AGameCharacter* AGameCharacter::GetCurrentTarget() const
@@ -633,7 +688,7 @@ void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& Dam
 
 	AGameCharacter* gc = Cast<AGameCharacter>(PawnInstigator);
 
-	if (gc && gc->playerController == GetWorld()->GetFirstPlayerController())
+	if (!IsValid(gc) || !IsValid(gc->playerController) && gc->playerController == GetWorld()->GetFirstPlayerController())
 	{
 		AHUD* hud = gc->playerController->GetHUD();
 		APlayerHUD* InstigatorHUD = Cast<APlayerHUD>(hud);
@@ -917,6 +972,31 @@ FAilmentInfo AGameCharacter::MakeAilmentInfo(EAilment ailment, FString ailmentSt
 	info.ailmentDir = ailmentDir;
 
 	return info;
+}
+
+void AGameCharacter::CalculateVisibility(TArray<AGameCharacter*>& seenCharacters)
+{
+	for (TActorIterator<AGameCharacter> gamechr(GetWorld()); gamechr; ++gamechr)
+	{
+		AGameCharacter* gc = *gamechr;
+		if (!IsValid(gc))
+			continue;
+
+		if (gc->GetTeamIndex() == GetTeamIndex())
+		{
+			seenCharacters.AddUnique(gc);
+			continue;
+		}
+
+		float distsq = (gc->GetActorLocation() - GetActorLocation()).SizeSquared2D();
+		if (distsq <= FMath::Square(sightRadius) || gc->CanEnemyAbsolutelySeeThisUnit())
+			seenCharacters.AddUnique(gc);
+	}
+}
+
+bool AGameCharacter::CanEnemyAbsolutelySeeThisUnit() const
+{
+	return false;
 }
 
 void AGameCharacter::PreReplication(IRepChangedPropertyTracker & ChangedPropertyTracker)

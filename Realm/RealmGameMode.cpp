@@ -11,6 +11,7 @@
 #include "LaneManager.h"
 #include "GameCharacter.h"
 #include "RealmPlayerStart.h"
+#include "RealmFogofWarManager.h"
 
 ARealmGameMode::ARealmGameMode(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
@@ -32,7 +33,7 @@ ARealmGameMode::ARealmGameMode(const FObjectInitializer& objectInitializer)
 	for (int32 i = 0; i < teamCount; i++)
 	{
 		FTeam newTeam;
-	
+
 		teams.Add(newTeam);
 	}
 
@@ -156,11 +157,35 @@ void ARealmGameMode::BeginPlay()
 	Super::BeginPlay();
 
 	gameStatus = EGameStatus::GS_Pregame;
+
+	if (sightManagers.Num() <= 0)
+	{
+		for (FTeam inTeam : teams)
+		{
+			ARealmFogofWarManager* mg = GetWorld()->SpawnActor<ARealmFogofWarManager>(ARealmFogofWarManager::StaticClass());
+			if (IsValid(mg))
+			{
+				mg->teamIndex = sightManagers.AddUnique(mg);
+			}
+		}
+	}
 }
 
 void ARealmGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
+
+	if (sightManagers.Num() <= 0)
+	{
+		for (FTeam inTeam : teams)
+		{
+			ARealmFogofWarManager* mg = GetWorld()->SpawnActor<ARealmFogofWarManager>(ARealmFogofWarManager::StaticClass());
+			if (IsValid(mg))
+			{
+				mg->teamIndex = sightManagers.AddUnique(mg);
+			}
+		}
+	}
 
 	ARealmPlayerController* pc = Cast<ARealmPlayerController>(NewPlayer);
 	if (IsValid(pc))
@@ -188,6 +213,7 @@ void ARealmGameMode::PostLogin(APlayerController* NewPlayer)
 				ps->SetTeamIndex(least);
 				teams[least].players.AddUnique(ps);
 				ps->SetTeamPlayerIndex(teams[least].players.Num() - 1);
+				sightManagers[least]->AddPlayerToManager(pc);
 			}
 		}
 

@@ -90,6 +90,9 @@ void ARealmEnabler::PostRenderFor(class APlayerController* PC, class UCanvas* Ca
 	if (!IsValid(PC->GetCharacter()))
 		return;
 
+	if (bHidden)
+		return;
+
 	Super::PostRenderFor(PC, Canvas, CameraPosition, CameraDir);
 
 	if (IsAlive())

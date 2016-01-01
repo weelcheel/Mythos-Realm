@@ -31,6 +31,9 @@ void AMinionCharacter::PostRenderFor(class APlayerController* PC, class UCanvas*
 	if (!IsValid(PC->GetCharacter()))
 		return;
 
+	if (bHidden)
+		return;
+
 	Super::PostRenderFor(PC, Canvas, CameraPosition, CameraDir);
 
 	if (IsAlive())

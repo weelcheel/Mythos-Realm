@@ -10,6 +10,7 @@ class ARealmEnabler;
 class APlayerCharacter;
 class ARealmPlayerState;
 class AGameCharacter;
+class ARealmFogofWarManager;
 
 UENUM()
 enum class EGameStatus : uint8
@@ -83,6 +84,9 @@ protected:
 
 	/* array of teams in the game, usually 2 */
 	TArray<FTeam> teams;
+
+	/* array of sight managers for each of the teams */
+	TArray<ARealmFogofWarManager*> sightManagers;
 
 	virtual void BeginPlay() override;
 

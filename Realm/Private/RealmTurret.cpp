@@ -141,6 +141,9 @@ void ATurret::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, 
 	if (!IsValid(PC->GetCharacter()))
 		return;
 
+	if (bHidden)
+		return;
+
 	Super::PostRenderFor(PC, Canvas, CameraPosition, CameraDir);
 
 	if (IsAlive())

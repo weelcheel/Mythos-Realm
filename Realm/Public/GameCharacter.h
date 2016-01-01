@@ -12,6 +12,8 @@
 const static int32 MAX_LEVEL = 15;
 const static float EXP_CONST = 2.f / FMath::Sqrt(128.f);
 
+class ARealmFogofWarManager;
+
 /* types for hard Crowd Control (Ailments) */
 UENUM(BlueprintType)
 enum class EAilment : uint8
@@ -129,6 +131,10 @@ protected:
 
 	/* timer for handling aimlments */
 	FTimerHandle ailmentTimer;
+
+	/* radius this character can see */
+	UPROPERTY(EditDefaultsOnly, Category = Sight)
+	float sightRadius;
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
@@ -385,4 +391,19 @@ public:
 	/* static function for creating ailments */
 	UFUNCTION(BlueprintCallable, Category = CC)
 	static FAilmentInfo MakeAilmentInfo(EAilment ailment, FString ailmentString, float ailmentDuration, FVector ailmentDir);
+
+	/* called by the fog of war manager to get visibility data */
+	virtual void CalculateVisibility(TArray<AGameCharacter*>& seenCharacters);
+
+	/* whether or not the enemy team can see this character even if its not in their sight range */
+	UFUNCTION(BlueprintCallable, Category = Vision)
+	bool CanEnemyAbsolutelySeeThisUnit() const;
+
+	/* play animation */
+	UFUNCTION(NetMulticast, reliable, WithValidation)
+	void AllPlayAnimMontage(class UAnimMontage* AnimMontage, float InPlayRate = 1.f);
+
+	/* stop animation */
+	UFUNCTION(NetMulticast, reliable, WithValidation)
+	void AllStopAnimMontage(class UAnimMontage* AnimMontage);
 };
