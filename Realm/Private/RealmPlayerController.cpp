@@ -310,6 +310,83 @@ ARealmMoveController* ARealmPlayerController::GetMoveController() const
 	return moveController;
 }
 
+bool ARealmPlayerController::GetUnitsUnderMouse(ECollisionChannel TraceChannel, bool bTraceComplex, TArray<FHitResult>& hits) const
+{
+	ULocalPlayer* LocalPlayer = Cast<ULocalPlayer>(Player);
+	if (LocalPlayer)
+	{
+		FVector2D MousePosition;
+		if (LocalPlayer->ViewportClient->GetMousePosition(MousePosition))
+		{
+			FVector WorldOrigin;
+			FVector WorldDirection;
+			if (UGameplayStatics::DeprojectScreenToWorld(this, MousePosition, WorldOrigin, WorldDirection) == true)
+			{
+				//return GetWorld()->LineTraceSingleByChannel(HitResult, WorldOrigin, WorldOrigin + WorldDirection * HitResultTraceDistance, TraceChannel, CollisionQueryParams);
+				return GetWorld()->LineTraceMultiByChannel(hits, WorldOrigin, WorldOrigin + WorldDirection * HitResultTraceDistance, TraceChannel);
+			}
+		}
+	}
+
+	return false;
+}
+
+bool ARealmPlayerController::SelectUnitUnderMouse(ECollisionChannel TraceChannel, bool bTraceComplex, FHitResult& chosenHit) const
+{
+	TArray<FHitResult> hits;
+	if (GetUnitsUnderMouse(ECC_Visibility, true, hits))
+	{
+		//select order: 1) enemy units 2) friendly units 3)self
+		FHitResult selectedHit;
+
+		for (FHitResult testHit : hits)
+		{
+			AGameCharacter* gc = Cast<AGameCharacter>(testHit.GetActor());
+			if (!IsValid(gc))
+				continue;
+
+			if (gc->GetTeamIndex() != GetPlayerCharacter()->GetTeamIndex())
+			{
+				AGameCharacter* sel = Cast<AGameCharacter>(selectedHit.GetActor());
+				if (IsValid(sel))
+				{
+					if (sel->GetTeamIndex() == GetPlayerCharacter()->GetTeamIndex() || sel == GetPlayerCharacter())
+						selectedHit = testHit;
+				}
+				else
+					selectedHit = testHit;
+			}
+
+			if (gc->GetTeamIndex() == GetPlayerCharacter()->GetTeamIndex())
+			{
+				AGameCharacter* sel = Cast<AGameCharacter>(selectedHit.GetActor());
+				if (IsValid(sel))
+				{
+					if (sel == GetPlayerCharacter())
+						selectedHit = testHit;
+				}
+				else
+					selectedHit = testHit;
+			}
+
+			if (gc == GetPlayerCharacter())
+			{
+				AGameCharacter* sel = Cast<AGameCharacter>(selectedHit.GetActor());
+				if (!IsValid(sel))
+					selectedHit = testHit;
+			}
+		}
+
+		if (!IsValid(selectedHit.GetActor()))
+			selectedHit = hits[hits.Num() - 1];
+
+		chosenHit = selectedHit;
+		return true;
+	}
+
+	return false;
+}
+
 void ARealmPlayerController::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

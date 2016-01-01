@@ -120,7 +120,7 @@ void ASpectatorCharacter::CalculateDirectedMove()
 	ARealmPlayerController* pc = Cast<ARealmPlayerController>(GetWorld()->GetFirstPlayerController());
 	FHitResult hit;
 
-	if (pc && pc->GetHitResultUnderCursor(ECC_Visibility, true, hit))
+	if (pc && pc->SelectUnitUnderMouse(ECC_Visibility, true, hit))
 	{
 		if (hit.GetActor()->IsA(AGameCharacter::StaticClass()))
 		{

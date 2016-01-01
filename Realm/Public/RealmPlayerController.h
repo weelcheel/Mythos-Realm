@@ -105,6 +105,14 @@ public:
 	UFUNCTION(reliable, server, WithValidation)
 	void ServerSellPlayerMod(int32 index);
 
+	/* get the hit results under this character's mouse */
+	UFUNCTION(BlueprintCallable, Category = Commands)
+	bool GetUnitsUnderMouse(ECollisionChannel TraceChannel, bool bTraceComplex, TArray<FHitResult>& hits) const;
+
+	/* filter through and select one single unit under the mouse */
+	UFUNCTION(BlueprintCallable, Category = Commands)
+	bool SelectUnitUnderMouse(ECollisionChannel TraceChannel, bool bTraceComplex, FHitResult& chosenHit) const;
+
 	/* gets the player character in range for auto attacks */
 	void GetPlayerInAutoAttackRange();
 

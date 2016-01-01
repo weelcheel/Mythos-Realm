@@ -13,6 +13,7 @@ struct FUIDamage
 	float amount;
 	float originTime;
 	FVector worldPosition;
+	TSubclassOf<UDamageType> damageType;
 	float posY;
 };
 

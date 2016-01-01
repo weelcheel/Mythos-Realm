@@ -82,6 +82,15 @@ void AGameCharacter::Tick(float DeltaSeconds)
 		if (IsValid(GetStatsManager()) && IsValid(GetAutoAttackManager()))
 			GetStatsManager()->baseStats[(uint8)EStat::ES_AARange] = GetAutoAttackManager()->GetCurrentAutoAttackRange();
 	}
+
+	if (IsValid(currentTarget) && currentTarget->IsAlive())
+	{
+		FRotator newRot = GetActorRotation();
+		FRotator dir = (currentTarget->GetActorLocation() - GetActorLocation()).Rotation();
+		newRot.Yaw = dir.Yaw;
+
+		SetActorRotation(newRot);
+	}
 }
 
 void AGameCharacter::ReplicateHit(float damage, struct FDamageEvent const& damageEvent, class APawn* instigatingPawn, class AActor* damageCauser, bool bKilled)
@@ -204,11 +213,15 @@ void AGameCharacter::StartAutoAttack()
 	if (bAutoAttackOnCooldown || bAutoAttackLaunching)
 		return;
 
-	GetWorldTimerManager().SetTimer(aaRangeTimer, this, &AGameCharacter::CheckAutoAttack, 1.f / 20.f, true);
+	if (GetWorldTimerManager().GetTimerRemaining(aaRangeTimer) <= 0.f)
+		GetWorldTimerManager().SetTimer(aaRangeTimer, this, &AGameCharacter::CheckAutoAttack, 1.f / 20.f, true);
 
 	float distance = (GetActorLocation() - currentTarget->GetActorLocation()).Size2D();
 	if (distance <= statsManager->GetCurrentValueForStat(EStat::ES_AARange))
 	{
+		ARealmMoveController* aicc = Cast<ARealmMoveController>(GetController());
+		if (IsValid(aicc))
+			aicc->CharacterInAttackRange();
 
 		float scale = statsManager->GetCurrentValueForStat(EStat::ES_AtkSp) / statsManager->GetBaseValueForStat(EStat::ES_AtkSp);
 		PlayAnimMontage(autoAttackManager->GetCurrentAttackAnimation(), scale);
@@ -294,7 +307,7 @@ void AGameCharacter::CheckAutoAttack()
 		//@todo: check to see if the unit is still visible
 		AAIController* aic = Cast<AAIController>(GetController());
 		if (IsValid(aic))
-			aic->MoveToActor(currentTarget);
+			aic->MoveToActor(currentTarget, statsManager->GetCurrentValueForStat(EStat::ES_AARange));
 	}
 	else if (!bAutoAttackLaunching && !bAutoAttackOnCooldown)
 	{
@@ -923,5 +936,6 @@ void AGameCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Ou
 	DOREPLIFETIME(AGameCharacter, skillManager);
 	DOREPLIFETIME(AGameCharacter, teamIndex);
 	DOREPLIFETIME(AGameCharacter, currentAilment);
+	DOREPLIFETIME(AGameCharacter, currentTarget);
 	DOREPLIFETIME_CONDITION(AGameCharacter, lastTakeHitInfo, COND_Custom);
 }

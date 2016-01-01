@@ -1,6 +1,7 @@
 #include "Realm.h"
 #include "PlayerHUD.h"
 #include "GameCharacter.h"
+#include "DamageTypes.h"
 
 APlayerHUD::APlayerHUD(const FObjectInitializer& objectInitializer)
 : Super(objectInitializer)
@@ -22,6 +23,7 @@ void APlayerHUD::NewDamageEvent(FTakeHitInfo hitInfo, FVector worldPosition)
 	dmg.amount = hitInfo.ActualDamage;
 	dmg.originTime = GetWorld()->TimeSeconds;
 	dmg.worldPosition = worldPosition;
+	dmg.damageType = hitInfo.DamageTypeClass;
 
 	FVector screenPos = Project(dmg.worldPosition);
 	dmg.posY = screenPos.Y;
@@ -57,9 +59,18 @@ void APlayerHUD::DrawHUD()
 			//floatingDamage[index].posY = FMath::FInterpConstantTo(floatingDamage[index].posY, floatingDamage[index].posY - 35, GetWorld()->GetDeltaSeconds(), 17.f);
 
 			FString dText = FString::FromInt(floatingDamage[index].amount);
-			FLinearColor fontColor = FLinearColor::White;
+			FColor fontColor = FColor::White;
 
-			DrawText(dText, fontColor, screenPos.X, screenPos.Y - (deltaSeconds/3.f * 90.f), uiFont);
+			//DrawText(dText, fontColor, screenPos.X, screenPos.Y - (deltaSeconds/3.f * 90.f), uiFont);
+
+			if (floatingDamage[index].damageType == UPhysicalDamage::StaticClass())
+				Canvas->SetDrawColor(FColor(232.f, 125.f, 143.f));
+			else if (floatingDamage[index].damageType == USpecialDamage::StaticClass())
+				Canvas->SetDrawColor(FColor(93.f, 123.f, 186.f));
+			else
+				Canvas->SetDrawColor(fontColor);
+
+			Canvas->DrawText(uiFont, dText, screenPos.X, screenPos.Y - (deltaSeconds / 3.f * 90.f));
 		}
 		else
 			floatingDamage.RemoveAt(index);

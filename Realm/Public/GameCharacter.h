@@ -167,6 +167,7 @@ public:
 	FTimerHandle healthRegen, flareRegen;
 
 	/* current target for this character */
+	UPROPERTY(replicated)
 	AGameCharacter* currentTarget;
 
 	/* check whether or not this character has movement enabled */
