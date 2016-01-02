@@ -101,7 +101,7 @@ void AGameCharacter::Tick(float DeltaSeconds)
 		}
 	}
 
-	if (IsValid(currentTarget) && currentTarget->IsAlive())
+	if (IsValid(currentTarget) && currentTarget->IsAlive() && IsAlive())
 	{
 		FRotator newRot = GetActorRotation();
 		FRotator dir = (currentTarget->GetActorLocation() - GetActorLocation()).Rotation();
@@ -269,7 +269,7 @@ void AGameCharacter::LaunchAutoAttack()
 		SetCurrentTarget(nullptr);
 		bAutoAttackLaunching = false;
 
-		ARealmLaneMinionAI* aic = Cast<ARealmLaneMinionAI>(GetController());
+		ARealmMoveController* aic = Cast<ARealmMoveController>(GetController());
 		if (IsValid(aic))
 			aic->NeedsNewCommand();
 
@@ -304,6 +304,8 @@ void AGameCharacter::LaunchAutoAttack()
 	float aaTime = 1.f / statsManager->GetCurrentValueForStat(EStat::ES_AtkSp);
 	GetWorldTimerManager().SetTimer(aaTimer, this, &AGameCharacter::OnFinishAATimer, aaTime);
 	bAutoAttackOnCooldown = true;
+
+	GetWorldTimerManager().ClearTimer(aaRangeTimer);
 }
 
 void AGameCharacter::CheckAutoAttack()
@@ -316,7 +318,7 @@ void AGameCharacter::CheckAutoAttack()
 		GetWorldTimerManager().ClearTimer(aaLaunchTimer);
 		bAutoAttackLaunching = false;
 
-		ARealmLaneMinionAI* aic = Cast<ARealmLaneMinionAI>(GetController());
+		ARealmMoveController* aic = Cast<ARealmMoveController>(GetController());
 		if (IsValid(aic))
 			aic->NeedsNewCommand();
 
@@ -637,8 +639,12 @@ bool AGameCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent, A
 	UDamageType const* const DamageType = DamageEvent.DamageTypeClass ? DamageEvent.DamageTypeClass->GetDefaultObject<UDamageType>() : GetDefault<UDamageType>();
 	Killer = GetDamageInstigator(Killer->GetController(), *DamageType)->GetPawn();
 
-	AController* const KilledPlayer = (Controller != NULL) ? Controller : Cast<AController>(GetOwner());
+	ARealmPlayerController* const KilledPlayer = (Controller != NULL) ? Cast<ARealmPlayerController>(Controller) : Cast<ARealmPlayerController>(GetOwner());
 	//GetWorld()->GetAuthGameMode<AShooterGameMode>()->Killed(Killer, KilledPlayer, this, DamageType);
+
+	ARealmGameMode* gm = GetWorld()->GetAuthGameMode<ARealmGameMode>();
+	if (IsValid(gm))
+		
 
 	NetUpdateFrequency = GetDefault<AGameCharacter>()->NetUpdateFrequency;
 	GetCharacterMovement()->ForceReplicationUpdate();
@@ -688,7 +694,7 @@ void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& Dam
 
 	AGameCharacter* gc = Cast<AGameCharacter>(PawnInstigator);
 
-	if (!IsValid(gc) || !IsValid(gc->playerController) && gc->playerController == GetWorld()->GetFirstPlayerController())
+	if (IsValid(gc) && gc->playerController == GetWorld()->GetFirstPlayerController())
 	{
 		AHUD* hud = gc->playerController->GetHUD();
 		APlayerHUD* InstigatorHUD = Cast<APlayerHUD>(hud);

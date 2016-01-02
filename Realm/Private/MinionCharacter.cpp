@@ -3,6 +3,7 @@
 #include "RealmMoveController.h"
 #include "RealmLaneMinionAI.h"
 #include "PlayerCharacter.h"
+#include "RealmPlayerState.h"
 
 AMinionCharacter::AMinionCharacter(const FObjectInitializer& objectInitializer)
 : Super(objectInitializer)
@@ -18,7 +19,15 @@ void AMinionCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& D
 
 	APlayerCharacter* pc = Cast<APlayerCharacter>(InstigatingPawn);
 	if (Role == ROLE_Authority && IsValid(pc))
+	{
 		pc->ChangeCredits(playerReward);
+		if (IsValid(pc->GetPlayerController()))
+		{
+			ARealmPlayerState* ps = Cast<ARealmPlayerState>(pc->GetPlayerController()->PlayerState);
+			if (IsValid(ps))
+				ps->playerCreepScore++;
+		}
+	}
 
 	if (IsValid(GetController()))
 		GetController()->SetLifeSpan(10.f);

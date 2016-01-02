@@ -170,7 +170,11 @@ void URealmGameInstance::TCPSocketListener()
 		//login parsing
 		if (data[0].Equals("loginSuccess"))
 		{
-			mm->PlayerLoginSuccessful(data[2], FCString::Atoi(*data[4]), FCString::Atoi(*data[6]), data[8]);
+			currentUserid = data[2];
+			currentAlias = data[8];
+			currentMythosPoints = FCString::Atoi(*data[6]);
+			
+			mm->PlayerLoginSuccessful(currentUserid, FCString::Atoi(*data[4]), currentMythosPoints, currentAlias);
 			UE_LOG(LogTemp, Warning, TEXT("Logged in successfully as %s!"), *data[8]);
 		}
 		if (data[0].Equals("loginFailure"))

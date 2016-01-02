@@ -4,6 +4,7 @@
 #include "PlayerHUD.generated.h"
 
 class AGameCharacter;
+class ARealmPlayerState;
 
 USTRUCT()
 struct FUIDamage
@@ -56,4 +57,8 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = Effects)
 	void CharacterEffectsUpdated(AGameCharacter* updatedCharacter);
+
+	/* notifies this HUD about a player kill */
+	UFUNCTION(BlueprintImplementableEvent, Category = Announcements)
+	void NotifyPlayerKill(ARealmPlayerState* killer, ARealmPlayerState* killed, bool bIsThisPlayerDead = false, bool bIsThisPlayerKiller = false);
 };

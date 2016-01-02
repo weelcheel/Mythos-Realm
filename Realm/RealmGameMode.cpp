@@ -304,15 +304,36 @@ void ARealmGameMode::CheckForAllCharactersSelected()
 	}
 }
 
-void ARealmGameMode::PlayerDied(ARealmPlayerController* killedPlayer, ARealmPlayerController* playerKiller)
+void ARealmGameMode::PlayerDied(AController* killedPlayer, AController* playerKiller)
 {
-	if (!IsValid(killedPlayer) || !IsValid(playerKiller))
+	if (!IsValid(killedPlayer))
 		return;
 
-	APlayerCharacter* pc = playerKiller->GetPlayerCharacter();
-	if (IsValid(pc))
-		pc->ChangeCredits(playerKillWorth);
+	ARealmPlayerController* killerPC = Cast<ARealmPlayerController>(playerKiller);
+	if (IsValid(killerPC))
+	{
+		//award the killer
+		APlayerCharacter* pc = killerPC->GetPlayerCharacter();
+		if (IsValid(pc))
+			pc->ChangeCredits(CalculatePlayerKillValue(killedPlayer, playerKiller));
+	}
 
+	ARealmPlayerController* killedPC = Cast<ARealmPlayerController>(killedPlayer);
+	if (IsValid(killedPC))
+	{
+		//announce the kill to the game
+		ARealmPlayerState* ps = Cast<ARealmPlayerState>(killedPC->PlayerState);
+		ARealmPlayerState* ps2 = Cast<ARealmPlayerState>(killerPC->PlayerState);
+		if (IsValid(ps))
+		{
+			ps->playerDeaths++;
+			ps->BroadcastDeath(ps2);
+		}
+		if (IsValid(ps2))
+			ps2->playerKills++;
+
+		//award the assistors
+	}
 }
 
 AActor* ARealmGameMode::FindPlayerStart(AController* Player, const FString& IncomingName)
@@ -327,4 +348,9 @@ AActor* ARealmGameMode::FindPlayerStart(AController* Player, const FString& Inco
 	}
 
 	return ps;
+}
+
+int32 ARealmGameMode::CalculatePlayerKillValue(AController* killedPlayer, AController* killerPlayer)
+{
+	return 350;
 }

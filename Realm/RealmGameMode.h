@@ -105,6 +105,9 @@ protected:
 	/* start credit income */
 	void StartCreditIncome();
 
+	/* calculate the credit value of a player kill */
+	int32 CalculatePlayerKillValue(AController* killedPlayer, AController* killerPlayer);
+
 public:
 
 	/* get the store items for this game */
@@ -124,7 +127,7 @@ public:
 	void PlayerSelectedCharacter(ARealmPlayerController* player, TSubclassOf<APlayerCharacter> characterClass);
 
 	/* called when a player dies */
-	void PlayerDied(ARealmPlayerController* killedPlayer, ARealmPlayerController* playerKiller);
+	void PlayerDied(AController *killedPlayer, AController* playerKiller);
 
 	/* find player start */
 	virtual AActor* FindPlayerStart(AController* Player, const FString& IncomingName = TEXT(""));

@@ -210,13 +210,14 @@ void ASpectatorCharacter::LockCamera(AActor* focusedActor)
 
 void ASpectatorCharacter::OnUnlockCamera()
 {
+	if (cameraLockTarget)
+		ServerSetLocation(cameraLockTarget->GetActorLocation());
+		//SetActorLocation(cameraLockTarget->GetActorLocation());
+
 	springArm->DetachFromParent(false);
 	springArm->AttachTo(GetRootComponent());
 
 	DetachRootComponentFromParent(false);
-
-	if (cameraLockTarget)
-		ServerSetLocation(cameraLockTarget->GetActorLocation());
 
 	UnlockCamera();
 }

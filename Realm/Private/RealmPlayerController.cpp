@@ -75,7 +75,10 @@ void ARealmPlayerController::Possess(APawn* aPawn)
 				playerCharacter->SetOwner(this);
 
 				if (ps)
+				{
+					playerCharacter->PlayerState = ps;
 					playerCharacter->SetTeamIndex(ps->GetTeamIndex());
+				}
 			}
 		}
 	}
@@ -115,6 +118,8 @@ void ARealmPlayerController::ServerStartAutoAttack_Implementation(AGameCharacter
 
 	if (!playerCharacter->CanAutoAttack())
 		return;
+
+	ServerClearMoveCommands();
 
 	playerCharacter->SetCurrentTarget(target);
 	GetPlayerInAutoAttackRange();
@@ -398,6 +403,13 @@ void ARealmPlayerController::ClientSetVisibleCharacters_Implementation(const TAr
 
 		gc->SetActorHiddenInGame(!characters.Contains(gc));
 	}
+}
+
+void ARealmPlayerController::OnDeathMessage(ARealmPlayerState* killer, ARealmPlayerState* killed)
+{
+	APlayerHUD* hud = Cast<APlayerHUD>(GetHUD());
+	if (IsValid(hud))
+		hud->NotifyPlayerKill(killer, killed, killed == PlayerState, killer == PlayerState);
 }
 
 void ARealmPlayerController::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const

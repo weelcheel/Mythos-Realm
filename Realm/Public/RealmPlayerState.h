@@ -26,10 +26,34 @@ protected:
 
 public:
 
+	/* amount of kills this player has */
+	UPROPERTY(replicated, BlueprintReadOnly, Category = Stats)
+	int32 playerKills;
+
+	/* amount of kills this player has */
+	UPROPERTY(replicated, BlueprintReadOnly, Category = Stats)
+	int32 playerDeaths;
+
+	/* amount of assists this player has got this game */
+	UPROPERTY(replicated, BlueprintReadOnly, Category = Stats)
+	int32 playerAssists;
+
+	/* total amount of credits the player has earned this game */
+	UPROPERTY(replicated, BlueprintReadOnly, Category = Stats)
+	int32 playerTotalIncome;
+
+	/* amount of creeps/minions this player last hit */
+	UPROPERTY(replicated, BlueprintReadOnly, Category = Stats)
+	int32 playerCreepScore;
+
 	UFUNCTION(BlueprintCallable, Category = Team)
 	int32 GetTeamIndex() const;
 
 	void SetTeamIndex(int32 newTeam);
+
+	/** broadcast death for this player state to local clients */
+	UFUNCTION(Reliable, NetMulticast)
+	void BroadcastDeath(class ARealmPlayerState* KillerPlayerState);
 
 	TSubclassOf<APlayerCharacter> GetChosenCharacterClass() const
 	{

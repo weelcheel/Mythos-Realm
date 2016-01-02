@@ -4,6 +4,7 @@
 
 class ARealmMoveController;
 class APlayerCharacter;
+class ARealmPlayerState;
 
 UCLASS()
 class ARealmPlayerController : public APlayerController
@@ -133,4 +134,7 @@ public:
 	/* [CLIENT] receive data from the server about what characters we can and cant see */
 	UFUNCTION(reliable, client)
 	void ClientSetVisibleCharacters(const TArray<AGameCharacter*>& characters);
+
+	/* [CLIENT] a player kill happened in the game */
+	void OnDeathMessage(ARealmPlayerState* killer, ARealmPlayerState* killed);
 };
