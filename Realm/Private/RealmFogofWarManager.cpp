@@ -32,7 +32,7 @@ void ARealmFogofWarManager::CalculateTeamVisibility()
 	//remove bad team characters
 	for (int32 i = 0; i < teamCharacters.Num(); i++)
 	{
-		if (!IsValid(teamCharacters[i]))
+		if (!IsValid(teamCharacters[i]) || (IsValid(teamCharacters[i]) && !teamCharacters[i]->IsAlive()))
 			RemoveCharacterFromManager(teamCharacters[i]);
 	}
 

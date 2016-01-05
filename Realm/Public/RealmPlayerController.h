@@ -106,6 +106,14 @@ public:
 	UFUNCTION(reliable, server, WithValidation)
 	void ServerSellPlayerMod(int32 index);
 
+	/* [CLIENT] server needs to be sent an end game user id */
+	UFUNCTION(reliable, client)
+	void ClientSendEndgameUserID();
+
+	/* [SERVER] receive an endgame userid from the client */
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerReceiveEndgameUserID(const FString& userid);
+
 	/* get the hit results under this character's mouse */
 	UFUNCTION(BlueprintCallable, Category = Commands)
 	bool GetUnitsUnderMouse(ECollisionChannel TraceChannel, bool bTraceComplex, TArray<FHitResult>& hits) const;

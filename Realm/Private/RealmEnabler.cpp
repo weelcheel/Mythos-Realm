@@ -82,7 +82,12 @@ void ARealmEnabler::OnDeath(float KillingDamage, struct FDamageEvent const& Dama
 	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser);
 
 	if (Role == ROLE_Authority && GetWorld()->GetAuthGameMode<ARealmGameMode>())
-		GetWorld()->GetAuthGameMode<ARealmGameMode>()->EnablerDestroyed(this);
+	{
+		if (GetTeamIndex() == 0)
+			GetWorld()->GetAuthGameMode<ARealmGameMode>()->EnablerDestroyed(this, 1);
+		else if (GetTeamIndex() == 1)
+			GetWorld()->GetAuthGameMode<ARealmGameMode>()->EnablerDestroyed(this, 0);
+	}
 }
 
 void ARealmEnabler::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, FVector CameraPosition, FVector CameraDir)

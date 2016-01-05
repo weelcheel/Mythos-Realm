@@ -8,6 +8,7 @@
 #include "Mod.h"
 #include "RealmPlayerState.h"
 #include "RealmGameMode.h"
+#include "RealmGameInstance.h"
 
 ARealmPlayerController::ARealmPlayerController(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
@@ -410,6 +411,29 @@ void ARealmPlayerController::OnDeathMessage(ARealmPlayerState* killer, ARealmPla
 	APlayerHUD* hud = Cast<APlayerHUD>(GetHUD());
 	if (IsValid(hud))
 		hud->NotifyPlayerKill(killer, killed, killed == PlayerState, killer == PlayerState);
+}
+
+void ARealmPlayerController::ClientSendEndgameUserID_Implementation()
+{
+	URealmGameInstance* instance = Cast<URealmGameInstance>(GetGameInstance());
+	if (instance)
+		ServerReceiveEndgameUserID(instance->GetUserID());
+}
+
+bool ARealmPlayerController::ServerReceiveEndgameUserID_Validate(const FString& userid)
+{
+	return userid != "";
+}
+
+void ARealmPlayerController::ServerReceiveEndgameUserID_Implementation(const FString& userid)
+{
+	ARealmPlayerState* ps = Cast<ARealmPlayerState>(PlayerState);
+	int32 teamInd = 0;
+	if (IsValid(ps))
+		teamInd = ps->GetTeamIndex();
+
+	if (GetWorld()->GetAuthGameMode<ARealmGameMode>())
+		GetWorld()->GetAuthGameMode<ARealmGameMode>()->ReceiveEndgameStats(userid, teamInd);
 }
 
 void ARealmPlayerController::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const

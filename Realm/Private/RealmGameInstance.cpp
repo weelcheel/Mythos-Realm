@@ -298,3 +298,47 @@ void URealmGameInstance::AttemptCreateLogin(FString username, FString password, 
 	if (!StartTCPReceiver(loginSocket))
 		return;
 }
+
+void URealmGameInstance::SendMatchComplete(ARealmGameMode* gameMode)
+{
+	if (!IsValid(gameMode))
+		return;
+
+	if (gameMode->bRankedGame)
+	{
+		//try to establish a connection to the multiplayer master server
+		loginSocket = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(NAME_Stream, TEXT("multiplayer"), false);
+
+		FString address = TEXT("192.168.1.4");
+		int32 port = 3310;
+		FIPv4Address ip;
+		FIPv4Address::Parse(address, ip);
+
+		TSharedRef<FInternetAddr> addr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
+		addr->SetIp(ip.GetValue());
+		addr->SetPort(port);
+
+		bool connected = loginSocket->Connect(*addr);
+		UE_LOG(LogTemp, Warning, TEXT("trying to connect"));
+
+		FString sendStr = "rankedGameFinished|";
+		for (int32 i = 0; i < gameMode->endgameUserids.Num(); i++)
+			sendStr += gameMode->endgameUserids[i] + ",";
+		sendStr += "|";
+		for (int32 j = 0; j < gameMode->endgameTeams.Num(); j++)
+			sendStr += FString::FromInt(gameMode->endgameTeams[j]) + ",";
+		sendStr += "|" + FString::FromInt(gameMode->winningTeamIndex);
+
+		//send the data to the server
+		TCHAR *serializedChar = sendStr.GetCharArray().GetData();
+		int32 encSize = FCString::Strlen(serializedChar);
+		int32 sent = 0;
+
+		//send and store whether or not it was successful
+		bool bSuccesfullySentLogin = loginSocket->Send((uint8*)TCHAR_TO_UTF8(serializedChar), encSize, sent);
+		UE_LOG(LogTemp, Warning, TEXT("tried to send match complete and sent %d bytes to the server"), sent);
+
+		if (!StartTCPReceiver(loginSocket))
+			return;
+	}
+}

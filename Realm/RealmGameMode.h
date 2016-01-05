@@ -37,6 +37,8 @@ struct FTeam
 UCLASS()
 class REALM_API ARealmGameMode : public AGameMode
 {
+	friend class URealmGameInstance;
+
 	GENERATED_UCLASS_BODY()
 
 protected:
@@ -69,6 +71,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = Kills)
 	int32 ambientCreditIncome;
 
+	/* whether or not this game counts towards player's competitive rank */
+	bool bRankedGame = false;
+
 	/* the array of characters the players have elected to ban */
 	TArray<TSubclassOf<APlayerCharacter> > bannedCharacters;
 
@@ -87,6 +92,18 @@ protected:
 
 	/* array of sight managers for each of the teams */
 	TArray<ARealmFogofWarManager*> sightManagers;
+
+	/* set the winner of the game */
+	int32 winningTeamIndex;
+
+	/* user ids of all of the players in the game (for end game) */
+	TArray<FString> endgameUserids;
+
+	/* team indices of all player getting skill updates (matches with endgameUserids)*/
+	TArray<int32> endgameTeams;
+
+	/* end game user id check */
+	FTimerHandle useridcheck;
 
 	virtual void BeginPlay() override;
 
@@ -108,6 +125,21 @@ protected:
 	/* calculate the credit value of a player kill */
 	int32 CalculatePlayerKillValue(AController* killedPlayer, AController* killerPlayer);
 
+	/* end match */
+	virtual void EndRealmMatch();
+
+	/* calculate end game variables to send to master server */
+	void CalculateEndgame();
+
+	/* check for userid values calculated */
+	void CheckForEndgameIDs();
+
+	/* tell the game instance to send the end game to the master server */
+	void ReportEndGame();
+
+	/* server received end game stats so show clients post game screen */
+	void BeginPostGame();
+
 public:
 
 	/* get the store items for this game */
@@ -117,7 +149,7 @@ public:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 	/* called when an enabler is destroyed to end the game */
-	void EnablerDestroyed(ARealmEnabler* enablerDestroyed);
+	void EnablerDestroyed(ARealmEnabler* enablerDestroyed, int32 winningTeam);
 
 	/* can damage friendly units */
 	bool CanDamageFriendlies() const;
@@ -133,4 +165,6 @@ public:
 	virtual AActor* FindPlayerStart(AController* Player, const FString& IncomingName = TEXT(""));
 
 	virtual void RestartPlayer(class AController* NewPlayer);
+
+	void ReceiveEndgameStats(const FString& userid, int32 teamIndex);
 };

@@ -8,6 +8,8 @@
 #include "Networking.h"
 #include "RealmGameInstance.generated.h"
 
+class ARealmGameMode;
+
 UCLASS()
 class URealmGameInstance : public UGameInstance
 {
@@ -68,4 +70,13 @@ public:
 
 	/* attempts to contact the login server to create a new account with the provided credentials */
 	void AttemptCreateLogin(FString username, FString password, FString email, FString ingameAlias);
+
+	/* send match complete info to the database server from a game server */
+	void SendMatchComplete(ARealmGameMode* gameMode);
+
+	/* get the current userid */
+	FString GetUserID() const
+	{
+		return currentUserid;
+	}
 };

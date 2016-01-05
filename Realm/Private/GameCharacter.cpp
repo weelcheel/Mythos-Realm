@@ -208,13 +208,16 @@ void AGameCharacter::PlayHit(float DamageTaken, struct FDamageEvent const& Damag
 		ReplicateHit(DamageTaken, DamageEvent, PawnInstigator, DamageCauser, false);
 	}
 	
-	if (PawnInstigator && PawnInstigator->playerController == GetWorld()->GetFirstPlayerController())
+	if (IsValid(PawnInstigator) && PawnInstigator->playerController == GetWorld()->GetFirstPlayerController())
 	{
-		AHUD* hud = PawnInstigator->playerController->GetHUD();
-		APlayerHUD* InstigatorHUD = Cast<APlayerHUD>(hud);
-		if (InstigatorHUD)
+		if (IsValid(PawnInstigator->playerController))
 		{
-			InstigatorHUD->NewDamageEvent(lastTakeHitInfo, GetActorLocation());
+			AHUD* hud = PawnInstigator->playerController->GetHUD();
+			APlayerHUD* InstigatorHUD = Cast<APlayerHUD>(hud);
+			if (IsValid(InstigatorHUD))
+			{
+				InstigatorHUD->NewDamageEvent(lastTakeHitInfo, GetActorLocation());
+			}
 		}
 	}
 
@@ -269,7 +272,7 @@ void AGameCharacter::LaunchAutoAttack()
 		SetCurrentTarget(nullptr);
 		bAutoAttackLaunching = false;
 
-		ARealmMoveController* aic = Cast<ARealmMoveController>(GetController());
+		ARealmLaneMinionAI* aic = Cast<ARealmLaneMinionAI>(GetController());
 		if (IsValid(aic))
 			aic->NeedsNewCommand();
 
@@ -318,7 +321,7 @@ void AGameCharacter::CheckAutoAttack()
 		GetWorldTimerManager().ClearTimer(aaLaunchTimer);
 		bAutoAttackLaunching = false;
 
-		ARealmMoveController* aic = Cast<ARealmMoveController>(GetController());
+		ARealmLaneMinionAI* aic = Cast<ARealmLaneMinionAI>(GetController());
 		if (IsValid(aic))
 			aic->NeedsNewCommand();
 
@@ -696,11 +699,14 @@ void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& Dam
 
 	if (IsValid(gc) && gc->playerController == GetWorld()->GetFirstPlayerController())
 	{
-		AHUD* hud = gc->playerController->GetHUD();
-		APlayerHUD* InstigatorHUD = Cast<APlayerHUD>(hud);
-		if (InstigatorHUD)
+		if (IsValid(gc->playerController))
 		{
-			InstigatorHUD->NewDamageEvent(lastTakeHitInfo, GetActorLocation());
+			AHUD* hud = gc->playerController->GetHUD();
+			APlayerHUD* InstigatorHUD = Cast<APlayerHUD>(hud);
+			if (IsValid(InstigatorHUD))
+			{
+				InstigatorHUD->NewDamageEvent(lastTakeHitInfo, GetActorLocation());
+			}
 		}
 	}
 

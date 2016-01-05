@@ -12,6 +12,7 @@
 #include "GameCharacter.h"
 #include "RealmPlayerStart.h"
 #include "RealmFogofWarManager.h"
+#include "RealmGameInstance.h"
 
 ARealmGameMode::ARealmGameMode(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
@@ -38,6 +39,7 @@ ARealmGameMode::ARealmGameMode(const FObjectInitializer& objectInitializer)
 	}
 
 	bDelayedStart = true;
+	bRankedGame = true;
 }
 
 void ARealmGameMode::StartMatch()
@@ -224,13 +226,19 @@ void ARealmGameMode::PostLogin(APlayerController* NewPlayer)
 	}
 }
 
-void ARealmGameMode::EnablerDestroyed(ARealmEnabler* enablerDestroyed)
+void ARealmGameMode::EnablerDestroyed(ARealmEnabler* enablerDestroyed, int32 winningTeam)
 {
+	if (!IsValid(enablerDestroyed))
+		return;
+
 	if (!bGameWinner)
 	{
 		bGameWinner = true;
-		if (IsValid(enablerDestroyed))
-			UE_LOG(LogTemp, Warning, TEXT("TEAM %d HAS WON THE MATCH!"), enablerDestroyed->GetTeamIndex());
+		
+		winningTeamIndex = winningTeam;
+		EndRealmMatch();
+
+		UE_LOG(LogTemp, Warning, TEXT("TEAM %d HAS WON THE MATCH!"), winningTeam);
 	}
 }
 
@@ -353,4 +361,63 @@ AActor* ARealmGameMode::FindPlayerStart(AController* Player, const FString& Inco
 int32 ARealmGameMode::CalculatePlayerKillValue(AController* killedPlayer, AController* killerPlayer)
 {
 	return 350;
+}
+
+void ARealmGameMode::EndRealmMatch()
+{
+	/*for (TActorIterator<ARealmFogofWarManager> fogitr(GetWorld()); fogitr; ++fogitr)
+		GetWorldTimerManager().ClearAllTimersForObject((*fogitr));
+	for (TActorIterator<ALaneManager> laneitr(GetWorld()); laneitr; ++laneitr)
+	{
+		GetWorldTimerManager().ClearAllTimersForObject((*laneitr));
+	}
+
+	for (TActorIterator<AGameCharacter> gamechr(GetWorld()); gamechr; ++gamechr)
+	{
+		(*gamechr)->StopAutoAttack();
+		if (IsValid((*gamechr)->GetController()))
+			(*gamechr)->GetController()->StopMovement();
+
+		GetWorldTimerManager().ClearAllTimersForObject((*gamechr));
+	}*/
+
+	CalculateEndgame();
+}
+
+void ARealmGameMode::CalculateEndgame()
+{
+	for (FConstPlayerControllerIterator plyr = GetWorld()->GetPlayerControllerIterator(); plyr; ++plyr)
+	{
+		ARealmPlayerController* pc = Cast<ARealmPlayerController>((*plyr));
+		if (IsValid(pc))
+			pc->ClientSendEndgameUserID();
+	}
+
+	GetWorldTimerManager().SetTimer(useridcheck, this, &ARealmGameMode::CheckForEndgameIDs, 0.05f, true);
+}
+
+void ARealmGameMode::CheckForEndgameIDs()
+{
+	int32 count = 0;
+	for (FConstPlayerControllerIterator plyr = GetWorld()->GetPlayerControllerIterator(); plyr; ++plyr)
+		count++;
+
+	if (endgameUserids.Num() == count)
+	{
+		GetWorldTimerManager().ClearTimer(useridcheck);
+		ReportEndGame();
+	}
+}
+
+void ARealmGameMode::ReportEndGame()
+{
+	URealmGameInstance* instance = Cast<URealmGameInstance>(GetGameInstance());
+	if (instance)
+		instance->SendMatchComplete(this);
+}
+
+void ARealmGameMode::ReceiveEndgameStats(const FString& userid, int32 teamIndex)
+{
+	endgameTeams.Add(teamIndex);
+	endgameUserids.AddUnique(userid);
 }
