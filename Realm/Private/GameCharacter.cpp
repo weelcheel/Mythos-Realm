@@ -36,7 +36,9 @@ void AGameCharacter::BeginPlay()
 		skillManager = GetWorld()->SpawnActor<ASkillManager>(GetActorLocation(), GetActorRotation());
 
 		//initialize stats
-		statsManager->InitializeStats(baseStats, this);
+		if (characterData)
+			statsManager->InitializeStats(characterData->GetDefaultObject<UGameCharacterData>()->GetCharacterBaseStats(), this);
+	
 		autoAttackManager->InitializeManager(autoAttacks, statsManager);
 		autoAttackManager->SetOwner(playerController);
 		statsManager->AttachRootComponentToActor(this);

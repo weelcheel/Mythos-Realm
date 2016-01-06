@@ -6,6 +6,7 @@
 #include "DamageTypes.h"
 #include "DamageInstance.h"
 #include "Mod.h"
+#include "GameCharacterData.h"
 #include "GameCharacter.generated.h"
 
 /* max level for characters */
@@ -51,9 +52,9 @@ class AGameCharacter : public ARealmCharacter
 
 protected:
 
-	/* base stats to initialize the stats manager with */
+	/* character data (so we can have variants of the same character, like different character skins for example) */
 	UPROPERTY(EditDefaultsOnly, Category = Stats)
-	float baseStats[(uint8)EStat::ES_Max];
+	TSubclassOf<UGameCharacterData> characterData;
 
 	/* stat manager for handling stat updates */
 	UPROPERTY(replicated)
