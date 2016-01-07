@@ -281,6 +281,13 @@ void AGameCharacter::LaunchAutoAttack()
 		return;
 	}
 
+	//calculate critcal hit
+	int32 crit = FMath::RandRange(0, 100);
+	float dmg = GetCurrentValueForStat(EStat::ES_Atk);
+
+	if (GetCurrentValueForStat(EStat::ES_CritChance) > 0.f && crit <= (GetCurrentValueForStat(EStat::ES_CritChance) * 100))
+		dmg += dmg * GetCurrentValueForStat(EStat::ES_CritRatio);
+
 	if (autoAttackManager->IsCurrentAttackProjectile())
 	{
 		//launch a projectile
@@ -291,7 +298,7 @@ void AGameCharacter::LaunchAutoAttack()
 		if (IsValid(attackProjectile))
 		{
 			attackProjectile->bAutoAttackProjectile = true;
-			attackProjectile->InitializeProjectile(dir.Vector(), statsManager->GetCurrentValueForStat(EStat::ES_Atk), UPhysicalDamage::StaticClass(), this, currentTarget);
+			attackProjectile->InitializeProjectile(dir.Vector(), dmg, UPhysicalDamage::StaticClass(), this, currentTarget);
 		}
 	}
 	else
@@ -301,6 +308,7 @@ void AGameCharacter::LaunchAutoAttack()
 		FDamageEvent de(UPhysicalDamage::StaticClass());
 
 		currentTarget->TakeDamage(dmg, de, GetRealmController(), this);
+
 		DamagedOtherCharacter(currentTarget, dmg, true);
 	}
 
@@ -495,6 +503,10 @@ float AGameCharacter::TakeDamage(float Damage, struct FDamageEvent const& Damage
 	ARealmPlayerController* pc = Cast<ARealmPlayerController>(EventInstigator);
 	ARealmMoveController* aipc = Cast<ARealmMoveController>(EventInstigator);
 	AGameCharacter* damageCausingGC = NULL;
+
+	if (!GetWorld()->GetAuthGameMode<ARealmGameMode>()->CanDamageFriendlies() && ((pc && pc->GetPlayerCharacter()->GetTeamIndex() == teamIndex) || (damageCausingGC && damageCausingGC->GetTeamIndex() == teamIndex)))
+		return 0.f;
+
 	if (aipc)
 	{
 		damageCausingGC = Cast<AGameCharacter>(aipc->GetCharacter());
@@ -507,9 +519,6 @@ float AGameCharacter::TakeDamage(float Damage, struct FDamageEvent const& Damage
 	}
 
 	if (!damageCausingGC)
-		return 0.f;
-
-	if (!GetWorld()->GetAuthGameMode<ARealmGameMode>()->CanDamageFriendlies() && ((pc && pc->GetPlayerCharacter()->GetTeamIndex() == teamIndex) || (damageCausingGC && damageCausingGC->GetTeamIndex() == teamIndex)))
 		return 0.f;
 
 	float ActualDamage = Damage;
