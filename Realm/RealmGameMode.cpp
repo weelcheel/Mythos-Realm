@@ -331,7 +331,10 @@ void ARealmGameMode::PlayerDied(AController* killedPlayer, AController* playerKi
 	{
 		//announce the kill to the game
 		ARealmPlayerState* ps = Cast<ARealmPlayerState>(killedPC->PlayerState);
-		ARealmPlayerState* ps2 = Cast<ARealmPlayerState>(killerPC->PlayerState);
+		ARealmPlayerState* ps2 = nullptr;
+
+		if (IsValid(killerPC))
+			ps2 = Cast<ARealmPlayerState>(killerPC->PlayerState);
 		if (IsValid(ps))
 		{
 			ps->playerDeaths++;

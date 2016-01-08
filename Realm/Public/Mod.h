@@ -42,7 +42,18 @@ public:
 		return modDescription;
 	}
 
+	/* gets the name of the mod */
+	UFUNCTION(BlueprintCallable, Category = Stats)
+	FText GetModName() const
+	{
+		return modName;
+	}
+
 	/* gets a text description of the stats this mod affects */
 	UFUNCTION(BlueprintCallable, Category = Stats)
 	FString GetStatsDescription() const;
+
+	/* gets the default object for a mod class */
+	UFUNCTION(BlueprintCallable, Category = Stats)
+	static AMod* GetDefaultModObject(TSubclassOf<AMod> modClass);
 };

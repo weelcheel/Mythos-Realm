@@ -97,3 +97,8 @@ FString AMod::GetStatsDescription() const
 
 	return statsDesc;
 }
+
+AMod* AMod::GetDefaultModObject(TSubclassOf<AMod> modClass)
+{
+	return modClass->GetDefaultObject<AMod>();
+}

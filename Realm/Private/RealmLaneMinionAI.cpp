@@ -190,7 +190,7 @@ void ARealmLaneMinionAI::CharacterInAttackRange()
 		AMinionCharacter* mc = *minion;
 		FVector targetVector = mc->GetActorLocation() - mcc->GetActorLocation();
 		float distance = targetVector.Size();
-		if (IsValid(mc) && mc->IsAlive() && mc != mcc && mc->GetTeamIndex() == mcc->GetTeamIndex() && distance <= 90.f)
+		if (IsValid(mc) && mc->IsAlive() && mc != mcc && mc->GetTeamIndex() == mcc->GetTeamIndex() && distance <= 50.f)
 		{
 			FTimerHandle handle;
 			GetWorldTimerManager().SetTimer(handle, this, &ARealmLaneMinionAI::CharacterInAttackRange, 0.15f);
@@ -199,7 +199,7 @@ void ARealmLaneMinionAI::CharacterInAttackRange()
 			FVector newLoc = targetVector.RotateAngleAxis(FMath::RandRange(90, 180), FVector(0.f, 0.f, 1.f));
 			mcc->StopAutoAttack();
 
-			MoveToLocation(mcc->GetActorLocation() + (newLoc.Rotation().Vector() * 90.f));
+			MoveToLocation(mcc->GetActorLocation() + (newLoc.Rotation().Vector() * 50.f));
 
 			return;
 		}

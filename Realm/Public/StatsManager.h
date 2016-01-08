@@ -140,6 +140,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Effects)
 	AEffect* GetEffect(const FString& effectKey);
 
+	/* clear all effects */
+	void RemoveAllEffects();
+
 	/* take damage and update health accordingly */
 	void RemoveHealth(float amount);
 

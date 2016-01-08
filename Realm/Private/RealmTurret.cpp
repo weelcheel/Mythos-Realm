@@ -20,9 +20,7 @@ void ATurret::OnSeePawn(APawn* OtherActor)
 	if (gc && (!gc->IsAlive() || gc->GetTeamIndex() == GetTeamIndex()))
 		return;
 
-	if (currentTarget && gc)
-		inRangeTargets.AddUnique(gc);
-	else if (!currentTarget && gc)
+	if (!currentTarget && IsValid(gc))
 	{
 		currentTarget = gc;
 		StartAutoAttack();
@@ -33,20 +31,16 @@ void ATurret::CheckAutoAttack()
 {
  	if (!IsValid(currentTarget) || !IsValid(GetController()) || !currentTarget->IsAlive())
 	{
+		StopAutoAttack();
 		TargetOutofRange();
-
 		return;
 	}
 
 	float distanceSq = (GetActorLocation() - currentTarget->GetActorLocation()).SizeSquared2D();
 	if (distanceSq > autoAttackManager->GetCurrentAutoAttackRangeSquared())
 	{
-		StopAnimMontage();
-		GetWorldTimerManager().ClearTimer(aaLaunchTimer);
-
+		StopAutoAttack();
 		TargetOutofRange();
-
-		bAutoAttackLaunching = false;
 	}
 }
 
@@ -54,6 +48,21 @@ void ATurret::TargetOutofRange()
 {
 	float leastDistance = -1.f;
 	int32 leastInd = -1;
+
+	if (!IsValid(this))
+		return;
+
+	inRangeTargets.Empty();
+	for (TActorIterator<AGameCharacter> chritr(GetWorld()); chritr; ++chritr)
+	{
+		AGameCharacter* gc = *chritr;
+		if (IsValid(gc) && gc->IsAlive() && gc != this && gc->GetTeamIndex() != GetTeamIndex())
+		{
+			float dist = (gc->GetActorLocation() - GetActorLocation()).Size();
+			if (dist <= GetCurrentValueForStat(EStat::ES_AARange))
+				inRangeTargets.AddUnique(gc);
+		}
+	}
 
 	for (int32 i = 0; i < inRangeTargets.Num(); i++)
 	{
@@ -128,6 +137,7 @@ void ATurret::TargetOutofRange()
 	if (leastInd >= 0)
 	{
 		currentTarget = inRangeTargets[leastInd];
+		StartAutoAttack();
 	}
 	else
 	{
@@ -160,6 +170,9 @@ void ATurret::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, 
 
 void ATurret::ReceiveCallForHelp(AGameCharacter* distressedUnit, AGameCharacter* enemyTarget)
 {
-	if (distressedUnit->IsA(APlayerCharacter::StaticClass()))
+	if (distressedUnit->IsA(APlayerCharacter::StaticClass()) && enemyTarget->IsA(APlayerCharacter::StaticClass()))
+	{
 		currentTarget = enemyTarget;
+		StartAutoAttack();
+	}
 }

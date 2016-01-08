@@ -649,16 +649,15 @@ bool AGameCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent, A
 		return false;
 	}
 
+	if (IsValid(statsManager))
+		statsManager->RemoveAllEffects();
+
 	// if this is an environmental death then refer to the previous killer so that they receive credit (knocked into lava pits, etc)
 	UDamageType const* const DamageType = DamageEvent.DamageTypeClass ? DamageEvent.DamageTypeClass->GetDefaultObject<UDamageType>() : GetDefault<UDamageType>();
 	Killer = GetDamageInstigator(Killer->GetController(), *DamageType)->GetPawn();
 
 	ARealmPlayerController* const KilledPlayer = (Controller != NULL) ? Cast<ARealmPlayerController>(Controller) : Cast<ARealmPlayerController>(GetOwner());
 	//GetWorld()->GetAuthGameMode<AShooterGameMode>()->Killed(Killer, KilledPlayer, this, DamageType);
-
-	ARealmGameMode* gm = GetWorld()->GetAuthGameMode<ARealmGameMode>();
-	if (IsValid(gm))
-		
 
 	NetUpdateFrequency = GetDefault<AGameCharacter>()->NetUpdateFrequency;
 	GetCharacterMovement()->ForceReplicationUpdate();

@@ -253,6 +253,12 @@ void AStatsManager::AddCreatedEffect(AEffect* newEffect)
 	}
 }
 
+void AStatsManager::RemoveAllEffects()
+{
+	effectsList.Empty();
+	effectsMap.Empty(0);
+}
+
 void AStatsManager::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
