@@ -137,6 +137,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = Sight)
 	float sightRadius;
 
+	/* name of the action this character is currently performing */
+	UPROPERTY(BlueprintReadOnly, Category = Action)
+	FString currentActionName;
+
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 
@@ -170,7 +174,10 @@ public:
 	FTimerHandle aaRangeTimer, aaTimer, aaLaunchTimer;
 
 	/* timer for actions */
-	FTimerHandle actionTimer, respawnTimer;
+	UPROPERTY(BlueprintReadOnly, Category=Actions)
+	FTimerHandle actionTimer;
+
+	FTimerHandle respawnTimer;
 	FTimerHandle healthRegen, flareRegen;
 
 	/* current target for this character */
@@ -407,4 +414,8 @@ public:
 	/* stop animation */
 	UFUNCTION(NetMulticast, reliable, WithValidation)
 	void AllStopAnimMontage(class UAnimMontage* AnimMontage);
+
+	/* apply an action to this character */
+	UFUNCTION(BlueprintCallable, NetMulticast, reliable, Category = Action)
+	void ApplyCharacterAction(const FString& actionName, float actionDuration, bool bReverseProgressBar = false);
 };

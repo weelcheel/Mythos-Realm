@@ -114,6 +114,10 @@ public:
 	UFUNCTION(reliable, server, WithValidation)
 	void ServerReceiveEndgameUserID(const FString& userid);
 
+	/* [CLIENT] opens the end game screen UI */
+	UFUNCTION(reliable, client)
+	void ClientOpenEndgameUI(int32 winningTeam);
+
 	/* get the hit results under this character's mouse */
 	UFUNCTION(BlueprintCallable, Category = Commands)
 	bool GetUnitsUnderMouse(ECollisionChannel TraceChannel, bool bTraceComplex, TArray<FHitResult>& hits) const;

@@ -160,12 +160,12 @@ bool AGameCharacter::CanMove() const
 
 bool AGameCharacter::CanAutoAttack() const
 {
-	return currentAilment.newAilment == EAilment::AL_None;
+	return currentAilment.newAilment == EAilment::AL_None && GetWorldTimerManager().GetTimerRemaining(actionTimer) <= 0.f;
 }
 
 bool AGameCharacter::CanPerformSkills() const
 {
-	return currentAilment.newAilment == EAilment::AL_None;
+	return currentAilment.newAilment == EAilment::AL_None && GetWorldTimerManager().GetTimerRemaining(actionTimer) <= 0.f;
 }
 
 bool AGameCharacter::UseSkill_Validate(int32 index, FVector mouseHitLoc, AGameCharacter* unitTarget)
@@ -1019,6 +1019,12 @@ void AGameCharacter::CalculateVisibility(TArray<AGameCharacter*>& seenCharacters
 bool AGameCharacter::CanEnemyAbsolutelySeeThisUnit() const
 {
 	return false;
+}
+
+void AGameCharacter::ApplyCharacterAction_Implementation(const FString& actionName, float actionDuration, bool bReverseProgressBar /* = false */)
+{
+	currentActionName = actionName;
+	GetWorldTimerManager().SetTimer(actionTimer, actionDuration, false);
 }
 
 void AGameCharacter::PreReplication(IRepChangedPropertyTracker & ChangedPropertyTracker)

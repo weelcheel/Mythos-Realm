@@ -61,4 +61,8 @@ public:
 	/* notifies this HUD about a player kill */
 	UFUNCTION(BlueprintImplementableEvent, Category = Announcements)
 	void NotifyPlayerKill(ARealmPlayerState* killer, ARealmPlayerState* killed, bool bIsThisPlayerDead = false, bool bIsThisPlayerKiller = false);
+
+	/* server has sent out the game over message */
+	UFUNCTION(BlueprintImplementableEvent, Category = Postgame)
+	void NotifyEndGame(int32 teamVictor);
 };

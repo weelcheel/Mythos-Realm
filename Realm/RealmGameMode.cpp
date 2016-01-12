@@ -385,6 +385,13 @@ void ARealmGameMode::EndRealmMatch()
 	}*/
 
 	CalculateEndgame();
+
+	for (FConstPlayerControllerIterator plyr = GetWorld()->GetPlayerControllerIterator(); plyr; ++plyr)
+	{
+		ARealmPlayerController* pc = Cast<ARealmPlayerController>((*plyr));
+		if (IsValid(pc))
+			pc->ClientOpenEndgameUI(winningTeamIndex);
+	}
 }
 
 void ARealmGameMode::CalculateEndgame()

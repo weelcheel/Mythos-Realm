@@ -420,6 +420,13 @@ void ARealmPlayerController::ClientSendEndgameUserID_Implementation()
 		ServerReceiveEndgameUserID(instance->GetUserID());
 }
 
+void ARealmPlayerController::ClientOpenEndgameUI_Implementation(int32 winningTeam)
+{
+	APlayerHUD* hud = Cast<APlayerHUD>(GetHUD());
+	if (IsValid(hud))
+		hud->NotifyEndGame(winningTeam);
+}
+
 bool ARealmPlayerController::ServerReceiveEndgameUserID_Validate(const FString& userid)
 {
 	return userid != "";
