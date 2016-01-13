@@ -312,7 +312,7 @@ void ARealmGameMode::CheckForAllCharactersSelected()
 	}
 }
 
-void ARealmGameMode::PlayerDied(AController* killedPlayer, AController* playerKiller)
+void ARealmGameMode::PlayerDied(AController* killedPlayer, AController* playerKiller, APawn* killerPawn)
 {
 	if (!IsValid(killedPlayer))
 		return;
@@ -338,7 +338,7 @@ void ARealmGameMode::PlayerDied(AController* killedPlayer, AController* playerKi
 		if (IsValid(ps))
 		{
 			ps->playerDeaths++;
-			ps->BroadcastDeath(ps2);
+			ps->BroadcastDeath(ps2, killerPawn);
 		}
 		if (IsValid(ps2))
 			ps2->playerKills++;

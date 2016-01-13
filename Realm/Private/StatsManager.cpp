@@ -255,6 +255,14 @@ void AStatsManager::AddCreatedEffect(AEffect* newEffect)
 
 void AStatsManager::RemoveAllEffects()
 {
+	GetWorldTimerManager().ClearAllTimersForObject(this);
+
+	for (int32 i = 0; i < effectsList.Num(); i++)
+	{
+		if (IsValid(effectsList[i]))
+			EffectFinished(effectsList[i]->keyName);
+	}
+
 	effectsList.Empty();
 	effectsMap.Empty(0);
 }

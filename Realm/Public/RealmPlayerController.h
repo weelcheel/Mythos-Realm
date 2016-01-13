@@ -148,5 +148,5 @@ public:
 	void ClientSetVisibleCharacters(const TArray<AGameCharacter*>& characters);
 
 	/* [CLIENT] a player kill happened in the game */
-	void OnDeathMessage(ARealmPlayerState* killer, ARealmPlayerState* killed);
+	void OnDeathMessage(ARealmPlayerState* killer, ARealmPlayerState* killed, APawn* killerPawn);
 };

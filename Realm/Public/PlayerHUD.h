@@ -60,7 +60,7 @@ public:
 
 	/* notifies this HUD about a player kill */
 	UFUNCTION(BlueprintImplementableEvent, Category = Announcements)
-	void NotifyPlayerKill(ARealmPlayerState* killer, ARealmPlayerState* killed, bool bIsThisPlayerDead = false, bool bIsThisPlayerKiller = false);
+	void NotifyPlayerKill(ARealmPlayerState* killer, ARealmPlayerState* killed, APawn* killerPawn, bool bIsThisPlayerDead = false, bool bIsThisPlayerKiller = false);
 
 	/* server has sent out the game over message */
 	UFUNCTION(BlueprintImplementableEvent, Category = Postgame)

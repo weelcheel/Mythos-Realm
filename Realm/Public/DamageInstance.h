@@ -9,28 +9,28 @@ struct FTakeHitInfo
 	GENERATED_USTRUCT_BODY()
 
 	/** The amount of damage actually applied */
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly, Category = Hits)
 	float ActualDamage;
 
 	/** The damage type we were hit with. */
-	UPROPERTY()
-		UClass* DamageTypeClass;
+	UPROPERTY(BlueprintReadOnly, Category = Hits)
+	UClass* DamageTypeClass;
 
 	/** Who hit us */
-	UPROPERTY()
-		class AGameCharacter* PawnInstigator;
+	UPROPERTY(BlueprintReadOnly, Category = Hits)
+	class AGameCharacter* PawnInstigator;
 
 	/** Who actually caused the damage */
-	UPROPERTY()
-		TWeakObjectPtr<class AActor> DamageCauser;
+	UPROPERTY(BlueprintReadOnly, Category = Hits)
+	TWeakObjectPtr<class AActor> DamageCauser;
 
 	/** Specifies which DamageEvent below describes the damage received. */
-	UPROPERTY()
-		int32 DamageEventClassID;
+	UPROPERTY(BlueprintReadOnly, Category = Hits)
+	int32 DamageEventClassID;
 
 	/** Rather this was a kill */
-	UPROPERTY()
-		uint32 bKilled : 1;
+	UPROPERTY(BlueprintReadOnly, Category = Hits)
+	uint32 bKilled : 1;
 
 private:
 

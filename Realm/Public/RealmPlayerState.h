@@ -53,7 +53,7 @@ public:
 
 	/** broadcast death for this player state to local clients */
 	UFUNCTION(Reliable, NetMulticast)
-	void BroadcastDeath(class ARealmPlayerState* KillerPlayerState);
+	void BroadcastDeath(class ARealmPlayerState* KillerPlayerState, APawn* killerPawn);
 
 	TSubclassOf<APlayerCharacter> GetChosenCharacterClass() const
 	{

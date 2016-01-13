@@ -159,7 +159,7 @@ public:
 	void PlayerSelectedCharacter(ARealmPlayerController* player, TSubclassOf<APlayerCharacter> characterClass);
 
 	/* called when a player dies */
-	void PlayerDied(AController *killedPlayer, AController* playerKiller);
+	void PlayerDied(AController *killedPlayer, AController* playerKiller, APawn* killerPawn);
 
 	/* find player start */
 	virtual AActor* FindPlayerStart(AController* Player, const FString& IncomingName = TEXT(""));

@@ -50,11 +50,21 @@ void APlayerCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& D
 
 	if (Role == ROLE_Authority)
 	{
+		ARealmPlayerController* pc = nullptr;
 		AGameCharacter* gc = Cast<AGameCharacter>(InstigatingPawn);
 		if (IsValid(gc))
-			GetWorld()->GetAuthGameMode<ARealmGameMode>()->PlayerDied(playerController, gc->GetPlayerController());
+		{
+			for (int32 i = 0; i < lifeHits.Num(); i++)
+			{
+				if (IsValid(lifeHits[i].PawnInstigator) && IsValid(lifeHits[i].PawnInstigator->GetPlayerController()))
+					pc = lifeHits[i].PawnInstigator->GetPlayerController();
+			}
+			GetWorld()->GetAuthGameMode<ARealmGameMode>()->PlayerDied(playerController, IsValid(pc) ? pc : gc->GetPlayerController(), gc);
+		}
 		else
-			GetWorld()->GetAuthGameMode<ARealmGameMode>()->PlayerDied(playerController, gc->GetPlayerController());
+			GetWorld()->GetAuthGameMode<ARealmGameMode>()->PlayerDied(playerController, nullptr, nullptr);
+
+		GetWorldTimerManager().ClearTimer(liftHitsClearTimer);
 	}
 
 	float respawnTime = GetWorld()->TimeSeconds / 10.f;
@@ -94,7 +104,7 @@ void APlayerCharacter::Respawn()
 	//StopRagdollPhysics();
 	SetActorEnableCollision(true);
 
-	lifeHits.Empty();
+	ClearLifeHits();
 }
 
 void APlayerCharacter::ChangeCredits(int32 deltaAmount)
@@ -117,6 +127,9 @@ void APlayerCharacter::ReplicateHit(float damage, struct FDamageEvent const& dam
 	Super::ReplicateHit(damage, damageEvent, instigatingPawn, damageCauser, bKilled);
 
 	lifeHits.Add(lastTakeHitInfo);
+	GetWorldTimerManager().SetTimer(liftHitsClearTimer, this, &APlayerCharacter::ClearLifeHits, 7.5f, false);
+
+
 }
 
 void APlayerCharacter::StartAmbientCreditIncome(int32 amount)
@@ -131,9 +144,15 @@ void APlayerCharacter::OnAmbientCreditIncome()
 	ChangeCredits(ambientCreditAmount / 4.f);
 }
 
+void APlayerCharacter::ClearLifeHits()
+{
+	lifeHits.Empty();
+}
+
 void APlayerCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(APlayerCharacter, credits);
+	DOREPLIFETIME(APlayerCharacter, lifeHits);
 }

@@ -662,6 +662,7 @@ bool AGameCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent, A
 	NetUpdateFrequency = GetDefault<AGameCharacter>()->NetUpdateFrequency;
 	GetCharacterMovement()->ForceReplicationUpdate();
 
+	GetWorldTimerManager().ClearAllTimersForObject(this);
 	OnDeath(KillingDamage, DamageEvent, Killer, DamageCauser);
 
 	return true;

@@ -22,25 +22,43 @@ void ATurret::OnSeePawn(APawn* OtherActor)
 
 	if (!currentTarget && IsValid(gc))
 	{
-		currentTarget = gc;
+		SetCurrentTarget(gc);
 		StartAutoAttack();
 	}
 }
 
 void ATurret::CheckAutoAttack()
 {
- 	if (!IsValid(currentTarget) || !IsValid(GetController()) || !currentTarget->IsAlive())
+	if (!IsValid(currentTarget) || !IsValid(GetController()) || !currentTarget->IsAlive())
 	{
-		StopAutoAttack();
+		AllStopAnimMontage(autoAttackManager->GetCurrentAttackAnimation());
+
+		SetCurrentTarget(nullptr);
+		GetWorldTimerManager().ClearTimer(aaLaunchTimer);
+		bAutoAttackLaunching = false;
+
 		TargetOutofRange();
+
 		return;
 	}
 
-	float distanceSq = (GetActorLocation() - currentTarget->GetActorLocation()).SizeSquared2D();
-	if (distanceSq > autoAttackManager->GetCurrentAutoAttackRangeSquared())
+	float distance = (GetActorLocation() - currentTarget->GetActorLocation()).Size2D();
+	if (distance > statsManager->GetCurrentValueForStat(EStat::ES_AARange))
 	{
-		StopAutoAttack();
+		AllStopAnimMontage(autoAttackManager->GetCurrentAttackAnimation());
+		GetWorldTimerManager().ClearTimer(aaLaunchTimer);
+		bAutoAttackLaunching = false;
+
 		TargetOutofRange();
+	}
+	else if (!bAutoAttackLaunching && !bAutoAttackOnCooldown)
+	{
+		float scale = statsManager->GetCurrentValueForStat(EStat::ES_AtkSp) / statsManager->GetBaseValueForStat(EStat::ES_AtkSp);
+		AllPlayAnimMontage(autoAttackManager->GetCurrentAttackAnimation(), scale);
+
+		GetWorldTimerManager().SetTimer(aaLaunchTimer, this, &AGameCharacter::LaunchAutoAttack, autoAttackManager->GetAutoAttackLaunchTime() / scale);
+
+		bAutoAttackLaunching = true;
 	}
 }
 
@@ -170,9 +188,9 @@ void ATurret::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, 
 
 void ATurret::ReceiveCallForHelp(AGameCharacter* distressedUnit, AGameCharacter* enemyTarget)
 {
-	if (distressedUnit->IsA(APlayerCharacter::StaticClass()) && enemyTarget->IsA(APlayerCharacter::StaticClass()))
+	if (distressedUnit->IsA(APlayerCharacter::StaticClass()) && enemyTarget->IsA(APlayerCharacter::StaticClass()) && currentTarget != enemyTarget)
 	{
 		currentTarget = enemyTarget;
-		StartAutoAttack();
+		ResetAutoAttack();
 	}
 }

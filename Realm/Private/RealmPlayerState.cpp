@@ -19,7 +19,7 @@ void ARealmPlayerState::SetTeamIndex(int32 newTeam)
 	
 }
 
-void ARealmPlayerState::BroadcastDeath_Implementation(class ARealmPlayerState* KillerPlayerState)
+void ARealmPlayerState::BroadcastDeath_Implementation(class ARealmPlayerState* KillerPlayerState, APawn* killerPawn)
 {
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
@@ -27,7 +27,7 @@ void ARealmPlayerState::BroadcastDeath_Implementation(class ARealmPlayerState* K
 		ARealmPlayerController* TestPC = Cast<ARealmPlayerController>(*It);
 		if (TestPC && TestPC->IsLocalController())
 		{
-			TestPC->OnDeathMessage(KillerPlayerState, this);
+			TestPC->OnDeathMessage(KillerPlayerState, this, killerPawn);
 		}
 	}
 }

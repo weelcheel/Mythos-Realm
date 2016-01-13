@@ -17,14 +17,20 @@ protected:
 	float credits;
 
 	/* array of hits for this life for death recaps */
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly, replicated, Category=Hits)
 	TArray<FTakeHitInfo> lifeHits;
+
+	/* timer to clear out hit info. this is reset every time this player takes damage */
+	FTimerHandle liftHitsClearTimer;
 
 	/* timer for ambient credit income */
 	FTimerHandle ambientCreditTimer;
 
 	/* amount for ambient credit income per second */
 	int32 ambientCreditAmount;
+
+	/* function to clear out all of the hits for this player */
+	void ClearLifeHits();
 
 	/* record hits for death recaps */
 	virtual void ReplicateHit(float damage, struct FDamageEvent const& damageEvent, class APawn* instigatingPawn, class AActor* damageCauser, bool bKilled) override;

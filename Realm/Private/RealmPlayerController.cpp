@@ -406,11 +406,11 @@ void ARealmPlayerController::ClientSetVisibleCharacters_Implementation(const TAr
 	}
 }
 
-void ARealmPlayerController::OnDeathMessage(ARealmPlayerState* killer, ARealmPlayerState* killed)
+void ARealmPlayerController::OnDeathMessage(ARealmPlayerState* killer, ARealmPlayerState* killed, APawn* killerPawn)
 {
 	APlayerHUD* hud = Cast<APlayerHUD>(GetHUD());
 	if (IsValid(hud))
-		hud->NotifyPlayerKill(killer, killed, killed == PlayerState, killer == PlayerState);
+		hud->NotifyPlayerKill(killer, killed, killerPawn, killed == PlayerState, killer == PlayerState);
 }
 
 void ARealmPlayerController::ClientSendEndgameUserID_Implementation()
