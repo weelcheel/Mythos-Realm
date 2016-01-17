@@ -1011,9 +1011,26 @@ void AGameCharacter::CalculateVisibility(TArray<AGameCharacter*>& seenCharacters
 			continue;
 		}
 
-		float distsq = (gc->GetActorLocation() - GetActorLocation()).SizeSquared2D();
-		if (distsq <= FMath::Square(sightRadius) || gc->CanEnemyAbsolutelySeeThisUnit())
+		if (gc->CanEnemyAbsolutelySeeThisUnit())
+		{
 			seenCharacters.AddUnique(gc);
+			continue;
+		}
+
+		float distsq = (gc->GetActorLocation() - GetActorLocation()).SizeSquared2D();
+		if (distsq <= FMath::Square(sightRadius))
+		{
+			TArray<FHitResult> hits;
+			FVector start = GetActorLocation();
+			FVector end = gc->GetActorLocation();
+
+			GetWorld()->LineTraceMultiByChannel(hits, start, end, ECC_Visibility);
+			for (int32 i = 0; i < hits.Num(); i++)
+			{
+				if (hits[i].GetActor() == gc)
+					seenCharacters.AddUnique(gc);
+			}
+		}
 	}
 }
 

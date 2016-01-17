@@ -106,7 +106,7 @@ void ARealmPlayerController::ServerMoveCommand_Implementation(FVector targetLoca
 
 bool ARealmPlayerController::ServerStartAutoAttack_Validate(AGameCharacter* target)
 {
-	return IsValid(target);
+	return true;
 }
 
 void ARealmPlayerController::ServerStartAutoAttack_Implementation(AGameCharacter* target)
@@ -362,6 +362,8 @@ bool ARealmPlayerController::SelectUnitUnderMouse(ECollisionChannel TraceChannel
 				}
 				else
 					selectedHit = testHit;
+
+				continue;
 			}
 
 			if (gc->GetTeamIndex() == GetPlayerCharacter()->GetTeamIndex())
@@ -374,6 +376,8 @@ bool ARealmPlayerController::SelectUnitUnderMouse(ECollisionChannel TraceChannel
 				}
 				else
 					selectedHit = testHit;
+
+				continue;
 			}
 
 			if (gc == GetPlayerCharacter())
