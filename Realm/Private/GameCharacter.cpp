@@ -94,11 +94,21 @@ void AGameCharacter::Tick(float DeltaSeconds)
 				if (GetWorldTimerManager().GetTimerRemaining(healthRegen) <= 0.f)
 					GetWorldTimerManager().SetTimer(healthRegen, this, &AGameCharacter::HealthRegen, 0.25f, true);
 			}
+			else if (GetHealth() > GetCurrentValueForStat(EStat::ES_HP))
+			{
+				GetWorldTimerManager().ClearTimer(healthRegen);
+				statsManager->health = GetCurrentValueForStat(EStat::ES_HP);
+			}
 
 			if (GetFlare() < GetCurrentValueForStat(EStat::ES_Flare))
 			{
 				if (GetWorldTimerManager().GetTimerRemaining(flareRegen) <= 0.f)
 					GetWorldTimerManager().SetTimer(flareRegen, this, &AGameCharacter::FlareRegen, 0.25f, true);
+			}
+			else if (GetFlare() > GetCurrentValueForStat(EStat::ES_Flare))
+			{
+				GetWorldTimerManager().ClearTimer(flareRegen);
+				statsManager->flare = GetCurrentValueForStat(EStat::ES_Flare);
 			}
 		}
 	}

@@ -62,10 +62,6 @@ protected:
 	UPROPERTY(replicated)
 	float modStats[(uint8)EStat::ES_Max];
 
-	/* array of base stats for the character */
-	UPROPERTY(replicated)
-	float bonusStats[(uint8)EStat::ES_Max];
-
 	/* current health for t	he character */
 	UPROPERTY(replicated)
 	float health;
@@ -89,6 +85,10 @@ protected:
 	void OnRepUpdateEffects();
 
 public:
+
+	/* array of base stats for the character */
+	UPROPERTY(replicated)
+	float bonusStats[(uint8)EStat::ES_Max];
 
 	/* set the health and flare */
 	void SetMaxHealth();
