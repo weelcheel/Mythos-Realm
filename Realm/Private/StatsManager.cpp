@@ -30,6 +30,8 @@ void AStatsManager::InitializeStats(float* initBaseStats, AGameCharacter* ownerC
 	for (int32 i = 0; i < (uint8)EStat::ES_Max; i++)
 		baseStats[i] = initBaseStats[i];
 
+	baseStats[(uint8)EStat::ES_CritRatio] = 1.f;
+
 	bInitialized = true;
 
 	owningCharacter = ownerChar;
