@@ -23,6 +23,7 @@ enum class EAilment : uint8
 	AL_Knockup UMETA(DisplayName = "Knocked Up"),
 	AL_Stun UMETA(DisplayName = "Stunned"),
 	AL_Neutral UMETA(DisplayName = "Neutralized"),
+	AL_Blind UMETA(DisplayName = "Blinded"),
 	AL_Max UMETA(Hidden)
 };
 
@@ -140,6 +141,13 @@ protected:
 	/* name of the action this character is currently performing */
 	UPROPERTY(BlueprintReadOnly, Category = Action)
 	FString currentActionName;
+
+	/* whether or not this character is seen by the enemy */
+	UPROPERTY(BlueprintReadOnly, Category = Sight)
+	bool bCanEnemySee = false;
+
+	/* whether or not his character is guaranteed to crit next hit */
+	bool bGuaranteeCrit = false;
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
@@ -406,6 +414,14 @@ public:
 	/* whether or not the enemy team can see this character even if its not in their sight range */
 	UFUNCTION(BlueprintCallable, Category = Vision)
 	bool CanEnemyAbsolutelySeeThisUnit() const;
+
+	/* set whether or not the enemy team can see this character even if its not in their sight range */
+	UFUNCTION(BlueprintCallable, Category = Vision)
+	void SetEnemyAbsolutelySeeThisUnit(bool bNewCanSee = false);
+
+	/* set whether or not the next auto attack will critically hit */
+	UFUNCTION(BlueprintCallable, Category = Vision)
+	void SetGuaranteedCrit(bool bNewCrit = false);
 
 	/* play animation */
 	UFUNCTION(NetMulticast, reliable, WithValidation)

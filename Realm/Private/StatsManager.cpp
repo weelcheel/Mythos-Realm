@@ -27,10 +27,10 @@ void AStatsManager::InitializeStats(float* initBaseStats, AGameCharacter* ownerC
 	if (bInitialized)
 		return;
 
-	for (int32 i = 0; i < (uint8)EStat::ES_Max; i++)
+	for (int32 i = 0; i < (int32)EStat::ES_Max; i++)
 		baseStats[i] = initBaseStats[i];
 
-	baseStats[(uint8)EStat::ES_CritRatio] = 1.f;
+	baseStats[(int32)EStat::ES_CritRatio] = 1.f;
 
 	bInitialized = true;
 
@@ -42,17 +42,17 @@ float AStatsManager::GetCurrentValueForStat(EStat stat) const
 	if (stat == EStat::ES_AARange && bonusStats[(uint8)EStat::ES_AARange] > 0)
 		stat = EStat::ES_AARange;
 
-	return baseStats[(uint8)stat] + modStats[(uint8)stat] + bonusStats[(uint8)stat];
+	return baseStats[(int32)stat] + modStats[(int32)stat] + bonusStats[(int32)stat];
 }
 
 float AStatsManager::GetBaseValueForStat(EStat stat) const
 {
-	return baseStats[(uint8)stat];
+	return baseStats[(int32)stat];
 }
 
 float AStatsManager::GetUnaffectedValueForStat(EStat stat) const
 {
-	return baseStats[(uint8)stat] + modStats[(uint8)stat];
+	return baseStats[(int32)stat] + modStats[(int32)stat];
 }
 
 AEffect* AStatsManager::AddEffect(FString effectName, FString effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration /* = 0.f */, FString keyName, bool bStacking /*= false*/, bool bMultipleInfliction)
@@ -78,7 +78,7 @@ AEffect* AStatsManager::AddEffect(FString effectName, FString effectDescription,
 		int32 ind = 0;
 		for (TEnumAsByte<EStat> eStat : stats)
 		{
-			bonusStats[(uint8)eStat.GetValue()] += amounts[ind];
+			bonusStats[(int32)eStat.GetValue()] += amounts[ind];
 			ind++;
 		}
 	}
@@ -110,7 +110,7 @@ void AStatsManager::EffectFinished(FString key)
 		int32 ind = 0;
 		for (TEnumAsByte<EStat> eStat : effect->stats)
 		{
-			bonusStats[(uint8)eStat.GetValue()] -= effect->amounts[ind];
+			bonusStats[(int32)eStat.GetValue()] -= effect->amounts[ind];
 			ind++;
 		}
 	}
@@ -166,7 +166,7 @@ float AStatsManager::GetFlare() const
 void AStatsManager::UpdateModStats(TArray<AMod*>& mods)
 {
 	//clear the mods array
-	for (int32 i = 0; i < (uint8)EStat::ES_Max; i++)
+	for (int32 i = 0; i < (int32)EStat::ES_Max; i++)
 		modStats[i] = 0.f;
 
 	if (mods.Num() <= 0)
@@ -174,25 +174,25 @@ void AStatsManager::UpdateModStats(TArray<AMod*>& mods)
 
 	for (AMod* mod : mods)
 	{
-		for (int32 i = 0; i < (uint8)EStat::ES_Max; i++)
+		for (int32 i = 0; i < (int32)EStat::ES_Max; i++)
 			modStats[i] += mod->deltaStats[i];
 	}
 }
 
 void AStatsManager::CharacterLevelUp()
 {
-	baseStats[(uint8)EStat::ES_HP] += GetCurrentValueForStat(EStat::ES_HPPL);
+	baseStats[(int32)EStat::ES_HP] += GetCurrentValueForStat(EStat::ES_HPPL);
 	health += GetCurrentValueForStat(EStat::ES_HPPL);
-	baseStats[(uint8)EStat::ES_Flare] += GetCurrentValueForStat(EStat::ES_FlarePL);
+	baseStats[(int32)EStat::ES_Flare] += GetCurrentValueForStat(EStat::ES_FlarePL);
 	flare += GetCurrentValueForStat(EStat::ES_FlarePL);
 
-	baseStats[(uint8)EStat::ES_HPRegen] += GetCurrentValueForStat(EStat::ES_HPRegenPL);
-	baseStats[(uint8)EStat::ES_FlareRegen] += GetCurrentValueForStat(EStat::ES_FlareRegenPL);
-	baseStats[(uint8)EStat::ES_SpAtk] += GetCurrentValueForStat(EStat::ES_SpAtkPL);
-	baseStats[(uint8)EStat::ES_Atk] += GetCurrentValueForStat(EStat::ES_AtkPL);
-	baseStats[(uint8)EStat::ES_Def] += GetCurrentValueForStat(EStat::ES_DefPL);
-	baseStats[(uint8)EStat::ES_SpDef] += GetCurrentValueForStat(EStat::ES_SpDefPL);
-	baseStats[(uint8)EStat::ES_AtkSp] += GetCurrentValueForStat(EStat::ES_AtkSpPL);
+	baseStats[(int32)EStat::ES_HPRegen] += GetCurrentValueForStat(EStat::ES_HPRegenPL);
+	baseStats[(int32)EStat::ES_FlareRegen] += GetCurrentValueForStat(EStat::ES_FlareRegenPL);
+	baseStats[(int32)EStat::ES_SpAtk] += GetCurrentValueForStat(EStat::ES_SpAtkPL);
+	baseStats[(int32)EStat::ES_Atk] += GetCurrentValueForStat(EStat::ES_AtkPL);
+	baseStats[(int32)EStat::ES_Def] += GetCurrentValueForStat(EStat::ES_DefPL);
+	baseStats[(int32)EStat::ES_SpDef] += GetCurrentValueForStat(EStat::ES_SpDefPL);
+	baseStats[(int32)EStat::ES_AtkSp] += GetCurrentValueForStat(EStat::ES_AtkSpPL);
 }
 
 void AStatsManager::OnRepUpdateEffects()
@@ -239,7 +239,7 @@ void AStatsManager::AddCreatedEffect(AEffect* newEffect)
 			int32 ind = 0;
 			for (TEnumAsByte<EStat> eStat : newEffect->stats)
 			{
-				bonusStats[(uint8)eStat.GetValue()] += newEffect->amounts[ind];
+				bonusStats[(int32)eStat.GetValue()] += newEffect->amounts[ind];
 				ind++;
 			}
 		}

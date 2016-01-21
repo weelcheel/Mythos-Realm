@@ -292,11 +292,23 @@ void AGameCharacter::LaunchAutoAttack()
 	}
 
 	//calculate critcal hit
-	int32 crit = FMath::RandRange(0, 100);
+	float crit = FMath::RandRange(0, 100);
 	float dmg = GetCurrentValueForStat(EStat::ES_Atk);
 
-	if (GetCurrentValueForStat(EStat::ES_CritChance) > 0.f && crit <= (GetCurrentValueForStat(EStat::ES_CritChance) * 100))
+	if (currentAilment.newAilment == EAilment::AL_Blind)
+		dmg = 0.f;
+
+	if (bGuaranteeCrit)
+	{
 		dmg += dmg * GetCurrentValueForStat(EStat::ES_CritRatio);
+		bGuaranteeCrit = false;
+	}
+	else
+	{
+		float critPercent = GetCurrentValueForStat(EStat::ES_CritChance);
+		if ((critPercent > 0.f && crit <= critPercent))
+			dmg += dmg * GetCurrentValueForStat(EStat::ES_CritRatio);
+	}
 
 	if (autoAttackManager->IsCurrentAttackProjectile())
 	{
@@ -1046,7 +1058,17 @@ void AGameCharacter::CalculateVisibility(TArray<AGameCharacter*>& seenCharacters
 
 bool AGameCharacter::CanEnemyAbsolutelySeeThisUnit() const
 {
-	return false;
+	return bCanEnemySee;
+}
+
+void AGameCharacter::SetEnemyAbsolutelySeeThisUnit(bool bNewSee)
+{
+	bCanEnemySee = bNewSee;
+}
+
+void AGameCharacter::SetGuaranteedCrit(bool bNewCrit /* = false */)
+{
+	bGuaranteeCrit = bNewCrit;
 }
 
 void AGameCharacter::ApplyCharacterAction_Implementation(const FString& actionName, float actionDuration, bool bReverseProgressBar /* = false */)
