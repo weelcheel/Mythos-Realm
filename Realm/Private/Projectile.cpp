@@ -71,7 +71,7 @@ void AProjectile::OnHit(class AActor* OtherActor, class UPrimitiveComponent* Oth
 
 	ServerProjectileCollision();
 
-	if (damage <= 0.f || damageType == nullptr)
+	if (damageType == nullptr)
 		return;
 		
 	if (homingTarget && OtherActor == homingTarget)

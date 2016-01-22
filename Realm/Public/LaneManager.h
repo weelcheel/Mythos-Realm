@@ -51,18 +51,18 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Spawner)
 	ATargetPoint* spawnLocation;
 
-	/* reference to the enemy's lane manager of the same lane */
-	UPROPERTY(EditAnywhere, Category = Spawner)
-	ALaneManager* enemyLane;
+	/* reference to the enabler for this team */
+	ARealmEnabler* teamEnabler;
+
+public:
 
 	/* each objective in the lane */
 	UPROPERTY(EditAnywhere, Category = TeamBase)
 	TArray<ARealmObjective*> laneObjectives;
 
-	/* reference to the enabler for this team */
-	ARealmEnabler* teamEnabler;
-
-public:
+	/* reference to the enemy's lane manager of the same lane */
+	UPROPERTY(EditAnywhere, Category = Spawner)
+	ALaneManager* enemyLane;
 
 	/* called when the game mode starts the match */
 	void MatchStarted();

@@ -22,11 +22,16 @@ void ARealmLaneMinionAI::Possess(APawn* InPawn)
 
 	mc->GetStatsManager()->SetMaxHealth();
 
-	ARealmObjective* oc = laneManager->GetEnemyLaneManager()->GetCurrentLaneObjective();
-	MoveToActor(oc, mc->GetAutoAttackManager()->GetCurrentAutoAttackRange());
+	objectives.Enqueue(laneManager->laneObjectives[0]);
+	for (int32 i = 0; i < laneManager->enemyLane->laneObjectives.Num(); i++)
+		objectives.Enqueue(laneManager->enemyLane->laneObjectives[i]);
+
+	objectives.Dequeue(objectiveTarget);
+	MoveToActor(objectiveTarget);
 	currentTargetPriority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
 
-	GetWorldTimerManager().SetTimer(rangeTimer, this, &ARealmLaneMinionAI::ReevaluateTargets, 1.8f, true);
+	GetWorldTimerManager().SetTimer(rangeTimer, this, &ARealmLaneMinionAI::ReevaluateTargets, 0.8f, true);
+	GetWorldTimerManager().SetTimer(rangeTimer, this, &ARealmLaneMinionAI::CheckReachedObjective, 0.8f, true);
 }
 
 void ARealmLaneMinionAI::OnTargetEnterRadius(class APawn* pawn)
@@ -40,9 +45,7 @@ void ARealmLaneMinionAI::OnTargetEnterRadius(class APawn* pawn)
 	if (gc->GetTeamIndex() == mc->GetTeamIndex() || !gc->IsAlive())
 		return;
 
-	if (currentTargetPriority > ELaneMinionTargetPriority::LMTP_ObjectiveTarget)
-		inRangeTargets.AddUnique(gc);
-	else
+	if (currentTargetPriority == ELaneMinionTargetPriority::LMTP_ObjectiveTarget)
 	{
 		ELaneMinionTargetPriority priority;
 
@@ -52,6 +55,27 @@ void ARealmLaneMinionAI::OnTargetEnterRadius(class APawn* pawn)
 
 		SetNewTarget(gc, priority);
 		mc->StartAutoAttack();
+	}
+}
+
+void ARealmLaneMinionAI::CheckReachedObjective()
+{
+	if (!IsValid(objectiveTarget))
+		return;
+
+	AMinionCharacter* mc = Cast<AMinionCharacter>(GetCharacter());
+	if (!IsValid(mc))
+		return;
+
+	if (currentTargetPriority == ELaneMinionTargetPriority::LMTP_ObjectiveTarget)
+	{
+		float dist = (objectiveTarget->GetActorLocation() - mc->GetActorLocation()).Size2D();
+		if (dist < 350.f && (objectiveTarget->GetTeamIndex() == mc->GetTeamIndex() || !objectiveTarget->IsAlive()))
+		{
+			objectives.Dequeue(objectiveTarget);
+			MoveToActor(objectiveTarget);
+			currentTargetPriority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
+		}
 	}
 }
 
@@ -108,16 +132,31 @@ void ARealmLaneMinionAI::NeedsNewCommand()
 	float leastDistance = -1.f;
 	int32 leastInd = -1;
 
+	inRangeTargets.Empty();
+	for (TActorIterator<AGameCharacter> chritr(GetWorld()); chritr; ++chritr)
+	{
+		AGameCharacter* gc = *chritr;
+		if (IsValid(gc) && gc->IsAlive() && gc != mc && gc->GetTeamIndex() != mc->GetTeamIndex())
+		{
+			float dist = (gc->GetActorLocation() - mc->GetActorLocation()).Size();
+			if (dist <= 710.f)
+				inRangeTargets.AddUnique(gc);
+		}
+	}
+
 	for (int32 i = 0; i < inRangeTargets.Num(); i++)
 	{
-		if (!IsValid(inRangeTargets[i]) || !inRangeTargets[i]->IsAlive())
+		if (!IsValid(inRangeTargets[i]))
 		{
 			inRangeTargets.RemoveAt(i);
 			continue;
 		}
 
+		if (!inRangeTargets[i]->IsA(AMinionCharacter::StaticClass()))
+			continue;
+
 		float distanceSq = (inRangeTargets[i]->GetActorLocation() - mc->GetActorLocation()).SizeSquared2D();
-		if (distanceSq > FMath::Square(targetRadius->SightRadius))
+		if (!inRangeTargets[i]->IsAlive() || distanceSq > FMath::Square(710.f))
 		{
 			inRangeTargets.RemoveAt(i);
 			continue;
@@ -145,13 +184,16 @@ void ARealmLaneMinionAI::NeedsNewCommand()
 			priority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
 
 		SetNewTarget(inRangeTargets[leastInd], priority);
+
+		mc->StartAutoAttack();
 	}
 	else
 	{
-		mc->StopAutoAttack();
 		ARealmObjective* oc = laneManager->GetEnemyLaneManager()->GetCurrentLaneObjective();
-		MoveToActor(oc, mc->GetAutoAttackManager()->GetCurrentAutoAttackRange());
+		MoveToActor(objectiveTarget);
 		currentTargetPriority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
+
+		mc->StopAutoAttack();
 	}
 }
 

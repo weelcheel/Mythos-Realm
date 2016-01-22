@@ -22,7 +22,7 @@ AGameCharacter::AGameCharacter(const FObjectInitializer& objectInitializer)
 	skillPoints = 0;
 	baseExpReward = 21;
 	experienceRewardRange = 1500.f;
-	sightRadius = 850.f;
+	sightRadius = 1350.f;
 }
 
 void AGameCharacter::BeginPlay()

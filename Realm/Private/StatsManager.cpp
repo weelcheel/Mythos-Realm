@@ -105,6 +105,8 @@ void AStatsManager::EffectFinished(FString key)
 	if (!IsValid(effect))
 		return;
 
+	GetWorldTimerManager().ClearTimer(effect->effectTimer);
+
 	if (Role == ROLE_Authority)
 	{
 		int32 ind = 0;

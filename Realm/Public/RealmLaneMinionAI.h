@@ -48,13 +48,22 @@ protected:
 	/* next target */
 	AGameCharacter* nextTarget;
 
+	/* objective target */
+	ARealmObjective* objectiveTarget;
+
 	/* next target priority */
 	ELaneMinionTargetPriority nextTargetPriority;
 
 	bool bRepositioned;
 
+	/* queue of objectives we need to visit to keep pathing in lane*/
+	TQueue<ARealmObjective*> objectives;
+
 	/* target out of aggro range */
 	void ReevaluateTargets();
+
+	/* check for reached objectives */
+	void CheckReachedObjective();
 
 	/* called whenever an enemy walks into attack radius */
 	UFUNCTION()
