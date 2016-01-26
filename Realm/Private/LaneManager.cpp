@@ -44,6 +44,8 @@ void ALaneManager::SpawnNextMinion()
 
 		if (minion)
 		{
+			minion->InitCharacterStatsForLevel(spawnMinionLevel);
+
 			minion->SetTeamIndex(teamIndex);
 			ARealmLaneMinionAI* minionAI = GetWorld()->SpawnActor<ARealmLaneMinionAI>(minion->GetActorLocation(), minion->GetActorRotation());
 			minionAI->SetLaneManager(this);
@@ -91,4 +93,9 @@ ARealmEnabler* ALaneManager::GetTeamEnabler() const
 ALaneManager* ALaneManager::GetEnemyLaneManager() const
 {
 	return enemyLane;
+}
+
+void ALaneManager::SetMinionLevel(int32 newLevel)
+{
+	spawnMinionLevel = newLevel;
 }

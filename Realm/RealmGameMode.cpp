@@ -13,6 +13,8 @@
 #include "RealmPlayerStart.h"
 #include "RealmFogofWarManager.h"
 #include "RealmGameInstance.h"
+#include "RealmGameState.h"
+#include "RealmObjective.h"
 
 ARealmGameMode::ARealmGameMode(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
@@ -40,6 +42,8 @@ ARealmGameMode::ARealmGameMode(const FObjectInitializer& objectInitializer)
 
 	bDelayedStart = true;
 	bRankedGame = true;
+
+	ambientLevelUpTime = 210.f;
 }
 
 void ARealmGameMode::StartMatch()
@@ -52,8 +56,10 @@ void ARealmGameMode::StartMatch()
 	}
 
 	FTimerHandle h;
-
 	GetWorldTimerManager().SetTimer(h, this, &ARealmGameMode::StartCreditIncome, 5.f, false);
+
+	FTimerHandle j;
+	GetWorldTimerManager().SetTimer(j, this, &ARealmGameMode::AmbientGameLevelUp, ambientLevelUpTime, true);
 }
 
 void ARealmGameMode::RestartPlayer(class AController* NewPlayer)
@@ -347,6 +353,26 @@ void ARealmGameMode::PlayerDied(AController* killedPlayer, AController* playerKi
 	}
 }
 
+void ARealmGameMode::ObjectiveDestroyed(ARealmObjective* destroyedObjective, APawn* killerPawn)
+{
+	AGameCharacter* gc = Cast<AGameCharacter>(killerPawn);
+	if (!IsValid(destroyedObjective) || !IsValid(gc))
+		return;
+
+	//award the players
+	for (TActorIterator<APlayerCharacter> plyitr(GetWorld()); plyitr; ++plyitr)
+	{
+		APlayerCharacter* pc = (*plyitr);
+		if (IsValid(pc) && pc->GetTeamIndex() == gc->GetTeamIndex())
+			pc->ChangeCredits(destroyedObjective->playerReward);
+	}
+
+	//notify the players
+	ARealmGameState* gs = Cast<ARealmGameState>(GameState);
+	if (IsValid(gs))
+		gs->BroadcastObjectiveDeath(killerPawn, destroyedObjective);
+}
+
 AActor* ARealmGameMode::FindPlayerStart(AController* Player, const FString& IncomingName)
 {
 	ARealmPlayerStart* ps = nullptr;
@@ -430,4 +456,47 @@ void ARealmGameMode::ReceiveEndgameStats(const FString& userid, int32 teamIndex)
 {
 	endgameTeams.Add(teamIndex);
 	endgameUserids.AddUnique(userid);
+}
+
+void ARealmGameMode::PlayerLeveledUp()
+{
+	for (int32 i = 0; i < teams.Num(); i++)
+	{
+		int32 levels = 0;
+		int32 count = 0;
+		for (TActorIterator<APlayerCharacter> plyitr(GetWorld()); plyitr; ++plyitr)
+		{
+			APlayerCharacter* pc = (*plyitr);
+			if (IsValid(pc) && pc->GetTeamIndex() == i)
+			{
+				levels += pc->GetLevel();
+				count++;
+			}
+		}
+
+		if (count <= 0)
+			count++;
+
+		int32 avg = levels / count;
+
+		for (TActorIterator<ALaneManager> laneitr(GetWorld()); laneitr; ++laneitr)
+		{
+			ALaneManager* lm = (*laneitr);
+			if (IsValid(lm) && lm->teamIndex == i)
+				lm->SetMinionLevel(avg);
+		}
+	}
+}
+
+void ARealmGameMode::AmbientGameLevelUp()
+{
+	for (int32 i = 0; i < teams.Num(); i++)
+	{
+		for (TActorIterator<ALaneManager> laneitr(GetWorld()); laneitr; ++laneitr)
+		{
+			ALaneManager* lm = (*laneitr);
+			if (IsValid(lm) && lm->teamIndex == i)
+				lm->SetMinionLevel(lm->spawnMinionLevel + 1);
+		}
+	}
 }

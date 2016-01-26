@@ -62,6 +62,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = Announcements)
 	void NotifyPlayerKill(ARealmPlayerState* killer, ARealmPlayerState* killed, APawn* killerPawn, bool bIsThisPlayerDead = false, bool bIsThisPlayerKiller = false);
 
+	/* notifies this HUD about a player kill */
+	UFUNCTION(BlueprintImplementableEvent, Category = Announcements)
+	void NotifyObjectiveKill(APawn* killerPawn, ARealmObjective* objectiveDestroyed);
+
 	/* server has sent out the game over message */
 	UFUNCTION(BlueprintImplementableEvent, Category = Postgame)
 	void NotifyEndGame(int32 teamVictor);

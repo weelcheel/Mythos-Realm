@@ -29,8 +29,13 @@ void AMinionCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& D
 		}
 	}
 
+	GetWorldTimerManager().ClearAllTimersForObject(this);
+
 	if (IsValid(GetController()))
-		GetController()->SetLifeSpan(10.f);
+	{
+		GetWorldTimerManager().ClearAllTimersForObject(GetController());
+		GetController()->SetLifeSpan(2.6f);
+	}
 
 	SetLifeSpan(2.6f);
 }

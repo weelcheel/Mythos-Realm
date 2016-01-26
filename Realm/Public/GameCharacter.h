@@ -57,6 +57,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = Stats)
 	TSubclassOf<UGameCharacterData> characterData;
 
+	/* current target for this character */
+	UPROPERTY(replicated)
+	AGameCharacter* currentTarget;
+
 	/* stat manager for handling stat updates */
 	UPROPERTY(replicated)
 	AStatsManager* statsManager;
@@ -187,10 +191,6 @@ public:
 
 	FTimerHandle respawnTimer;
 	FTimerHandle healthRegen, flareRegen;
-
-	/* current target for this character */
-	UPROPERTY(replicated)
-	AGameCharacter* currentTarget;
 
 	/* check whether or not this character has movement enabled */
 	bool CanMove() const;
@@ -434,4 +434,13 @@ public:
 	/* apply an action to this character */
 	UFUNCTION(BlueprintCallable, NetMulticast, reliable, Category = Action)
 	void ApplyCharacterAction(const FString& actionName, float actionDuration, bool bReverseProgressBar = false);
+
+	/* initiate the character's stats to the specified level */
+	void InitCharacterStatsForLevel(int32 level);
+
+	/* get the character level */
+	int32 GetLevel() const
+	{
+		return level;
+	}
 };

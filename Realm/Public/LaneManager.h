@@ -8,6 +8,8 @@ class ARealmEnabler;
 UCLASS()
 class ALaneManager : public AActor
 {
+	friend class ARealmGameMode;
+
 	GENERATED_UCLASS_BODY()
 
 protected:
@@ -54,6 +56,9 @@ protected:
 	/* reference to the enabler for this team */
 	ARealmEnabler* teamEnabler;
 
+	/* level of the team this spawner is for */
+	int32 spawnMinionLevel;
+
 public:
 
 	/* each objective in the lane */
@@ -96,4 +101,7 @@ public:
 	/* gets the enemy lane manager */
 	UFUNCTION(BlueprintCallable, Category = TeamBase)
 	ALaneManager* GetEnemyLaneManager() const;
+
+	/* sets the level of the minion spawner */
+	void SetMinionLevel(int32 newLevel);
 };

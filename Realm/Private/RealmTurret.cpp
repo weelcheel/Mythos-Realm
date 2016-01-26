@@ -194,3 +194,11 @@ void ATurret::ReceiveCallForHelp(AGameCharacter* distressedUnit, AGameCharacter*
 		ResetAutoAttack();
 	}
 }
+
+void ATurret::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser)
+{
+	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser);
+
+	if (Role == ROLE_Authority)
+		GetWorld()->GetAuthGameMode<ARealmGameMode>()->ObjectiveDestroyed(this, InstigatingPawn);
+}

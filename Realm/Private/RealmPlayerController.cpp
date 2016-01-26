@@ -165,7 +165,7 @@ void ARealmPlayerController::ServerUseSkill_Implementation(int32 index, FVector 
 		return;
 
 	if (playerCharacter->CanPerformSkills())
-		playerCharacter->UseSkill(index, mouseHitLoc, playerCharacter->currentTarget);
+		playerCharacter->UseSkill(index, mouseHitLoc, playerCharacter->GetCurrentTarget());
 }
 
 bool ARealmPlayerController::ServerChooseCharacter_Validate(TSubclassOf<APlayerCharacter> chosenCharacter)
@@ -415,6 +415,13 @@ void ARealmPlayerController::OnDeathMessage(ARealmPlayerState* killer, ARealmPla
 	APlayerHUD* hud = Cast<APlayerHUD>(GetHUD());
 	if (IsValid(hud))
 		hud->NotifyPlayerKill(killer, killed, killerPawn, killed == PlayerState, killer == PlayerState);
+}
+
+void ARealmPlayerController::OnObjectiveDeathMessage(APawn* killerPawn, ARealmObjective* objectiveDestroyed)
+{
+	APlayerHUD* hud = Cast<APlayerHUD>(GetHUD());
+	if (IsValid(hud))
+		hud->NotifyObjectiveKill(killerPawn, objectiveDestroyed);
 }
 
 void ARealmPlayerController::ClientSendEndgameUserID_Implementation()

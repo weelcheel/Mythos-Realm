@@ -149,4 +149,7 @@ public:
 
 	/* [CLIENT] a player kill happened in the game */
 	void OnDeathMessage(ARealmPlayerState* killer, ARealmPlayerState* killed, APawn* killerPawn);
+
+	/* [CLIENT] an objective in the game was destroyed */
+	void OnObjectiveDeathMessage(APawn* killerPawn, ARealmObjective* objectiveDestroyed);
 };

@@ -11,6 +11,7 @@ class APlayerCharacter;
 class ARealmPlayerState;
 class AGameCharacter;
 class ARealmFogofWarManager;
+class ARealmObjective;
 
 UENUM()
 enum class EGameStatus : uint8
@@ -29,6 +30,9 @@ struct FTeam
 
 	/* array of player state references to the players on the team */
 	TArray<ARealmPlayerState*> players;
+
+	/* avreage level of the players on the team */
+	int32 averageTeamLevel;
 };
 
 /**
@@ -105,6 +109,10 @@ protected:
 	/* end game user id check */
 	FTimerHandle useridcheck;
 
+	/* amount of time it takes for the games minions to level up ambiently */
+	UPROPERTY(EditDefaultsOnly, Category = MinionLevel)
+	float ambientLevelUpTime;
+
 	virtual void BeginPlay() override;
 
 	/* each time a player logs in, check to see if we can start the game */
@@ -161,10 +169,19 @@ public:
 	/* called when a player dies */
 	void PlayerDied(AController *killedPlayer, AController* playerKiller, APawn* killerPawn);
 
+	/* called when an objective is destroyed */
+	void ObjectiveDestroyed(ARealmObjective* destroyedObjective, APawn* killerPawn);
+
 	/* find player start */
 	virtual AActor* FindPlayerStart(AController* Player, const FString& IncomingName = TEXT(""));
 
 	virtual void RestartPlayer(class AController* NewPlayer);
 
 	void ReceiveEndgameStats(const FString& userid, int32 teamIndex);
+
+	/* called whenever a player levels up so we can adjust minion levels */
+	void PlayerLeveledUp();
+
+	/* called every period of time to level up the teams minions */
+	void AmbientGameLevelUp();
 };

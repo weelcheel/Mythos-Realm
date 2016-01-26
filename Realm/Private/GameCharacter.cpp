@@ -113,10 +113,10 @@ void AGameCharacter::Tick(float DeltaSeconds)
 		}
 	}
 
-	if (IsValid(currentTarget) && currentTarget->IsAlive() && IsAlive())
+	if (IsValid(GetCurrentTarget()) && GetCurrentTarget()->IsAlive() && IsAlive())
 	{
 		FRotator newRot = GetActorRotation();
-		FRotator dir = (currentTarget->GetActorLocation() - GetActorLocation()).Rotation();
+		FRotator dir = (GetCurrentTarget()->GetActorLocation() - GetActorLocation()).Rotation();
 		newRot.Yaw = dir.Yaw;
 
 		SetActorRotation(newRot);
@@ -243,7 +243,7 @@ void AGameCharacter::PlayHit(float DamageTaken, struct FDamageEvent const& Damag
 
 void AGameCharacter::StartAutoAttack()
 {
-	if (!IsValid(currentTarget) || !IsValid(autoAttackManager) || !IsValid(statsManager) || !IsAlive())
+	if (!IsValid(GetCurrentTarget()) || !IsValid(autoAttackManager) || !IsValid(statsManager) || !IsAlive())
 		return;
 
 	if (bAutoAttackLaunching) //bAutoAttackOnCooldown || bAutoAttackLaunching
@@ -255,7 +255,7 @@ void AGameCharacter::StartAutoAttack()
 	if (bAutoAttackOnCooldown)
 		return;
 
-	float distance = (GetActorLocation() - currentTarget->GetActorLocation()).Size2D();
+	float distance = (GetActorLocation() - GetCurrentTarget()->GetActorLocation()).Size2D();
 	if (distance <= statsManager->GetCurrentValueForStat(EStat::ES_AARange))
 	{
 		ARealmMoveController* aicc = Cast<ARealmMoveController>(GetController());
@@ -279,7 +279,7 @@ void AGameCharacter::LaunchAutoAttack()
 {
 	//GetWorldTimerManager().ClearTimer(aaRangeTimer);
 
-	if (!IsValid(currentTarget) || !IsValid(this) || !IsValid(GetController()) || !currentTarget->IsAlive())
+	if (!IsValid(GetCurrentTarget()) || !IsValid(this) || !IsValid(GetController()) || !GetCurrentTarget()->IsAlive())
 	{
 		SetCurrentTarget(nullptr);
 		bAutoAttackLaunching = false;
@@ -314,13 +314,13 @@ void AGameCharacter::LaunchAutoAttack()
 	{
 		//launch a projectile
 		FVector spawnPos = GetMesh()->GetSocketLocation(autoAttackManager->GetCurrentAutoAttackProjectileSocket());
-		FRotator dir = (currentTarget->GetActorLocation() - GetActorLocation()).Rotation();
+		FRotator dir = (GetCurrentTarget()->GetActorLocation() - GetActorLocation()).Rotation();
 		AProjectile* attackProjectile = GetWorld()->SpawnActor<AProjectile>(autoAttackManager->GetCurrentAutoAttackProjectileClass(), spawnPos, dir);
 
 		if (IsValid(attackProjectile))
 		{
 			attackProjectile->bAutoAttackProjectile = true;
-			attackProjectile->InitializeProjectile(dir.Vector(), dmg, UPhysicalDamage::StaticClass(), this, currentTarget);
+			attackProjectile->InitializeProjectile(dir.Vector(), dmg, UPhysicalDamage::StaticClass(), this, GetCurrentTarget());
 		}
 	}
 	else
@@ -329,9 +329,9 @@ void AGameCharacter::LaunchAutoAttack()
 		float dmg = statsManager->GetCurrentValueForStat(EStat::ES_Atk);
 		FDamageEvent de(UPhysicalDamage::StaticClass());
 
-		currentTarget->TakeDamage(dmg, de, GetRealmController(), this);
+		GetCurrentTarget()->TakeDamage(dmg, de, GetRealmController(), this);
 
-		DamagedOtherCharacter(currentTarget, dmg, true);
+		DamagedOtherCharacter(GetCurrentTarget(), dmg, true);
 	}
 
 	bAutoAttackLaunching = false;
@@ -345,7 +345,7 @@ void AGameCharacter::LaunchAutoAttack()
 
 void AGameCharacter::CheckAutoAttack()
 {
-	if (!IsValid(currentTarget) || !IsValid(GetController()) || !currentTarget->IsAlive())
+	if (!IsValid(GetCurrentTarget()) || !IsValid(GetController()) || !GetCurrentTarget()->IsAlive())
 	{
 		AllStopAnimMontage(autoAttackManager->GetCurrentAttackAnimation());
 
@@ -360,7 +360,7 @@ void AGameCharacter::CheckAutoAttack()
 		return;
 	}
 
-	float distance = (GetActorLocation() - currentTarget->GetActorLocation()).Size2D();
+	float distance = (GetActorLocation() - GetCurrentTarget()->GetActorLocation()).Size2D();
 	if (distance > statsManager->GetCurrentValueForStat(EStat::ES_AARange))
 	{
 		AllStopAnimMontage(autoAttackManager->GetCurrentAttackAnimation());
@@ -370,7 +370,7 @@ void AGameCharacter::CheckAutoAttack()
 		//@todo: check to see if the unit is still visible
 		AAIController* aic = Cast<AAIController>(GetController());
 		if (IsValid(aic))
-			aic->MoveToActor(currentTarget, statsManager->GetCurrentValueForStat(EStat::ES_AARange));
+			aic->MoveToActor(GetCurrentTarget(), statsManager->GetCurrentValueForStat(EStat::ES_AARange));
 	}
 	else if (!bAutoAttackLaunching && !bAutoAttackOnCooldown)
 	{
@@ -401,7 +401,7 @@ void AGameCharacter::OnFinishAATimer()
 	bAutoAttackOnCooldown = false;
 	bAutoAttackLaunching = false;
 
-	if (IsValid(currentTarget))
+	if (IsValid(GetCurrentTarget()))
 		StartAutoAttack();
 }
 
@@ -445,12 +445,15 @@ void AGameCharacter::AllStopAnimMontage_Implementation(class UAnimMontage* AnimM
 
 AGameCharacter* AGameCharacter::GetCurrentTarget() const
 {
-	return currentTarget;
+	return (!IsAlive() || !IsValid(this)) ? nullptr : currentTarget;
 }
 
 void AGameCharacter::SetCurrentTarget(AGameCharacter* newTarget)
 {
-	currentTarget = newTarget;
+	if (IsAlive() && IsValid(this) && IsValid(newTarget))
+		currentTarget = newTarget;
+	else
+		currentTarget = nullptr;
 }
 
 AStatsManager* AGameCharacter::GetStatsManager() const
@@ -937,8 +940,22 @@ void AGameCharacter::LevelUp()
 	level++;
 	skillPoints++;
 
+	if (Role == ROLE_Authority)
+		GetWorld()->GetAuthGameMode<ARealmGameMode>()->PlayerLeveledUp();
+
 	if (IsValid(statsManager))
 		statsManager->CharacterLevelUp();
+}
+
+void AGameCharacter::InitCharacterStatsForLevel(int32 newlevel)
+{
+	int32 deltaLvl = newlevel - level;
+
+	if (deltaLvl > 0)
+	{
+		for (int32 i = 0; i < deltaLvl; i++)
+			LevelUp();
+	}
 }
 
 void AGameCharacter::EffectsUpdated()
@@ -1095,5 +1112,7 @@ void AGameCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Ou
 	DOREPLIFETIME(AGameCharacter, teamIndex);
 	DOREPLIFETIME(AGameCharacter, currentAilment);
 	DOREPLIFETIME(AGameCharacter, currentTarget);
+	DOREPLIFETIME(AGameCharacter, level);
+	DOREPLIFETIME(AGameCharacter, experienceAmount);
 	DOREPLIFETIME_CONDITION(AGameCharacter, lastTakeHitInfo, COND_Custom);
 }
