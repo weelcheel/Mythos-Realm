@@ -113,3 +113,5 @@ void ARealmEnabler::PostRenderFor(class APlayerController* PC, class UCanvas* Ca
 		Canvas->K2_DrawTexture(nullptr, FVector2D(screenPos.X - (150.f / 2.f), screenPos.Y), FVector2D((GetHealth() / GetCurrentValueForStat(EStat::ES_HP)) * 150.f, 20.f), FVector2D::ZeroVector, FVector2D::UnitVector, Canvas->DrawColor);
 	}
 }
+
+#undef LOCTEXT_NAMESPACE 

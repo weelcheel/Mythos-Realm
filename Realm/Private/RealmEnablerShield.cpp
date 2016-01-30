@@ -52,3 +52,5 @@ void ARealmEnablerShield::OnShieldEndOverlap(AActor* otherActor, UPrimitiveCompo
 	if (IsValid(gc) && gc->IsAlive() && gc->GetTeamIndex() != GetTeamIndex())
 		gc->EndEffect("enablershieldaura");
 }
+
+#undef LOCTEXT_NAMESPACE 
