@@ -177,7 +177,12 @@ void AStatsManager::UpdateModStats(TArray<AMod*>& mods)
 	for (AMod* mod : mods)
 	{
 		for (int32 i = 0; i < (int32)EStat::ES_Max; i++)
-			modStats[i] += mod->deltaStats[i];
+		{
+			if (i == (int32)EStat::ES_AtkSp)
+				modStats[i] += GetCurrentValueForStat(EStat::ES_AtkSp) * mod->deltaStats[i];
+			else
+				modStats[i] += mod->deltaStats[i];
+		}
 	}
 }
 

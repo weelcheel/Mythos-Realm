@@ -4,6 +4,8 @@
 #include "RealmLaneMinionAI.h"
 #include "PlayerCharacter.h"
 #include "RealmPlayerState.h"
+#include "RealmForestMinionAI.h"
+#include "RealmPlayerController.h"
 
 AMinionCharacter::AMinionCharacter(const FObjectInitializer& objectInitializer)
 : Super(objectInitializer)
@@ -38,6 +40,19 @@ void AMinionCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& D
 	}
 
 	SetLifeSpan(2.6f);
+}
+
+float AMinionCharacter::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser)
+{
+	ARealmForestMinionAI* ai = Cast<ARealmForestMinionAI>(GetController());
+	if (IsValid(ai))
+	{
+		ARealmPlayerController* pc = Cast<ARealmPlayerController>(EventInstigator);
+		if (IsValid(pc) && IsValid(pc->GetPlayerCharacter()))
+			ai->CharacterTookDamage(pc->GetPlayerCharacter());
+	}
+
+	return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 }
 
 void AMinionCharacter::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, FVector CameraPosition, FVector CameraDir)

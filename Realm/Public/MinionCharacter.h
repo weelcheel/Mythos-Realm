@@ -25,4 +25,6 @@ public:
 	/* called whenever a minion is under attack and needs help, if we aren't already helping try to help */
 	virtual void ReceiveCallForHelp(AGameCharacter* distressedUnit, AGameCharacter* enemyTarget) override;
 
+	/* let ai know we got hurt */
+	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser) override;
 };

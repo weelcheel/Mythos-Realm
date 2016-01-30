@@ -7,6 +7,7 @@
 class ALaneManager;
 class AGameCharacter;
 class AMinionCharacter;
+class AForestCamp;
 
 UCLASS()
 class ARealmForestMinionAI : public ARealmMoveController
@@ -19,18 +20,26 @@ protected:
 	UPROPERTY()
 	AMinionCharacter* minionCharacter;
 
-	/* lane manager that controls this minion */
-	UPROPERTY(VisibleAnywhere, Category = Lane)
-	ALaneManager* laneManager;
+	/* whether or not this unit repositioned from being to close to a friendly */
+	bool bRepositioned = false;
 
-	/* current enemy unit this target is attacking (if any) */
-	AGameCharacter* enemyTarget;
+	/* whether or not this minion is on his way back home */
+	bool bReturningHome = false;
 
-	/* called whenever an enemy walks into attack radius */
-	UFUNCTION()
-	void OnTargetEnterRadius(class APawn* seenPawn);
+	/* target out of aggro range */
+	void ReevaluateTargets();
 
 public:
 
+	/* home vector of this minion */
+	FVector homePosition;
+
+	/* home camp spawner */
+	AForestCamp* campSpawner;
+
 	virtual void Possess(APawn* InPawn) override;
+	virtual void NeedsNewCommand() override;
+
+	/* character takee damage */
+	void CharacterTookDamage(AGameCharacter* damageCauser);
 };

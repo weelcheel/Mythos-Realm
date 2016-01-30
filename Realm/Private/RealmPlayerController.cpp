@@ -168,6 +168,19 @@ void ARealmPlayerController::ServerUseSkill_Implementation(int32 index, FVector 
 		playerCharacter->UseSkill(index, mouseHitLoc, playerCharacter->GetCurrentTarget());
 }
 
+bool ARealmPlayerController::ServerUseMod_Validate(int32 index, FHitResult const& hit)
+{
+	return true;
+}
+
+void ARealmPlayerController::ServerUseMod_Implementation(int32 index, FHitResult const& hit)
+{
+	if (!IsValid(playerCharacter))
+		return;
+
+	playerCharacter->UseMod(index, hit);
+}
+
 bool ARealmPlayerController::ServerChooseCharacter_Validate(TSubclassOf<APlayerCharacter> chosenCharacter)
 {
 	return chosenCharacter != nullptr;

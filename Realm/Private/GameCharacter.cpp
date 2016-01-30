@@ -210,6 +210,22 @@ void AGameCharacter::UseSkill_Implementation(int32 index, FVector mouseHitLoc, A
 		skillManager->ClientPerformSkill(index, mouseHitLoc, unitTarget);
 }
 
+bool AGameCharacter::UseMod_Validate(int32 index, FHitResult const& hit)
+{
+	return true;
+}
+
+void AGameCharacter::UseMod_Implementation(int32 index, FHitResult const& hit)
+{
+	if (index >= mods.Num())
+		return;
+
+	if (Role == ROLE_Authority)
+		mods[index]->ServerModUsed(hit);
+	else
+		mods[index]->ClientModUsed(hit);
+}
+
 void AGameCharacter::PlayHit(float DamageTaken, struct FDamageEvent const& DamageEvent, class AGameCharacter* PawnInstigator, class AActor* DamageCauser)
 {
 	if (!IsValid(this))
@@ -253,7 +269,10 @@ void AGameCharacter::StartAutoAttack()
 		GetWorldTimerManager().SetTimer(aaRangeTimer, this, &AGameCharacter::CheckAutoAttack, 1.f / 20.f, true);
 
 	if (bAutoAttackOnCooldown)
+	{
+		GetWorldTimerManager().ClearTimer(aaRangeTimer);
 		return;
+	}
 
 	float distance = (GetActorLocation() - GetCurrentTarget()->GetActorLocation()).Size2D();
 	if (distance <= statsManager->GetCurrentValueForStat(EStat::ES_AARange))
@@ -291,6 +310,8 @@ void AGameCharacter::LaunchAutoAttack()
 		return;
 	}
 
+	FRealmDamage rdmg;
+
 	//calculate critcal hit
 	float crit = FMath::RandRange(0, 100);
 	float dmg = GetCurrentValueForStat(EStat::ES_Atk);
@@ -302,12 +323,16 @@ void AGameCharacter::LaunchAutoAttack()
 	{
 		dmg += dmg * GetCurrentValueForStat(EStat::ES_CritRatio);
 		bGuaranteeCrit = false;
+		rdmg.bCriticalHit = true;
 	}
 	else
 	{
 		float critPercent = GetCurrentValueForStat(EStat::ES_CritChance);
 		if ((critPercent > 0.f && crit <= critPercent))
+		{
+			rdmg.bCriticalHit = true;
 			dmg += dmg * GetCurrentValueForStat(EStat::ES_CritRatio);
+		}
 	}
 
 	if (autoAttackManager->IsCurrentAttackProjectile())
@@ -320,18 +345,16 @@ void AGameCharacter::LaunchAutoAttack()
 		if (IsValid(attackProjectile))
 		{
 			attackProjectile->bAutoAttackProjectile = true;
-			attackProjectile->InitializeProjectile(dir.Vector(), dmg, UPhysicalDamage::StaticClass(), this, GetCurrentTarget());
+			attackProjectile->InitializeProjectile(dir.Vector(), dmg, UPhysicalDamage::StaticClass(), this, GetCurrentTarget(), rdmg);
 		}
 	}
 	else
 	{
 		//instant damage
-		float dmg = statsManager->GetCurrentValueForStat(EStat::ES_Atk);
 		FDamageEvent de(UPhysicalDamage::StaticClass());
 
-		GetCurrentTarget()->TakeDamage(dmg, de, GetRealmController(), this);
-
-		DamagedOtherCharacter(GetCurrentTarget(), dmg, true);
+		GetCurrentTarget()->CharacterTakeDamage(dmg, de, GetRealmController(), this, rdmg);
+		//GetCurrentTarget()->TakeDamage(dmg, de, GetRealmController(), this);
 	}
 
 	bAutoAttackLaunching = false;
@@ -352,10 +375,6 @@ void AGameCharacter::CheckAutoAttack()
 		SetCurrentTarget(nullptr);
 		GetWorldTimerManager().ClearTimer(aaLaunchTimer);
 		bAutoAttackLaunching = false;
-
-		ARealmLaneMinionAI* aic = Cast<ARealmLaneMinionAI>(GetController());
-		if (IsValid(aic))
-			aic->NeedsNewCommand();
 
 		return;
 	}
@@ -515,6 +534,34 @@ void AGameCharacter::EndEffect(const FString& effectKey)
 		statsManager->EffectFinished(effectKey);
 }
 
+float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser, FRealmDamage const& realmDamage)
+{
+	ARealmPlayerController* pc = Cast<ARealmPlayerController>(EventInstigator);
+	ARealmMoveController* aipc = Cast<ARealmMoveController>(EventInstigator);
+	AGameCharacter* damageCausingGC = NULL;
+
+	if (DamageEvent.DamageTypeClass == UPhysicalDamage::StaticClass() && statsManager->GetCurrentValueForStat(EStat::ES_Def) >= 0)
+		Damage -= statsManager->GetCurrentValueForStat(EStat::ES_Def);
+	else if (DamageEvent.DamageTypeClass == USpecialDamage::StaticClass() && statsManager->GetCurrentValueForStat(EStat::ES_SpDef) >= 0)
+		Damage -= statsManager->GetCurrentValueForStat(EStat::ES_SpDef);
+
+	if (aipc)
+	{
+		damageCausingGC = Cast<AGameCharacter>(aipc->GetCharacter());
+		aipc->CharacterDamaged(this);
+	}
+	else if (pc)
+	{
+		damageCausingGC = pc->GetPlayerCharacter();
+		pc->GetMoveController()->CharacterDamaged(this);
+	}
+	
+	if (IsValid(damageCausingGC))
+		damageCausingGC->HurtAnother(this, DamageEvent, Damage, realmDamage);
+
+	return TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+}
+
 float AGameCharacter::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser)
 {
 	if (Role < ROLE_Authority)
@@ -547,11 +594,6 @@ float AGameCharacter::TakeDamage(float Damage, struct FDamageEvent const& Damage
 		return 0.f;
 
 	float ActualDamage = Damage;
-
-	if (DamageEvent.DamageTypeClass == UPhysicalDamage::StaticClass() && statsManager->GetCurrentValueForStat(EStat::ES_Def) >= 0)
-		ActualDamage -= statsManager->GetCurrentValueForStat(EStat::ES_Def);
-	else if (DamageEvent.DamageTypeClass == USpecialDamage::StaticClass() && statsManager->GetCurrentValueForStat(EStat::ES_SpDef) >= 0)
-		ActualDamage -= statsManager->GetCurrentValueForStat(EStat::ES_SpDef);
 
 	ActualDamage = FMath::Max(ActualDamage, 0.f);
 
@@ -1092,6 +1134,19 @@ void AGameCharacter::ApplyCharacterAction_Implementation(const FString& actionNa
 {
 	currentActionName = actionName;
 	GetWorldTimerManager().SetTimer(actionTimer, actionDuration, false);
+}
+
+void AGameCharacter::HurtAnother(AGameCharacter* hurtCharacter, struct FDamageEvent const& DamageEvent, float damageAmount /* = 0.f */, FRealmDamage const& realmDamage)
+{
+	DamagedOtherCharacter(hurtCharacter, DamageEvent, damageAmount, realmDamage);
+
+	if (!IsValid(hurtCharacter) || !IsValid(statsManager) || damageAmount <= 0.f)
+		return;
+
+	//apply any effects we need to
+	//health drain
+	if (DamageEvent.DamageTypeClass == UPhysicalDamage::StaticClass() && GetCurrentValueForStat(EStat::ES_HPDrain) > 0.f)
+		statsManager->RemoveHealth(damageAmount * GetCurrentValueForStat(EStat::ES_HPDrain));
 }
 
 void AGameCharacter::PreReplication(IRepChangedPropertyTracker & ChangedPropertyTracker)

@@ -52,6 +52,9 @@ protected:
 	/* on skill used */
 	void OnUseSkill(int32 index);
 
+	/* on skill used finished */
+	void OnUseSkillFinished(int32 index);
+
 	/* zoom in the camera */
 	void OnCameraZoomIn();
 
@@ -67,6 +70,33 @@ protected:
 	{
 		OnUseSkill(Index);
 	}
+
+	/* template version for simple input finished */
+	template<int Index>
+	void OnUseSkillFinished()
+	{
+		OnUseSkillFinished(Index);
+	}
+
+	/* function for accepting mod use */
+	template<int Index>
+	void OnUseMod()
+	{
+		OnUseMod(Index);
+	}
+
+	/* function for accepting mod use stop */
+	template<int Index>
+	void OnUseModFinished()
+	{
+		OnUseModFinished(Index);
+	}
+
+	/* player wants to use a mod*/
+	void OnUseMod(int32 index);
+
+	/* player stopped pressing mod button */
+	void OnUseModFinished(int32 index);
 
 	/* [CLIENT] calculates a world position thats underneath the player's cursor location and sends it to the server */
 	void CalculateDirectedMove();

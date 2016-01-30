@@ -30,8 +30,11 @@ void ARealmLaneMinionAI::Possess(APawn* InPawn)
 	MoveToActor(objectiveTarget);
 	currentTargetPriority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
 
+	minionCharacter = mc;
+
+	FTimerHandle t;
 	GetWorldTimerManager().SetTimer(rangeTimer, this, &ARealmLaneMinionAI::ReevaluateTargets, 0.8f, true);
-	GetWorldTimerManager().SetTimer(rangeTimer, this, &ARealmLaneMinionAI::CheckReachedObjective, 0.8f, true);
+	GetWorldTimerManager().SetTimer(t, this, &ARealmLaneMinionAI::CheckReachedObjective, 0.8f, true);
 }
 
 void ARealmLaneMinionAI::OnTargetEnterRadius(class APawn* pawn)
@@ -81,18 +84,16 @@ void ARealmLaneMinionAI::CheckReachedObjective()
 
 void ARealmLaneMinionAI::ReevaluateTargets()
 {
-	AMinionCharacter* mc = Cast<AMinionCharacter>(GetCharacter());
-
-	if (!IsValid(mc))
+	if (!IsValid(minionCharacter))
 		return;
 
-	if (IsValid(mc->GetCurrentTarget()))
+	if (IsValid(minionCharacter->GetCurrentTarget()))
 	{
-		float distsq = (mc->GetCurrentTarget()->GetActorLocation() - GetCharacter()->GetActorLocation()).SizeSquared2D();
-		if (!mc->GetCurrentTarget()->IsAlive() || distsq > FMath::Square(targetRadius->SightRadius / 3.f))
+		float distsq = (minionCharacter->GetCurrentTarget()->GetActorLocation() - GetCharacter()->GetActorLocation()).SizeSquared2D();
+		if (!minionCharacter->GetCurrentTarget()->IsAlive() || distsq > FMath::Square(minionCharacter->GetCurrentValueForStat(EStat::ES_AARange)))
 			NeedsNewCommand();
 		else
-			mc->StartAutoAttack();
+			minionCharacter->StartAutoAttack();
 	}
 	else
 		NeedsNewCommand();
@@ -124,9 +125,7 @@ void ARealmLaneMinionAI::SetLaneManager(ALaneManager* newLaneManager)
 
 void ARealmLaneMinionAI::NeedsNewCommand()
 {
-	AMinionCharacter* mc = Cast<AMinionCharacter>(GetCharacter());
-
-	if (!IsValid(mc))
+	if (!IsValid(minionCharacter))
 		return;
 
 	float leastDistance = -1.f;
@@ -136,10 +135,10 @@ void ARealmLaneMinionAI::NeedsNewCommand()
 	for (TActorIterator<AGameCharacter> chritr(GetWorld()); chritr; ++chritr)
 	{
 		AGameCharacter* gc = *chritr;
-		if (IsValid(gc) && gc->IsAlive() && gc != mc && gc->GetTeamIndex() != mc->GetTeamIndex())
+		if (IsValid(gc) && gc->IsAlive() && gc != minionCharacter && gc->GetTeamIndex() != minionCharacter->GetTeamIndex())
 		{
-			float dist = (gc->GetActorLocation() - mc->GetActorLocation()).Size();
-			if (dist <= 710.f)
+			float dist = (gc->GetActorLocation() - minionCharacter->GetActorLocation()).Size2D();
+			if (dist <= minionCharacter->GetCurrentValueForStat(EStat::ES_AARange))
 				inRangeTargets.AddUnique(gc);
 		}
 	}
@@ -155,7 +154,7 @@ void ARealmLaneMinionAI::NeedsNewCommand()
 		if (!inRangeTargets[i]->IsA(AMinionCharacter::StaticClass()))
 			continue;
 
-		float distanceSq = (inRangeTargets[i]->GetActorLocation() - mc->GetActorLocation()).SizeSquared2D();
+		float distanceSq = (inRangeTargets[i]->GetActorLocation() - minionCharacter->GetActorLocation()).SizeSquared2D();
 		if (!inRangeTargets[i]->IsAlive() || distanceSq > FMath::Square(710.f))
 		{
 			inRangeTargets.RemoveAt(i);
@@ -185,7 +184,7 @@ void ARealmLaneMinionAI::NeedsNewCommand()
 
 		SetNewTarget(inRangeTargets[leastInd], priority);
 
-		mc->StartAutoAttack();
+		minionCharacter->StartAutoAttack();
 	}
 	else
 	{
@@ -193,7 +192,7 @@ void ARealmLaneMinionAI::NeedsNewCommand()
 		MoveToActor(objectiveTarget);
 		currentTargetPriority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
 
-		mc->StopAutoAttack();
+		minionCharacter->StopAutoAttack();
 	}
 }
 
@@ -224,24 +223,25 @@ void ARealmLaneMinionAI::ReceiveCallForHelp(AGameCharacter* distressedUnit, AGam
 
 void ARealmLaneMinionAI::CharacterInAttackRange()
 {
-	AMinionCharacter* mcc = Cast<AMinionCharacter>(GetCharacter());
+	if (!IsValid(minionCharacter))
+		return;
 
 	//see if there are any friendlies in range
 	for (TActorIterator<AMinionCharacter> minion(GetWorld()); minion; ++minion)
 	{
 		AMinionCharacter* mc = *minion;
-		FVector targetVector = mc->GetActorLocation() - mcc->GetActorLocation();
+		FVector targetVector = mc->GetActorLocation() - minionCharacter->GetActorLocation();
 		float distance = targetVector.Size();
-		if (IsValid(mc) && mc->IsAlive() && mc != mcc && mc->GetTeamIndex() == mcc->GetTeamIndex() && distance <= 50.f)
+		if (IsValid(mc) && mc->IsAlive() && mc != minionCharacter && mc->GetTeamIndex() == minionCharacter->GetTeamIndex() && distance <= 50.f)
 		{
 			FTimerHandle handle;
 			GetWorldTimerManager().SetTimer(handle, this, &ARealmLaneMinionAI::CharacterInAttackRange, 0.15f);
 			bRepositioned = true;
 
 			FVector newLoc = targetVector.RotateAngleAxis(FMath::RandRange(90, 180), FVector(0.f, 0.f, 1.f));
-			mcc->StopAutoAttack();
+			minionCharacter->StopAutoAttack();
 
-			MoveToLocation(mcc->GetActorLocation() + (newLoc.Rotation().Vector() * 50.f));
+			MoveToLocation(minionCharacter->GetActorLocation() + (newLoc.Rotation().Vector() * 50.f));
 
 			return;
 		}
@@ -251,7 +251,7 @@ void ARealmLaneMinionAI::CharacterInAttackRange()
 	{
 		bRepositioned = false;
 		ReevaluateTargets();
-		mcc->StartAutoAttack();
+		minionCharacter->StartAutoAttack();
 	}
 }
 

@@ -17,7 +17,7 @@ ALaneManager::ALaneManager(const FObjectInitializer& objectInitializer)
 void ALaneManager::MatchStarted()
 {
 	if (Role == ROLE_Authority)
-		GetWorld()->GetTimerManager().SetTimer(waveTimer, this, &ALaneManager::StartMinionWaveSpawning, 5.f);
+		GetWorld()->GetTimerManager().SetTimer(waveTimer, this, &ALaneManager::StartMinionWaveSpawning, 15.f);
 }
 
 void ALaneManager::StartMinionWaveSpawning()

@@ -180,6 +180,9 @@ protected:
 	/* perform level up */
 	void LevelUp();
 
+	/* called whenever this character damages another */
+	void HurtAnother(AGameCharacter* hurtCharacter, struct FDamageEvent const& DamageEvent, float damageAmount = 0.f, FRealmDamage const& realmDamage = FRealmDamage());
+
 public:
 
 	/* timers for auto attacks */
@@ -204,6 +207,10 @@ public:
 	/* perform the server version of the skill then perform the skill on all clients */
 	UFUNCTION(NetMulticast, reliable, WithValidation)
 	void UseSkill(int32 index, FVector mouseHitLoc, AGameCharacter* unitTarget);
+
+	/* use try to use the mod on all clients */
+	UFUNCTION(NetMulticast, reliable, WithValidation)
+	void UseMod(int32 index, FHitResult const& hit);
 
 	/** play effects on hit */
 	virtual void PlayHit(float DamageTaken, struct FDamageEvent const& DamageEvent, class AGameCharacter* PawnInstigator, class AActor* DamageCauser);
@@ -272,8 +279,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Stat)
 	void EndEffect(const FString& effectKey);
 
+	/* call other things and track extra damage data */
+	UFUNCTION(BlueprintCallable, Category = Damage)
+	virtual float CharacterTakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser, FRealmDamage const& realmDamage);
+
 	/** Take damage, handle death */
-	UFUNCTION(BlueprintCallable, Category=Damage)
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser) override;
 
 	/* get the health for this character */
@@ -371,7 +381,7 @@ public:
 
 	/* blueprint hook for when this character damages another */
 	UFUNCTION(BlueprintImplementableEvent, Category = Damage)
-	void DamagedOtherCharacter(AGameCharacter* hitCharacter, int32 damageAmount = 0, bool bAutoAttack = false);
+	void DamagedOtherCharacter(AGameCharacter* hurtCharacter, struct FDamageEvent const& DamageEvent, float damageAmount = 0.f, FRealmDamage const& realmDamage = FRealmDamage());
 
 	/* get the amount of experience needed for the next level */
 	UFUNCTION(BlueprintCallable, Category = Exp)

@@ -3,6 +3,7 @@
 #include "Projectile.generated.h"
 
 class AGameCharacter;
+struct FRealmDamage;
 
 UCLASS()
 class AProjectile : public AActor
@@ -35,6 +36,9 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_HomingTarget, BlueprintReadWrite, Category=Projectile)
 	AGameCharacter* homingTarget;
 
+	/* realm damage were doing */
+	FRealmDamage realmDamage;
+
 	virtual void Tick(float DeltaTime) override;
 	virtual void BeginPlay() override;
 
@@ -65,7 +69,7 @@ public:
 	bool bAutoAttackProjectile = false;
 
 	/* initialize and launch the projectile */
-	void InitializeProjectile(const FVector& AimDir, float damage, TSubclassOf<UDamageType> projDamage, AGameCharacter* projSpawner = nullptr, AGameCharacter* projTarget = nullptr);
+	void InitializeProjectile(const FVector& AimDir, float damage, TSubclassOf<UDamageType> projDamage, AGameCharacter* projSpawner, AGameCharacter* projTarget, FRealmDamage const& realmDamage);
 
 	/* get the projectile owner */
 	AGameCharacter* GetProjectileSpawner() const

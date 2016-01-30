@@ -15,6 +15,7 @@
 #include "RealmGameInstance.h"
 #include "RealmGameState.h"
 #include "RealmObjective.h"
+#include "RealmForestMinionCamp.h"
 
 ARealmGameMode::ARealmGameMode(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
@@ -53,6 +54,16 @@ void ARealmGameMode::StartMatch()
 	for (TActorIterator<ALaneManager> laneitr(GetWorld()); laneitr; ++laneitr)
 	{
 		(*laneitr)->MatchStarted();
+	}
+
+	for (TActorIterator<AForestCamp> foritr(GetWorld()); foritr; ++foritr)
+	{
+		AForestCamp* fc = (*foritr);
+		if (IsValid(fc))
+		{
+			FTimerHandle i;
+			GetWorldTimerManager().SetTimer(i, fc, &AForestCamp::SpawnMinions, 15.f, false);
+		}
 	}
 
 	FTimerHandle h;

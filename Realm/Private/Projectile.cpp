@@ -46,12 +46,13 @@ void AProjectile::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AProjectile::InitializeProjectile(const FVector& AimDir, float inDamage, TSubclassOf<UDamageType> projDamage, AGameCharacter* projSpawner /* = nullptr */, AGameCharacter* projTarget /* = nullptr */)
+void AProjectile::InitializeProjectile(const FVector& AimDir, float inDamage, TSubclassOf<UDamageType> projDamage, AGameCharacter* projSpawner /* = nullptr */, AGameCharacter* projTarget /* = nullptr */, FRealmDamage const& rdmg)
 {
 	movementComponent->Velocity = AimDir * movementComponent->InitialSpeed;
 	damage = inDamage;
 	damageType = projDamage;
 	projectileSpawner = projSpawner;
+	realmDamage = rdmg;
 
 	if (IsValid(projTarget))
 	{
@@ -77,8 +78,7 @@ void AProjectile::OnHit(class AActor* OtherActor, class UPrimitiveComponent* Oth
 	if (homingTarget && OtherActor == homingTarget)
 	{
 		FDamageEvent damageEvent(damageType);
-		homingTarget->TakeDamage(damage, damageEvent, projectileSpawner->GetRealmController(), this);
-		projectileSpawner->DamagedOtherCharacter(homingTarget, damage, bAutoAttackProjectile);
+		homingTarget->CharacterTakeDamage(damage, damageEvent, projectileSpawner->GetRealmController(), this, realmDamage);
 
 		Destroy();
 	}
@@ -92,8 +92,8 @@ void AProjectile::OnHit(class AActor* OtherActor, class UPrimitiveComponent* Oth
 			return;
 
 		FDamageEvent damageEvent(damageType);
-		gc->TakeDamage(damage, damageEvent, projectileSpawner->GetRealmController(), this);
-		projectileSpawner->DamagedOtherCharacter(gc, damage, bAutoAttackProjectile);
+		//gc->TakeDamage(damage, damageEvent, projectileSpawner->GetRealmController(), this);
+		gc->CharacterTakeDamage(damage, damageEvent, projectileSpawner->GetRealmController(), this, realmDamage);
 
 		Destroy();
 	}

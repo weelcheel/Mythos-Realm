@@ -56,4 +56,16 @@ public:
 	/* gets the default object for a mod class */
 	UFUNCTION(BlueprintCallable, Category = Stats)
 	static AMod* GetDefaultModObject(TSubclassOf<AMod> modClass);
+
+	/* server blueprint hook for mod use implementation */
+	UFUNCTION(BlueprintImplementableEvent, Category = UseMod)
+	void ServerModUsed(FHitResult const& hit);
+
+	/* client blueprint hook for mod use implementation */
+	UFUNCTION(BlueprintImplementableEvent, Category = UseMod)
+	void ClientModUsed(FHitResult const& hit);
+
+	/* validate a target for this mod */
+	UFUNCTION(BlueprintImplementableEvent, Category = UseMod)
+	void ValidateTarget(FHitResult const& hit);
 };

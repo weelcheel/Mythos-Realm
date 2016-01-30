@@ -78,6 +78,10 @@ public:
 	UFUNCTION(reliable, server, WithValidation)
 	void ServerUseSkill(int32 index, FVector mouseHitLoc);
 
+	/* [SERVER] called when the player wants to use a mod */
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerUseMod(int32 index, FHitResult const& hit);
+
 	/* [SERVER] sets the chosen character class */
 	UFUNCTION(reliable, server, WithValidation, BlueprintCallable, Category=Character)
 	void ServerChooseCharacter(TSubclassOf<APlayerCharacter> chosenCharacter);

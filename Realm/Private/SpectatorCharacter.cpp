@@ -43,12 +43,33 @@ void ASpectatorCharacter::SetupPlayerInputComponent(class UInputComponent* Input
 
 	InputComponent->BindAction("MoveCommand", IE_Pressed, this, &ASpectatorCharacter::OnDirectedMoveStart);
 	InputComponent->BindAction("MoveCommand", IE_Released, this, &ASpectatorCharacter::OnDirectedMoveStop);
+
+	//skills
 	InputComponent->BindAction("Skill1", IE_Pressed, this, &ASpectatorCharacter::OnUseSkill<0>);
+	InputComponent->BindAction("Skill1End", IE_Pressed, this, &ASpectatorCharacter::OnUseSkillFinished<0>);
 	InputComponent->BindAction("Skill2", IE_Pressed, this, &ASpectatorCharacter::OnUseSkill<1>);
+	InputComponent->BindAction("Skill2End", IE_Pressed, this, &ASpectatorCharacter::OnUseSkillFinished<1>);
 	InputComponent->BindAction("Skill3", IE_Pressed, this, &ASpectatorCharacter::OnUseSkill<2>);
+	InputComponent->BindAction("Skill3End", IE_Pressed, this, &ASpectatorCharacter::OnUseSkillFinished<2>);
 	InputComponent->BindAction("Skill4", IE_Pressed, this, &ASpectatorCharacter::OnUseSkill<3>);
+	InputComponent->BindAction("Skill4End", IE_Pressed, this, &ASpectatorCharacter::OnUseSkillFinished<3>);
+
 	InputComponent->BindAction("SelfCameraLock", IE_Pressed, this, &ASpectatorCharacter::OnSelfCameraLock);
 	InputComponent->BindAction("SelfCameraLock", IE_Released, this, &ASpectatorCharacter::OnUnlockCamera);
+
+	//mods
+	InputComponent->BindAction("UseMod1Start", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<0>);
+	InputComponent->BindAction("UseMod1End", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<0>);
+	InputComponent->BindAction("UseMod2Start", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<1>);
+	InputComponent->BindAction("UseMod2End", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<1>);
+	InputComponent->BindAction("UseMod3Start", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<2>);
+	InputComponent->BindAction("UseMod3End", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<2>);
+	InputComponent->BindAction("UseMod4Start", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<3>);
+	InputComponent->BindAction("UseMod4End", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<3>);
+	InputComponent->BindAction("UseMod5Start", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<4>);
+	InputComponent->BindAction("UseMod5End", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<4>);
+	InputComponent->BindAction("UseMod6Start", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<5>);
+	InputComponent->BindAction("UseMod6End", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<5>);
 }
 
 void ASpectatorCharacter::Tick(float deltaSeconds)
@@ -146,9 +167,30 @@ void ASpectatorCharacter::OnUseSkill(int32 index)
 
 	if (playerController)
 	{
-		playerController->GetHitResultUnderCursor(ECC_Visibility, true, hit);
+		playerController->SelectUnitUnderMouse(ECC_Visibility, true, hit);
 		playerController->ServerUseSkill(index, hit.Location);
 	}
+}
+
+void ASpectatorCharacter::OnUseSkillFinished(int32 index)
+{
+
+}
+
+void ASpectatorCharacter::OnUseMod(int32 index)
+{
+	FHitResult hit;
+
+	if (IsValid(playerController))
+	{
+		playerController->SelectUnitUnderMouse(ECC_Visibility, true, hit);
+		playerController->ServerUseMod(index, hit);
+	}
+}
+
+void ASpectatorCharacter::OnUseModFinished(int32 index)
+{
+
 }
 
 void ASpectatorCharacter::ToggleMovementSystem(bool bEnabled)
