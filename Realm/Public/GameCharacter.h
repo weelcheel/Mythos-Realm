@@ -271,7 +271,7 @@ public:
 
 	/* add buff/debuff to the player's stats */
 	UFUNCTION(BlueprintCallable, Category = Stat)
-	AEffect* AddEffect(const FString& effectName, const FString& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration = 0.f, FString keyName = "", bool bStacking = false, bool bMultipleInfliction = false);
+	AEffect* AddEffect(const FText& effectName, const FText& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration = 0.f, FString const& keyName = "", bool bStacking = false, bool bMultipleInfliction = false);
 
 	UFUNCTION(BlueprintCallable, Category = Stat)
 	void AddEffectStacks( const FString& effectKey,  int32 stackAmount);

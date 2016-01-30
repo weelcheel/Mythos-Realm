@@ -17,9 +17,11 @@ struct FRealmDamage
 	GENERATED_USTRUCT_BODY()
 
 	/* where this damage came from */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
 	ERealmDamageSource damageSource;
 
 	/* whether or not this was a critical hit */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
 	bool bCriticalHit;
 
 	FRealmDamage()

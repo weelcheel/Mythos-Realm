@@ -64,6 +64,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Skill)
 	float cost;
 
+	/* name of this skill */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Skill)
+	FText skillName;
+
 	/* called when cooldown is finished */
 	void CooldownFinished();
 

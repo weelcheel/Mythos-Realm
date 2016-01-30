@@ -283,7 +283,7 @@ void ARealmPlayerController::OnTargetSelect()
 {
 	FHitResult hit;
 
-	if (GetHitResultUnderCursor(ECC_Visibility, true, hit))
+	if (SelectUnitUnderMouse(ECC_Visibility, true, hit))
 	{
 
 	}

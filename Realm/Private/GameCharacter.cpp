@@ -514,7 +514,7 @@ float AGameCharacter::GetUnaffectedValueForStat(EStat stat) const
 		return -1.f;
 }
 
-AEffect* AGameCharacter::AddEffect(const FString& effectName, const FString& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration /* = 0.f */, FString keyName, bool bStacking /*= false*/, bool bMultipleInfliction)
+AEffect* AGameCharacter::AddEffect(const FText& effectName, const FText& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration, FString const& keyName, bool bStacking, bool bMultipleInfliction)
 {
 	if (Role == ROLE_Authority && statsManager)
 		return statsManager->AddEffect(effectName, effectDescription, stats, amounts, effectDuration, keyName, bStacking, bMultipleInfliction);

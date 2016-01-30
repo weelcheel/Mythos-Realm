@@ -5,6 +5,8 @@
 #include "PlayerCharacter.h"
 #include "Effect.h"
 
+#define LOCTEXT_NAMESPACE "Realm" 
+
 ARealmEnabler::ARealmEnabler(const FObjectInitializer& objectInitializer)
 : Super(objectInitializer)
 {
@@ -47,8 +49,8 @@ void ARealmEnabler::OnTargetsUpdate()
 			enablerAuraEffect = GetWorld()->SpawnActor<AEffect>(AEffect::StaticClass());
 
 			//effect descriptions
-			enablerAuraEffect->uiName = "Enabler Protection Aura";
-			enablerAuraEffect->description = "This unit is under protection from their Enabler and has increased Health and Flare regeneration.";
+			enablerAuraEffect->uiName = LOCTEXT("enablereffect", "Enabler Protection Aura");
+			enablerAuraEffect->description = LOCTEXT("enablereffectdesc", "This unit is under protection from their Enabler and has increased Health and Flare regeneration.");
 			enablerAuraEffect->keyName = "enablerprotection";
 			enablerAuraEffect->bCanBeInflictedMultipleTimes = false;
 

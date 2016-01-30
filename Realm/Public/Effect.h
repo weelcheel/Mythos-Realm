@@ -24,11 +24,11 @@ public:
 
 	/* effect name */
 	UPROPERTY(replicated, BlueprintReadOnly, Category = Effect)
-	FString uiName;
+	FText uiName;
 
 	/* effect description */
 	UPROPERTY(replicated, BlueprintReadOnly, Category = Effect)
-	FString description;
+	FText description;
 
 	/* stat(s) this effect affects */
 	TArray<TEnumAsByte<EStat> > stats;

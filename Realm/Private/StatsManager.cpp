@@ -55,7 +55,7 @@ float AStatsManager::GetUnaffectedValueForStat(EStat stat) const
 	return baseStats[(int32)stat] + modStats[(int32)stat];
 }
 
-AEffect* AStatsManager::AddEffect(FString effectName, FString effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration /* = 0.f */, FString keyName, bool bStacking /*= false*/, bool bMultipleInfliction)
+AEffect* AStatsManager::AddEffect(FText const& effectName, FText const& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration, FString const& keyName, bool bStacking, bool bMultipleInfliction)
 {
 	if (effectsMap.Contains(keyName) && !bMultipleInfliction) //return if this effect is already inflicted and can't be inflicted multiple times
 		return nullptr;

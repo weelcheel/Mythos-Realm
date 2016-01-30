@@ -1,6 +1,8 @@
 #include "Realm.h"
 #include "RealmEnablerShield.h"
 
+#define LOCTEXT_NAMESPACE "Realm" 
+
 ARealmEnablerShield::ARealmEnablerShield(const FObjectInitializer& objectInitializer)
 : Super(objectInitializer)
 {
@@ -35,7 +37,7 @@ void ARealmEnablerShield::OnShieldBeginOverlap(AActor* otherActor, UPrimitiveCom
 		statTypes.Add(EStat::ES_Def);
 		statTypes.Add(EStat::ES_SpDef);
 
-		gc->AddEffect("Interference Signal", "This unit is in the shield radius of an enemy Enabler Shield. Its Defense and Special Defense are greatly reduced.", statTypes, stats, 0.f, "enablershieldaura");
+		gc->AddEffect(LOCTEXT("enablershieldname", "Interference Signal"), LOCTEXT("enablershielddesc", "This unit is in the shield radius of an enemy Enabler Shield. Its Defense and Special Defense are greatly reduced."), statTypes, stats, 0.f, "enablershieldaura");
 	}
 }
 
