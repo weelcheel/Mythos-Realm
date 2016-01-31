@@ -453,4 +453,11 @@ public:
 	{
 		return level;
 	}
+
+	/* get the array of mods this character has */
+	UFUNCTION(BlueprintCallable, Category = Mods)
+	TArray<AMod*> const& GetMods()
+	{
+		return mods;
+	}
 };

@@ -303,13 +303,13 @@ void ARealmPlayerController::ServerBuyPlayerMod_Implementation(TSubclassOf<AMod>
 	if (modToBuy)
 	{
 		AMod* modToAdd;
-		if (GetPlayerCharacter()->GetCredits() >= modToBuy->GetCost())
+		if (modToBuy->CanCharacterBuyThisMod(GetPlayerCharacter()))
 		{
 			modToAdd = GetWorld()->SpawnActor<AMod>(wantedMod, GetCharacter()->GetActorLocation(), GetCharacter()->GetActorRotation());
 			if (IsValid(modToAdd))
 			{
+				modToAdd->CharacterPurchasedMod(GetPlayerCharacter());
 				GetPlayerCharacter()->AddMod(modToAdd);
-				GetPlayerCharacter()->ChangeCredits(-1 * modToAdd->GetCost());
 			}
 		}
 	}

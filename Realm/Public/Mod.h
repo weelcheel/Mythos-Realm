@@ -3,6 +3,8 @@
 #include "StatsManager.h"
 #include "Mod.generated.h"
 
+class APlayerCharacter;
+
 UCLASS()
 class AMod : public AActor
 {
@@ -21,6 +23,12 @@ protected:
 	/* description of the mod */
 	UPROPERTY(EditDefaultsOnly, Category = Stats)
 	FText modDescription;
+
+	/* array of classes of mods this mod requires the purchaser to have */
+	UPROPERTY(EditDefaultsOnly, Category = Stats)
+	TArray<TSubclassOf<AMod> > recipe;
+
+	FText statsDesc;
 
 public:
 
@@ -51,7 +59,7 @@ public:
 
 	/* gets a text description of the stats this mod affects */
 	UFUNCTION(BlueprintCallable, Category = Stats)
-	FString GetStatsDescription() const;
+	FText GetStatsDescription();
 
 	/* gets the default object for a mod class */
 	UFUNCTION(BlueprintCallable, Category = Stats)
@@ -65,7 +73,11 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = UseMod)
 	void ClientModUsed(FHitResult const& hit);
 
-	/* validate a target for this mod */
-	UFUNCTION(BlueprintImplementableEvent, Category = UseMod)
-	void ValidateTarget(FHitResult const& hit);
+	/* determine whether or not this item can be purchased by a certain character based on their credits and if they have the right items */
+	UFUNCTION(BlueprintCallable, Category = Stats)
+	bool CanCharacterBuyThisMod(APlayerCharacter* buyer);
+
+	/* called when the player actually buys the mod */
+	UFUNCTION(BlueprintCallable, Category = Stats)
+	void CharacterPurchasedMod(APlayerCharacter* buyer);
 };
