@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DamageInstance.h"
+#include "DamageTypes.h"
 #include "PlayerHUD.generated.h"
 
 class AGameCharacter;
@@ -11,11 +12,20 @@ struct FUIDamage
 {
 	GENERATED_USTRUCT_BODY()
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
 	float amount;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
 	float originTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
 	FVector worldPosition;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
 	TSubclassOf<UDamageType> damageType;
-	float posY;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
+	FRealmDamage realmDamage;
 };
 
 UCLASS(Blueprintable)
@@ -35,7 +45,7 @@ protected:
 
 public:
 
-	void NewDamageEvent(FTakeHitInfo hitInfo, FVector worldPosition);
+	void NewDamageEvent(FTakeHitInfo hitInfo, FVector worldPosition, FRealmDamage& realmdmg);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = Store)
 	void InitIngameStore(const TArray<TSubclassOf<AMod> >& modStore);
@@ -69,4 +79,20 @@ public:
 	/* server has sent out the game over message */
 	UFUNCTION(BlueprintImplementableEvent, Category = Postgame)
 	void NotifyEndGame(int32 teamVictor);
+
+	/* called when the hud needs to display damage text */
+	UFUNCTION(BlueprintImplementableEvent, Category = Damage)
+	void ShowDamageText(FUIDamage dmg);
+
+	//Float as FText With Precision!
+	UFUNCTION(BlueprintCallable, Category=FloatPrecision)
+	static FText GetFloatAsTextWithPrecision(float TheFloat, int32 Precision, bool IncludeLeadingZero = true)
+	{
+		FNumberFormattingOptions NumberFormat;					//Text.h
+		NumberFormat.MinimumIntegralDigits = (IncludeLeadingZero) ? 1 : 0;
+		NumberFormat.MaximumIntegralDigits = 10000;
+		NumberFormat.MinimumFractionalDigits = Precision;
+		NumberFormat.MaximumFractionalDigits = Precision;
+		return FText::AsNumber(TheFloat, &NumberFormat);
+	}
 };

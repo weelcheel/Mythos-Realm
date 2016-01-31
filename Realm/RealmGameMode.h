@@ -75,6 +75,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = Kills)
 	int32 ambientCreditIncome;
 
+	/* amount of credits players normally start out with */
+	UPROPERTY(EditDefaultsOnly, Category = Kills)
+	int32 startingCreditCount;
+
 	/* whether or not this game counts towards player's competitive rank */
 	bool bRankedGame = false;
 
@@ -184,4 +188,10 @@ public:
 
 	/* called every period of time to level up the teams minions */
 	void AmbientGameLevelUp();
+
+	/* get the starting amount of credits */
+	int32 GetStartingCredits() const
+	{
+		return startingCreditCount;
+	}
 };

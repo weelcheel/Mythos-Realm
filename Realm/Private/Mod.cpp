@@ -6,6 +6,37 @@ AMod::AMod(const FObjectInitializer& objectInitializer)
 : Super(objectInitializer)
 {
 	statsDesc = FText::GetEmpty();
+
+	bReplicates = true;
+}
+
+int32 AMod::GetCost(bool bNeededCost /* = false */, APlayerCharacter* buyer /* = nullptr */) const
+{
+	if (!bNeededCost)
+		return cost;
+	else
+	{
+		if (!IsValid(buyer))
+			return cost;
+
+		//get an array of mods that the character has
+		TArray<AMod*> mods = buyer->GetMods();
+
+		//get an array of classes for the mods
+		TArray<UClass*> modClasses;
+		for (int32 i = 0; i < mods.Num(); i++)
+			modClasses.Add(mods[i]->GetClass());
+
+		//see if they have the correct recipe and enough credits
+		int32 neededCredits = cost;
+		for (int32 j = 0; j < recipe.Num(); j++)
+		{
+			if (modClasses.Contains(recipe[j]))
+				neededCredits -= Cast<AMod>(recipe[j]->GetDefaultObject())->cost;
+		}
+
+		return neededCredits;
+	}
 }
 
 FText AMod::GetStatsDescription()

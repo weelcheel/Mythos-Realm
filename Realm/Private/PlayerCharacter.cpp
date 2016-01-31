@@ -8,7 +8,7 @@
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
 {
-	credits = 500;
+	credits = 0;
 	ambientCreditAmount = 4;
 }
 
@@ -44,9 +44,9 @@ void APlayerCharacter::PostRenderFor(class APlayerController* PC, class UCanvas*
 	}
 }
 
-void APlayerCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser)
+void APlayerCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage)
 {
-	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser);
+	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser, realmDamage);
 
 	if (Role == ROLE_Authority)
 	{
@@ -122,14 +122,12 @@ void APlayerCharacter::ChangeCredits(int32 deltaAmount)
 	}
 }
 
-void APlayerCharacter::ReplicateHit(float damage, struct FDamageEvent const& damageEvent, class APawn* instigatingPawn, class AActor* damageCauser, bool bKilled)
+void APlayerCharacter::ReplicateHit(float damage, struct FDamageEvent const& damageEvent, class APawn* instigatingPawn, class AActor* damageCauser, bool bKilled, FRealmDamage& realmDamage)
 {
-	Super::ReplicateHit(damage, damageEvent, instigatingPawn, damageCauser, bKilled);
+	Super::ReplicateHit(damage, damageEvent, instigatingPawn, damageCauser, bKilled, realmDamage);
 
 	lifeHits.Add(lastTakeHitInfo);
 	GetWorldTimerManager().SetTimer(liftHitsClearTimer, this, &APlayerCharacter::ClearLifeHits, 7.5f, false);
-
-
 }
 
 void APlayerCharacter::StartAmbientCreditIncome(int32 amount)

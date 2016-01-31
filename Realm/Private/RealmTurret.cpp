@@ -195,9 +195,9 @@ void ATurret::ReceiveCallForHelp(AGameCharacter* distressedUnit, AGameCharacter*
 	}
 }
 
-void ATurret::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser)
+void ATurret::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage)
 {
-	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser);
+	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser, realmDamage);
 
 	if (Role == ROLE_Authority)
 		GetWorld()->GetAuthGameMode<ARealmGameMode>()->ObjectiveDestroyed(this, InstigatingPawn);

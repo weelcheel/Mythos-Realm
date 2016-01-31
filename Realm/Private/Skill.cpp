@@ -35,7 +35,7 @@ float ASkill::SkillLevelScale(float min, float max, bool bIncreasing) const
 FDamageEvent ASkill::CreateDamageEvent(TSubclassOf<UDamageType> damageType)
 {
 	FDamageEvent damageEvent(damageType);
-
+	
 	return damageEvent;
 }
 

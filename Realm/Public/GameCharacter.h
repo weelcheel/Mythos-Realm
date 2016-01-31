@@ -157,7 +157,7 @@ protected:
 	virtual void Tick(float DeltaSeconds) override;
 
 	/** sets up the replication for taking a hit */
-	virtual void ReplicateHit(float damage, struct FDamageEvent const& damageEvent, class APawn* instigatingPawn, class AActor* damageCauser, bool bKilled);
+	virtual void ReplicateHit(float damage, struct FDamageEvent const& damageEvent, class APawn* instigatingPawn, class AActor* damageCauser, bool bKilled, FRealmDamage& realmDamage);
 
 	/** play hit or death on client */
 	UFUNCTION()
@@ -175,7 +175,7 @@ protected:
 	virtual void Destroy(bool bNetForce  = false, bool bShouldModifyLevel = true);
 
 	/** notification when killed, for both the server and client. */
-	virtual void OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser);
+	virtual void OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage);
 
 	/* perform level up */
 	void LevelUp();
@@ -213,7 +213,7 @@ public:
 	void UseMod(int32 index, FHitResult const& hit);
 
 	/** play effects on hit */
-	virtual void PlayHit(float DamageTaken, struct FDamageEvent const& DamageEvent, class AGameCharacter* PawnInstigator, class AActor* DamageCauser);
+	virtual void PlayHit(float DamageTaken, struct FDamageEvent const& DamageEvent, class AGameCharacter* PawnInstigator, class AActor* DamageCauser, FRealmDamage& realmDamage);
 
 	/* [SERVER] launch the charcater's auto attack once in range */
 	UFUNCTION(BlueprintCallable, Category = AA)
@@ -281,7 +281,7 @@ public:
 
 	/* call other things and track extra damage data */
 	UFUNCTION(BlueprintCallable, Category = Damage)
-	virtual float CharacterTakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser, FRealmDamage const& realmDamage);
+	virtual float CharacterTakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser, UPARAM(ref) FRealmDamage& realmDamage);
 
 	/** Take damage, handle death */
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser) override;
@@ -332,7 +332,7 @@ public:
 	* @param DamageCauser - the Actor that directly caused the damage (i.e. the Projectile that exploded, the Weapon that fired, etc)
 	* @returns true if allowed
 	*/
-	virtual bool Die(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* Killer, class AActor* DamageCauser);
+	virtual bool Die(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* Killer, class AActor* DamageCauser, FRealmDamage& realmDamage);
 
 	/** switch to ragdoll */
 	void SetRagdollPhysics();
@@ -456,7 +456,7 @@ public:
 
 	/* get the array of mods this character has */
 	UFUNCTION(BlueprintCallable, Category = Mods)
-	TArray<AMod*> const& GetMods()
+	TArray<AMod*>& GetMods()
 	{
 		return mods;
 	}

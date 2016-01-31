@@ -15,9 +15,9 @@ AMinionCharacter::AMinionCharacter(const FObjectInitializer& objectInitializer)
 	bReplicateMovement = true;
 }
 
-void AMinionCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser)
+void AMinionCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage)
 {
-	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser);
+	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser, realmDamage);
 
 	APlayerCharacter* pc = Cast<APlayerCharacter>(InstigatingPawn);
 	if (Role == ROLE_Authority && IsValid(pc))

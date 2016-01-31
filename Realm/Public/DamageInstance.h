@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DamageTypes.h"
 #include "DamageInstance.generated.h"
 
 /** replicated information on a hit we've taken */
@@ -51,6 +52,10 @@ private:
 		FRadialDamageEvent RadialDamageEvent;
 
 public:
+
+	UPROPERTY()
+	FRealmDamage realmDamage;
+
 	FTakeHitInfo()
 		: ActualDamage(0)
 		, DamageTypeClass(NULL)

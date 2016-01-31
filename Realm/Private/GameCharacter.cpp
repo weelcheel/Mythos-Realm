@@ -123,7 +123,7 @@ void AGameCharacter::Tick(float DeltaSeconds)
 	}
 }
 
-void AGameCharacter::ReplicateHit(float damage, struct FDamageEvent const& damageEvent, class APawn* instigatingPawn, class AActor* damageCauser, bool bKilled)
+void AGameCharacter::ReplicateHit(float damage, struct FDamageEvent const& damageEvent, class APawn* instigatingPawn, class AActor* damageCauser, bool bKilled, FRealmDamage& realmDamage)
 {
 	const float timeoutTime = GetWorld()->GetTimeSeconds() + 0.5f;
 
@@ -142,6 +142,7 @@ void AGameCharacter::ReplicateHit(float damage, struct FDamageEvent const& damag
 	}
 
 	lastTakeHitInfo.ActualDamage = damage;
+	lastTakeHitInfo.realmDamage = realmDamage;
 	lastTakeHitInfo.PawnInstigator = Cast<AGameCharacter>(instigatingPawn);
 	lastTakeHitInfo.DamageCauser = damageCauser;
 	lastTakeHitInfo.SetDamageEvent(damageEvent);
@@ -155,11 +156,11 @@ void AGameCharacter::OnRep_LastTakeHitInfo()
 {
 	if (lastTakeHitInfo.bKilled)
 	{
-		OnDeath(lastTakeHitInfo.ActualDamage, lastTakeHitInfo.GetDamageEvent(), lastTakeHitInfo.PawnInstigator, lastTakeHitInfo.DamageCauser.Get());
+		OnDeath(lastTakeHitInfo.ActualDamage, lastTakeHitInfo.GetDamageEvent(), lastTakeHitInfo.PawnInstigator, lastTakeHitInfo.DamageCauser.Get(), lastTakeHitInfo.realmDamage);
 	}
 	else if (Role < ROLE_Authority)
 	{
-		PlayHit(lastTakeHitInfo.ActualDamage, lastTakeHitInfo.GetDamageEvent(), lastTakeHitInfo.PawnInstigator, lastTakeHitInfo.DamageCauser.Get());
+		PlayHit(lastTakeHitInfo.ActualDamage, lastTakeHitInfo.GetDamageEvent(), lastTakeHitInfo.PawnInstigator, lastTakeHitInfo.DamageCauser.Get(), lastTakeHitInfo.realmDamage);
 	}
 }
 
@@ -226,26 +227,31 @@ void AGameCharacter::UseMod_Implementation(int32 index, FHitResult const& hit)
 		mods[index]->ClientModUsed(hit);
 }
 
-void AGameCharacter::PlayHit(float DamageTaken, struct FDamageEvent const& DamageEvent, class AGameCharacter* PawnInstigator, class AActor* DamageCauser)
+void AGameCharacter::PlayHit(float DamageTaken, struct FDamageEvent const& DamageEvent, class AGameCharacter* PawnInstigator, class AActor* DamageCauser, FRealmDamage& realmDamage)
 {
 	if (!IsValid(this))
 		return;
 
 	if (Role == ROLE_Authority)
 	{
-		ReplicateHit(DamageTaken, DamageEvent, PawnInstigator, DamageCauser, false);
+		ReplicateHit(DamageTaken, DamageEvent, PawnInstigator, DamageCauser, false, realmDamage);
 	}
 	
-	if (IsValid(PawnInstigator) && PawnInstigator->playerController == GetWorld()->GetFirstPlayerController())
+	if ((IsValid(PawnInstigator) && PawnInstigator->playerController == GetWorld()->GetFirstPlayerController()) || playerController == GetWorld()->GetFirstPlayerController())
 	{
 		if (IsValid(PawnInstigator->playerController))
 		{
 			AHUD* hud = PawnInstigator->playerController->GetHUD();
 			APlayerHUD* InstigatorHUD = Cast<APlayerHUD>(hud);
 			if (IsValid(InstigatorHUD))
-			{
-				InstigatorHUD->NewDamageEvent(lastTakeHitInfo, GetActorLocation());
-			}
+				InstigatorHUD->NewDamageEvent(lastTakeHitInfo, GetActorLocation(), realmDamage);
+		}
+		else if (IsValid(playerController))
+		{
+			AHUD* hud = playerController->GetHUD();
+			APlayerHUD* InstigatorHUD = Cast<APlayerHUD>(hud);
+			if (IsValid(InstigatorHUD))
+				InstigatorHUD->NewDamageEvent(lastTakeHitInfo, GetActorLocation(), realmDamage);
 		}
 	}
 
@@ -534,7 +540,7 @@ void AGameCharacter::EndEffect(const FString& effectKey)
 		statsManager->EffectFinished(effectKey);
 }
 
-float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser, FRealmDamage const& realmDamage)
+float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser, FRealmDamage& realmDamage)
 {
 	ARealmPlayerController* pc = Cast<ARealmPlayerController>(EventInstigator);
 	ARealmMoveController* aipc = Cast<ARealmMoveController>(EventInstigator);
@@ -558,6 +564,14 @@ float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent cons
 	
 	if (IsValid(damageCausingGC))
 		damageCausingGC->HurtAnother(this, DamageEvent, Damage, realmDamage);
+
+	if (Damage > 0.f)
+	{
+		if (GetHealth() - Damage > 0)
+			PlayHit(Damage, DamageEvent, damageCausingGC, DamageCauser, realmDamage);
+		else
+			Die(Damage, DamageEvent, damageCausingGC, DamageCauser, realmDamage);
+	}
 
 	return TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 }
@@ -600,15 +614,9 @@ float AGameCharacter::TakeDamage(float Damage, struct FDamageEvent const& Damage
 	if (ActualDamage > 0.f)
 	{
 		if (GetHealth() - ActualDamage > 0)
-		{
 			statsManager->RemoveHealth(ActualDamage);
-			PlayHit(ActualDamage, DamageEvent, damageCausingGC, DamageCauser);
-		}
 		else
-		{
 			statsManager->RemoveHealth(GetHealth());
-			Die(ActualDamage, DamageEvent, damageCausingGC, DamageCauser);
-		}
 
 		CharacterDamaged(ActualDamage, DamageEvent.DamageTypeClass, damageCausingGC, DamageCauser);
 		MakeNoise(1.0f, EventInstigator ? EventInstigator->GetPawn() : this);
@@ -700,7 +708,8 @@ void AGameCharacter::KilledBy(APawn* EventInstigator)
 			LastHitBy = NULL;
 		}
 
-		Die(GetHealth(), FDamageEvent(UDamageType::StaticClass()), Killer->GetPawn(), NULL);
+		FRealmDamage dmg;
+		Die(GetHealth(), FDamageEvent(UDamageType::StaticClass()), Killer->GetPawn(), NULL, dmg);
 	}
 }
 
@@ -709,7 +718,7 @@ void AGameCharacter::Suicide()
 	KilledBy(this);
 }
 
-bool AGameCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent, APawn* Killer, AActor* DamageCauser)
+bool AGameCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent, APawn* Killer, AActor* DamageCauser, FRealmDamage& realmDamage)
 {
 	if (!CanDie(KillingDamage, DamageEvent, Killer, DamageCauser))
 	{
@@ -730,12 +739,12 @@ bool AGameCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent, A
 	GetCharacterMovement()->ForceReplicationUpdate();
 
 	GetWorldTimerManager().ClearAllTimersForObject(this);
-	OnDeath(KillingDamage, DamageEvent, Killer, DamageCauser);
+	OnDeath(KillingDamage, DamageEvent, Killer, DamageCauser, realmDamage);
 
 	return true;
 }
 
-void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* PawnInstigator, class AActor* DamageCauser)
+void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* PawnInstigator, class AActor* DamageCauser, FRealmDamage& realmDamage)
 {
 	if (bIsDying)
 	{
@@ -747,7 +756,7 @@ void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& Dam
 
 	if (Role == ROLE_Authority)
 	{
-		ReplicateHit(KillingDamage, DamageEvent, PawnInstigator, DamageCauser, true);
+		ReplicateHit(KillingDamage, DamageEvent, PawnInstigator, DamageCauser, true, realmDamage);
 
 		TArray<APlayerCharacter*> gcs;
 		for (TActorIterator<APlayerCharacter> gcitr(GetWorld()); gcitr; ++gcitr)
@@ -775,16 +784,21 @@ void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& Dam
 
 	AGameCharacter* gc = Cast<AGameCharacter>(PawnInstigator);
 
-	if (IsValid(gc) && gc->playerController == GetWorld()->GetFirstPlayerController())
+	if ((IsValid(gc) && gc->playerController == GetWorld()->GetFirstPlayerController()) || playerController == GetWorld()->GetFirstPlayerController())
 	{
 		if (IsValid(gc->playerController))
 		{
 			AHUD* hud = gc->playerController->GetHUD();
 			APlayerHUD* InstigatorHUD = Cast<APlayerHUD>(hud);
 			if (IsValid(InstigatorHUD))
-			{
-				InstigatorHUD->NewDamageEvent(lastTakeHitInfo, GetActorLocation());
-			}
+				InstigatorHUD->NewDamageEvent(lastTakeHitInfo, GetActorLocation(), realmDamage);
+		}
+		else if (IsValid(playerController))
+		{
+			AHUD* hud = playerController->GetHUD();
+			APlayerHUD* InstigatorHUD = Cast<APlayerHUD>(hud);
+			if (IsValid(InstigatorHUD))
+				InstigatorHUD->NewDamageEvent(lastTakeHitInfo, GetActorLocation(), realmDamage);
 		}
 	}
 
@@ -1169,5 +1183,6 @@ void AGameCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Ou
 	DOREPLIFETIME(AGameCharacter, currentTarget);
 	DOREPLIFETIME(AGameCharacter, level);
 	DOREPLIFETIME(AGameCharacter, experienceAmount);
+	DOREPLIFETIME(AGameCharacter, mods);
 	DOREPLIFETIME_CONDITION(AGameCharacter, lastTakeHitInfo, COND_Custom);
 }

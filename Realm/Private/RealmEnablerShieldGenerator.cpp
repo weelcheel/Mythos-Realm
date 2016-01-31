@@ -7,9 +7,9 @@ ARealmEnablerShieldGenerator::ARealmEnablerShieldGenerator(const FObjectInitiali
 	GetCharacterMovement()->SetMovementMode(MOVE_None);
 }
 
-void ARealmEnablerShieldGenerator::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser)
+void ARealmEnablerShieldGenerator::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage)
 {
-	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser);
+	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser, realmDamage);
 
 	if (Role == ROLE_Authority)
 	{

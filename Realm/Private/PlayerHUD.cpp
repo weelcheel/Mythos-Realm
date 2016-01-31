@@ -16,7 +16,7 @@ APlayerHUD::APlayerHUD(const FObjectInitializer& objectInitializer)
 	bShowOverlays = true;
 }
 
-void APlayerHUD::NewDamageEvent(FTakeHitInfo hitInfo, FVector worldPosition)
+void APlayerHUD::NewDamageEvent(FTakeHitInfo hitInfo, FVector worldPosition, FRealmDamage& realmdmg)
 {
 	FUIDamage dmg;
 
@@ -24,11 +24,13 @@ void APlayerHUD::NewDamageEvent(FTakeHitInfo hitInfo, FVector worldPosition)
 	dmg.originTime = GetWorld()->TimeSeconds;
 	dmg.worldPosition = worldPosition;
 	dmg.damageType = hitInfo.DamageTypeClass;
+	dmg.realmDamage = realmdmg;
 
-	FVector screenPos = Project(dmg.worldPosition);
-	dmg.posY = screenPos.Y;
+	FVector2D screenPos;
+	UGameplayStatics::ProjectWorldToScreen(PlayerOwner, dmg.worldPosition, screenPos);
 
-	floatingDamage.Add(dmg);
+	//floatingDamage.Add(dmg);
+	ShowDamageText(dmg);
 }
 
 void APlayerHUD::BeginPlay()

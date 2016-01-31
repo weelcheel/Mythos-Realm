@@ -38,10 +38,7 @@ public:
 
 	/* gets the cost of the mod */
 	UFUNCTION(BlueprintCallable, Category = Stats)
-	int32 GetCost() const
-	{
-		return cost;
-	}
+	int32 GetCost(bool bNeededCost = false, APlayerCharacter* buyer = nullptr) const;
 
 	/* gets the description of the mod */
 	UFUNCTION(BlueprintCallable, Category = Stats)
