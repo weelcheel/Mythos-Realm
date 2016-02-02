@@ -140,6 +140,9 @@ bool AMod::CanCharacterBuyThisMod(APlayerCharacter* buyer)
 	if (!IsValid(buyer))
 		return false;
 
+	if (buyer->GetCredits() >= cost)
+		return true;
+
 	//get an array of mods that the character has
 	TArray<AMod*> mods = buyer->GetMods();
 	
@@ -168,15 +171,26 @@ void AMod::CharacterPurchasedMod(APlayerCharacter* buyer)
 
 	//get an array of mods that the character has
 	TArray<AMod*> mods = buyer->GetMods();
-
 	for (int32 i = 0; i < mods.Num(); i++)
 	{
 		if (recipe.Contains(mods[i]->GetClass()))
-			mods.RemoveAt(i);
+			mods[i]->RemoveMod(buyer, i);
 	}
 
 	int32 neededCredits = cost;
 	for (int32 j = 0; j < recipe.Num(); j++)
 		neededCredits -= Cast<AMod>(recipe[j]->GetDefaultObject())->cost;
 	buyer->ChangeCredits(-1 * neededCredits);
+}
+
+void AMod::RemoveMod(AGameCharacter* character, int32 index)
+{
+	TArray<AMod*> mods = character->GetMods();
+	for (int32 i = 0; i < mods.Num(); i++)
+	{
+		if (recipe.Contains(mods[i]->GetClass()))
+			mods[i]->RemoveMod(character, i);
+	}
+
+	character->RemoveMod(index);
 }

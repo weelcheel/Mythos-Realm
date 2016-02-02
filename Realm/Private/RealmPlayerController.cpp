@@ -75,6 +75,7 @@ void ARealmPlayerController::Possess(APawn* aPawn)
 				playerCharacter->SetPlayerController(this);
 				playerCharacter->SetOwner(this);
 				playerCharacter->ChangeCredits(GetWorld()->GetAuthGameMode<ARealmGameMode>()->GetStartingCredits());
+				playerCharacter->OnCharacterSpawned();
 
 				if (ps)
 				{

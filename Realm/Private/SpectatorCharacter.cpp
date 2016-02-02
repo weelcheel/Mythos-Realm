@@ -32,7 +32,7 @@ void ASpectatorCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GetCharacterMovement()->MaxFlySpeed = 1420.f;
+	GetCharacterMovement()->MaxFlySpeed = 1710.f;
 	GetCharacterMovement()->BrakingDecelerationFlying = 1710.f;
 	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 }
@@ -46,30 +46,30 @@ void ASpectatorCharacter::SetupPlayerInputComponent(class UInputComponent* Input
 
 	//skills
 	InputComponent->BindAction("Skill1", IE_Pressed, this, &ASpectatorCharacter::OnUseSkill<0>);
-	InputComponent->BindAction("Skill1End", IE_Pressed, this, &ASpectatorCharacter::OnUseSkillFinished<0>);
+	InputComponent->BindAction("Skill1", IE_Released, this, &ASpectatorCharacter::OnUseSkillFinished<0>);
 	InputComponent->BindAction("Skill2", IE_Pressed, this, &ASpectatorCharacter::OnUseSkill<1>);
-	InputComponent->BindAction("Skill2End", IE_Pressed, this, &ASpectatorCharacter::OnUseSkillFinished<1>);
+	InputComponent->BindAction("Skill2", IE_Released, this, &ASpectatorCharacter::OnUseSkillFinished<1>);
 	InputComponent->BindAction("Skill3", IE_Pressed, this, &ASpectatorCharacter::OnUseSkill<2>);
-	InputComponent->BindAction("Skill3End", IE_Pressed, this, &ASpectatorCharacter::OnUseSkillFinished<2>);
+	InputComponent->BindAction("Skill3", IE_Released, this, &ASpectatorCharacter::OnUseSkillFinished<2>);
 	InputComponent->BindAction("Skill4", IE_Pressed, this, &ASpectatorCharacter::OnUseSkill<3>);
-	InputComponent->BindAction("Skill4End", IE_Pressed, this, &ASpectatorCharacter::OnUseSkillFinished<3>);
+	InputComponent->BindAction("Skill4", IE_Released, this, &ASpectatorCharacter::OnUseSkillFinished<3>);
 
 	InputComponent->BindAction("SelfCameraLock", IE_Pressed, this, &ASpectatorCharacter::OnSelfCameraLock);
 	InputComponent->BindAction("SelfCameraLock", IE_Released, this, &ASpectatorCharacter::OnUnlockCamera);
 
 	//mods
-	InputComponent->BindAction("UseMod1Start", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<0>);
-	InputComponent->BindAction("UseMod1End", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<0>);
-	InputComponent->BindAction("UseMod2Start", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<1>);
-	InputComponent->BindAction("UseMod2End", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<1>);
-	InputComponent->BindAction("UseMod3Start", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<2>);
-	InputComponent->BindAction("UseMod3End", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<2>);
-	InputComponent->BindAction("UseMod4Start", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<3>);
-	InputComponent->BindAction("UseMod4End", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<3>);
-	InputComponent->BindAction("UseMod5Start", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<4>);
-	InputComponent->BindAction("UseMod5End", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<4>);
-	InputComponent->BindAction("UseMod6Start", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<5>);
-	InputComponent->BindAction("UseMod6End", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<5>);
+	InputComponent->BindAction("Mod1", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<0>);
+	InputComponent->BindAction("Mod1", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<0>);
+	InputComponent->BindAction("Mod2", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<1>);
+	InputComponent->BindAction("Mod2", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<1>);
+	InputComponent->BindAction("Mod3", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<2>);
+	InputComponent->BindAction("Mod3", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<2>);
+	InputComponent->BindAction("Mod4", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<3>);
+	InputComponent->BindAction("Mod4", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<3>);
+	InputComponent->BindAction("Mod5", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<4>);
+	InputComponent->BindAction("Mod5", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<4>);
+	InputComponent->BindAction("Mod6", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<5>);
+	InputComponent->BindAction("Mod6", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<5>);
 }
 
 void ASpectatorCharacter::Tick(float deltaSeconds)

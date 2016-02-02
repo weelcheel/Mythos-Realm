@@ -23,6 +23,7 @@ AGameCharacter::AGameCharacter(const FObjectInitializer& objectInitializer)
 	baseExpReward = 21;
 	experienceRewardRange = 1500.f;
 	sightRadius = 1350.f;
+	combatTimeoutDelay = 3.5f;
 }
 
 void AGameCharacter::BeginPlay()
@@ -34,6 +35,7 @@ void AGameCharacter::BeginPlay()
 		statsManager = GetWorld()->SpawnActor<AStatsManager>(GetActorLocation(), GetActorRotation());
 		autoAttackManager = GetWorld()->SpawnActor<AAutoAttackManager>(GetActorLocation(), GetActorRotation());
 		skillManager = GetWorld()->SpawnActor<ASkillManager>(GetActorLocation(), GetActorRotation());
+		modManager = GetWorld()->SpawnActor<AModManager>();
 
 		//initialize stats
 		if (characterData)
@@ -47,6 +49,8 @@ void AGameCharacter::BeginPlay()
 
 		statsManager->SetMaxHealth();
 		statsManager->SetMaxFlare();
+
+		modManager->managedCharacter = this;
 
 		for (int32 i = 0; i < skillClasses.Num(); i++)
 		{
@@ -205,7 +209,10 @@ void AGameCharacter::UseSkill_Implementation(int32 index, FVector mouseHitLoc, A
 		skillManager->GetSkill(index)->SetSkillState(ESkillState::Performing);
 
 	if (Role == ROLE_Authority)
+	{
 		skillManager->ServerPerformSkill(index, mouseHitLoc, unitTarget);
+		CharacterCombatAction();
+	}
 
 	if (Role < ROLE_Authority || (GetNetMode() == NM_ListenServer || GetNetMode() == NM_Standalone))
 		skillManager->ClientPerformSkill(index, mouseHitLoc, unitTarget);
@@ -546,6 +553,17 @@ float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent cons
 	ARealmMoveController* aipc = Cast<ARealmMoveController>(EventInstigator);
 	AGameCharacter* damageCausingGC = NULL;
 
+	if (Role < ROLE_Authority)
+		return 0.f;
+
+	if (!IsValid(statsManager) || !IsAlive())
+	{
+		return 0.f;
+	}
+
+	if (!GetWorld()->GetAuthGameMode<ARealmGameMode>()->CanDamageFriendlies() && ((pc && pc->GetPlayerCharacter()->GetTeamIndex() == teamIndex) || (damageCausingGC && damageCausingGC->GetTeamIndex() == teamIndex)))
+		return 0.f;
+
 	if (DamageEvent.DamageTypeClass == UPhysicalDamage::StaticClass() && statsManager->GetCurrentValueForStat(EStat::ES_Def) >= 0)
 		Damage -= statsManager->GetCurrentValueForStat(EStat::ES_Def);
 	else if (DamageEvent.DamageTypeClass == USpecialDamage::StaticClass() && statsManager->GetCurrentValueForStat(EStat::ES_SpDef) >= 0)
@@ -565,6 +583,8 @@ float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent cons
 	if (IsValid(damageCausingGC))
 		damageCausingGC->HurtAnother(this, DamageEvent, Damage, realmDamage);
 
+	CharacterCombatAction();
+
 	if (Damage > 0.f)
 	{
 		if (GetHealth() - Damage > 0)
@@ -578,31 +598,14 @@ float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent cons
 
 float AGameCharacter::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser)
 {
-	if (Role < ROLE_Authority)
-		return 0.f;
-
-	if (!IsValid(statsManager) || !IsAlive())
-	{
-		return 0.f;
-	}
-
 	ARealmPlayerController* pc = Cast<ARealmPlayerController>(EventInstigator);
 	ARealmMoveController* aipc = Cast<ARealmMoveController>(EventInstigator);
 	AGameCharacter* damageCausingGC = NULL;
 
-	if (!GetWorld()->GetAuthGameMode<ARealmGameMode>()->CanDamageFriendlies() && ((pc && pc->GetPlayerCharacter()->GetTeamIndex() == teamIndex) || (damageCausingGC && damageCausingGC->GetTeamIndex() == teamIndex)))
-		return 0.f;
-
 	if (aipc)
-	{
 		damageCausingGC = Cast<AGameCharacter>(aipc->GetCharacter());
-		aipc->CharacterDamaged(this);
-	}
 	else if (pc)
-	{
 		damageCausingGC = pc->GetPlayerCharacter();
-		pc->GetMoveController()->CharacterDamaged(this);
-	}
 
 	if (!damageCausingGC)
 		return 0.f;
@@ -619,6 +622,10 @@ float AGameCharacter::TakeDamage(float Damage, struct FDamageEvent const& Damage
 			statsManager->RemoveHealth(GetHealth());
 
 		CharacterDamaged(ActualDamage, DamageEvent.DamageTypeClass, damageCausingGC, DamageCauser);
+		
+		if (IsValid(modManager))
+			modManager->CharacterDamaged(ActualDamage, DamageEvent.DamageTypeClass, damageCausingGC, DamageCauser, lastTakeHitInfo.realmDamage);
+
 		MakeNoise(1.0f, EventInstigator ? EventInstigator->GetPawn() : this);
 
 		if (!GetWorldTimerManager().IsTimerActive(healthRegen) && IsAlive())
@@ -725,8 +732,34 @@ bool AGameCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent, A
 		return false;
 	}
 
-	if (IsValid(statsManager))
-		statsManager->RemoveAllEffects();
+	if (!IsValid(statsManager))
+		return false;
+
+	if (Role == ROLE_Authority)
+	{
+		TArray<AEffect*> charEffects;
+		statsManager->GetEffects(charEffects);
+		for (AEffect* effect : charEffects)
+		{
+			if (effect->bIsTransferredToPlayerKiller)
+			{
+				APlayerCharacter* gc = Cast<APlayerCharacter>(Killer);
+				if (IsValid(gc))
+				{
+					if (!IsValid(gc->AddEffect(effect->uiName, effect->description, effect->stats, effect->amounts, effect->duration, effect->keyName, effect->bStacking, effect->bCanBeInflictedMultipleTimes)))
+					{
+						if (!IsValid(gc->statsManager))
+							break;
+
+						AEffect* exisitingEffect = gc->statsManager->GetEffect(effect->keyName);
+						if (IsValid(exisitingEffect))
+							exisitingEffect->ResetEffectTimer();
+					}
+				}
+			}
+		}
+	}
+	statsManager->RemoveAllEffects();
 
 	// if this is an environmental death then refer to the previous killer so that they receive credit (knocked into lava pits, etc)
 	UDamageType const* const DamageType = DamageEvent.DamageTypeClass ? DamageEvent.DamageTypeClass->GetDefaultObject<UDamageType>() : GetDefault<UDamageType>();
@@ -777,6 +810,8 @@ void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& Dam
 			else
 				gcc->GiveCharacterExperience((baseExpReward + (level * 2.45f)) / gcs.Num());
 		}
+
+		OnCharacterDied(KillingDamage, PawnInstigator, DamageCauser, realmDamage);
 	}
 
 	GetWorldTimerManager().ClearTimer(flareRegen);
@@ -1152,15 +1187,36 @@ void AGameCharacter::ApplyCharacterAction_Implementation(const FString& actionNa
 
 void AGameCharacter::HurtAnother(AGameCharacter* hurtCharacter, struct FDamageEvent const& DamageEvent, float damageAmount /* = 0.f */, FRealmDamage const& realmDamage)
 {
-	DamagedOtherCharacter(hurtCharacter, DamageEvent, damageAmount, realmDamage);
-
 	if (!IsValid(hurtCharacter) || !IsValid(statsManager) || damageAmount <= 0.f)
 		return;
+
+	DamagedOtherCharacter(hurtCharacter, DamageEvent, damageAmount, realmDamage);
+	CharacterCombatAction();
 
 	//apply any effects we need to
 	//health drain
 	if (DamageEvent.DamageTypeClass == UPhysicalDamage::StaticClass() && GetCurrentValueForStat(EStat::ES_HPDrain) > 0.f)
-		statsManager->RemoveHealth(damageAmount * GetCurrentValueForStat(EStat::ES_HPDrain));
+		statsManager->RemoveHealth(damageAmount * GetCurrentValueForStat(EStat::ES_HPDrain) * -1.f);
+}
+
+void AGameCharacter::CharacterCombatAction()
+{
+	if (Role < ROLE_Authority)
+		return;
+
+	if (!bInCombat)
+	{
+		bInCombat = true;
+		CharacterEnteredCombat();
+	}
+
+	GetWorldTimerManager().SetTimer(combatTimeout, this, &AGameCharacter::CharacterCombatFinished, combatTimeoutDelay, false);
+}
+
+void AGameCharacter::CharacterCombatFinished()
+{
+	bInCombat = false;
+	CharacterLeftCombat();
 }
 
 void AGameCharacter::PreReplication(IRepChangedPropertyTracker & ChangedPropertyTracker)

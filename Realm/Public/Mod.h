@@ -1,9 +1,12 @@
 #pragma once
 
 #include "StatsManager.h"
+#include "DamageTypes.h"
 #include "Mod.generated.h"
 
 class APlayerCharacter;
+class AGameCharacter;
+struct FRealmDamage;
 
 UCLASS()
 class AMod : public AActor
@@ -54,6 +57,9 @@ public:
 		return modName;
 	}
 
+	/* recursively remove this mod and any mods that this recipe requires */
+	void RemoveMod(AGameCharacter* character, int32 index);
+
 	/* gets a text description of the stats this mod affects */
 	UFUNCTION(BlueprintCallable, Category = Stats)
 	FText GetStatsDescription();
@@ -77,4 +83,8 @@ public:
 	/* called when the player actually buys the mod */
 	UFUNCTION(BlueprintCallable, Category = Stats)
 	void CharacterPurchasedMod(APlayerCharacter* buyer);
+
+	/* called when the character that owns this mod is hurt */
+	UFUNCTION(BlueprintImplementableEvent, Category = Damage)
+	void CharacterDamaged(int32 dmgAmount, TSubclassOf<UDamageType> damageType, AGameCharacter* dmgCauser, AActor* actorCauser, FRealmDamage realmDamage);
 };

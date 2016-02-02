@@ -31,13 +31,20 @@ public:
 	FText description;
 
 	/* stat(s) this effect affects */
+	UPROPERTY()
 	TArray<TEnumAsByte<EStat> > stats;
 
 	/* amounts of stats this effects */
+	UPROPERTY()
 	TArray<float> amounts;
 
 	/* stats owner of this effect */
+	UPROPERTY()
 	AStatsManager* statsManager;
+
+	/* is this effect transfered to a player killer? */
+	UPROPERTY(BlueprintReadWrite, Category=Effect)
+	bool bIsTransferredToPlayerKiller = false;
 
 	/* duration of the effect */
 	UPROPERTY(replicated, BlueprintReadOnly, Category = Effect, ReplicatedUsing = OnRepDuration)

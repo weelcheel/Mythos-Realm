@@ -5,6 +5,7 @@
 #include "SkillManager.h"
 #include "DamageTypes.h"
 #include "DamageInstance.h"
+#include "ModManager.h"
 #include "Mod.h"
 #include "GameCharacterData.h"
 #include "GameCharacter.generated.h"
@@ -72,6 +73,10 @@ protected:
 	/* skill manager this character can use */
 	UPROPERTY(replicated)
 	ASkillManager* skillManager;
+
+	/* mod manager this character can use */
+	UPROPERTY(replicated)
+	AModManager* modManager;
 
 	/* array of auto attacks this character can use */
 	UPROPERTY(EditDefaultsOnly, Category = AA)
@@ -153,6 +158,16 @@ protected:
 	/* whether or not his character is guaranteed to crit next hit */
 	bool bGuaranteeCrit = false;
 
+	/* whether or not this character is in combat */
+	bool bInCombat = false;
+
+	/* period of time this character needs to take no damage or perform combat actions to leave combat */
+	UPROPERTY(EditDefaultsOnly, Category = Combat)
+	float combatTimeoutDelay;
+
+	/* timer for this character's combat phase */
+	FTimerHandle combatTimeout;
+
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 
@@ -182,6 +197,16 @@ protected:
 
 	/* called whenever this character damages another */
 	void HurtAnother(AGameCharacter* hurtCharacter, struct FDamageEvent const& DamageEvent, float damageAmount = 0.f, FRealmDamage const& realmDamage = FRealmDamage());
+
+	/* called whenever this character dies in the game world */
+	UFUNCTION(BlueprintImplementableEvent, Category = Events)
+	void OnCharacterDied(float KillingDamage, APawn* Killer, AActor* DamageCauser, UPARAM(ref) FRealmDamage& realmDamage);
+
+	/* called when this character starts combat */
+	void CharacterCombatAction();
+
+	/* called when this character has been in no combat for a period of time */
+	void CharacterCombatFinished();
 
 public:
 
@@ -413,6 +438,10 @@ public:
 	/* blueprint hook for whenever this character leaves combat */
 	UFUNCTION(BlueprintImplementableEvent, Category = Combat)
 	void CharacterLeftCombat();
+
+	/* called whenever this character spawns (or respawns) in the game world */
+	UFUNCTION(BlueprintImplementableEvent, Category = Events)
+	void OnCharacterSpawned();
 
 	/* static function for creating ailments */
 	UFUNCTION(BlueprintCallable, Category = CC)

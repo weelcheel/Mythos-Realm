@@ -69,6 +69,7 @@ void APlayerCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& D
 
 	float respawnTime = GetWorld()->TimeSeconds / 10.f;
 	GetWorldTimerManager().SetTimer(respawnTimer, this, &APlayerCharacter::Respawn, respawnTime);
+	GetWorldTimerManager().SetTimer(liftHitsClearTimer, this, &APlayerCharacter::ClearLifeHits, respawnTime, false);
 }
 
 void APlayerCharacter::Respawn()
@@ -105,6 +106,8 @@ void APlayerCharacter::Respawn()
 	SetActorEnableCollision(true);
 
 	ClearLifeHits();
+
+	OnCharacterSpawned();
 }
 
 void APlayerCharacter::ChangeCredits(int32 deltaAmount)
