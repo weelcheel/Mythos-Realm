@@ -228,6 +228,12 @@ void AGameCharacter::UseMod_Implementation(int32 index, FHitResult const& hit)
 	if (index >= mods.Num())
 		return;
 
+	if (!IsAlive() || !IsValid(mods[index]))
+		return;
+
+	if (mods[index]->GetCooldownRemaining() > 0.f)
+		return;
+
 	if (Role == ROLE_Authority)
 		mods[index]->ServerModUsed(hit);
 	else
@@ -569,6 +575,13 @@ float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent cons
 	else if (DamageEvent.DamageTypeClass == USpecialDamage::StaticClass() && statsManager->GetCurrentValueForStat(EStat::ES_SpDef) >= 0)
 		Damage -= statsManager->GetCurrentValueForStat(EStat::ES_SpDef);
 
+	CharacterDamaged(Damage, DamageEvent.DamageTypeClass, damageCausingGC, DamageCauser);
+	if (bNegateNextDmgEvent)
+	{
+		bNegateNextDmgEvent = false;
+		return 0.f;
+	}
+
 	if (aipc)
 	{
 		damageCausingGC = Cast<AGameCharacter>(aipc->GetCharacter());
@@ -620,8 +633,6 @@ float AGameCharacter::TakeDamage(float Damage, struct FDamageEvent const& Damage
 			statsManager->RemoveHealth(ActualDamage);
 		else
 			statsManager->RemoveHealth(GetHealth());
-
-		CharacterDamaged(ActualDamage, DamageEvent.DamageTypeClass, damageCausingGC, DamageCauser);
 		
 		if (IsValid(modManager))
 			modManager->CharacterDamaged(ActualDamage, DamageEvent.DamageTypeClass, damageCausingGC, DamageCauser, lastTakeHitInfo.realmDamage);

@@ -310,6 +310,7 @@ void ARealmPlayerController::ServerBuyPlayerMod_Implementation(TSubclassOf<AMod>
 			modToAdd = GetWorld()->SpawnActor<AMod>(wantedMod, GetCharacter()->GetActorLocation(), GetCharacter()->GetActorRotation());
 			if (IsValid(modToAdd))
 			{
+				modToAdd->SetCharacterOwner(GetPlayerCharacter());
 				modToAdd->CharacterPurchasedMod(GetPlayerCharacter());
 				GetPlayerCharacter()->AddMod(modToAdd);
 			}
@@ -355,6 +356,9 @@ bool ARealmPlayerController::GetUnitsUnderMouse(ECollisionChannel TraceChannel, 
 
 bool ARealmPlayerController::SelectUnitUnderMouse(ECollisionChannel TraceChannel, bool bTraceComplex, FHitResult& chosenHit) const
 {
+	if (!IsValid(GetPlayerCharacter()))
+		return false;
+
 	TArray<FHitResult> hits;
 	if (GetUnitsUnderMouse(ECC_Visibility, true, hits))
 	{

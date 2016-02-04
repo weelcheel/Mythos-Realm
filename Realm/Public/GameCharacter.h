@@ -161,6 +161,9 @@ protected:
 	/* whether or not this character is in combat */
 	bool bInCombat = false;
 
+	/* whether or not this character should negate the next damage event */
+	bool bNegateNextDmgEvent = false;
+
 	/* period of time this character needs to take no damage or perform combat actions to leave combat */
 	UPROPERTY(EditDefaultsOnly, Category = Combat)
 	float combatTimeoutDelay;
@@ -488,5 +491,12 @@ public:
 	TArray<AMod*>& GetMods()
 	{
 		return mods;
+	}
+
+	/* called in blueprints whenever this character needs to negate the next damage event */
+	UFUNCTION(BlueprintCallable, Category = Damage)
+	void SetNegateNextDamage()
+	{
+			bNegateNextDmgEvent = true;
 	}
 };

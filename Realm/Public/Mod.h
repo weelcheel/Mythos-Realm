@@ -31,7 +31,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = Stats)
 	TArray<TSubclassOf<AMod> > recipe;
 
+	/* reference to the character that owns this mod, if any */
+	UPROPERTY(BlueprintReadOnly, Category = Mod)
+	AGameCharacter* characterOwner;
+
+	UPROPERTY()
 	FText statsDesc;
+
+	/* timer for cooldowns */
+	FTimerHandle cooldownTimer;
 
 public:
 
@@ -41,7 +49,7 @@ public:
 
 	/* gets the cost of the mod */
 	UFUNCTION(BlueprintCallable, Category = Stats)
-	int32 GetCost(bool bNeededCost = false, APlayerCharacter* buyer = nullptr) const;
+	int32 GetCost(bool bNeededCost = false, APlayerCharacter* buyer = nullptr);
 
 	/* gets the description of the mod */
 	UFUNCTION(BlueprintCallable, Category = Stats)
@@ -57,8 +65,8 @@ public:
 		return modName;
 	}
 
-	/* recursively remove this mod and any mods that this recipe requires */
-	void RemoveMod(AGameCharacter* character, int32 index);
+	/* recursively finds every mod class that we need for this mod's recipe */
+	void GetRecipe(TArray<TSubclassOf<AMod> >& recipeClasses);
 
 	/* gets a text description of the stats this mod affects */
 	UFUNCTION(BlueprintCallable, Category = Stats)
@@ -68,13 +76,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Stats)
 	static AMod* GetDefaultModObject(TSubclassOf<AMod> modClass);
 
-	/* server blueprint hook for mod use implementation */
+	/* server blueprint hook for mod use implementation that gives mouse information at the time of use */
 	UFUNCTION(BlueprintImplementableEvent, Category = UseMod)
-	void ServerModUsed(FHitResult const& hit);
+	void ServerModUsed(const FHitResult& hit);
 
-	/* client blueprint hook for mod use implementation */
+	/* client blueprint hook for mod use implementation that gives mouse information at the time of use  */
 	UFUNCTION(BlueprintImplementableEvent, Category = UseMod)
-	void ClientModUsed(FHitResult const& hit);
+	void ClientModUsed(const FHitResult& hit);
 
 	/* determine whether or not this item can be purchased by a certain character based on their credits and if they have the right items */
 	UFUNCTION(BlueprintCallable, Category = Stats)
@@ -87,4 +95,22 @@ public:
 	/* called when the character that owns this mod is hurt */
 	UFUNCTION(BlueprintImplementableEvent, Category = Damage)
 	void CharacterDamaged(int32 dmgAmount, TSubclassOf<UDamageType> damageType, AGameCharacter* dmgCauser, AActor* actorCauser, FRealmDamage realmDamage);
+
+	/* called to set the character owner */
+	void SetCharacterOwner(AGameCharacter* newOwner)
+	{
+		characterOwner = newOwner;
+	}
+
+	/* start cooldown for the skill */
+	UFUNCTION(reliable, NetMulticast, BlueprintCallable, Category=Mod)
+	void StartCooldown(float cooldownTime);
+
+	/* gets the percentage of cooldown progress */
+	UFUNCTION(BlueprintCallable, Category = Mod)
+	float GetCooldownProgressPercent();
+
+	/* gets the amount of time left in the cooldown */
+	UFUNCTION(BlueprintCallable, Category = Mod)
+	float GetCooldownRemaining();
 };

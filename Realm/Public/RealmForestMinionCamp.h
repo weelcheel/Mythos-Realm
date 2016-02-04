@@ -33,6 +33,7 @@ class AForestCamp : public AActor
 public:
 
 	/* called when a spawned camp memeber dies */
+	UFUNCTION(BlueprintCallable, Category=Minion)
 	void SpawnedCharacterDied();
 
 	/* called when to spawn minions */

@@ -35,6 +35,7 @@ public:
 	FVector homePosition;
 
 	/* home camp spawner */
+	UPROPERTY(BlueprintReadOnly, Category=CampSpawner)
 	AForestCamp* campSpawner;
 
 	virtual void Possess(APawn* InPawn) override;

@@ -10,7 +10,7 @@ AMod::AMod(const FObjectInitializer& objectInitializer)
 	bReplicates = true;
 }
 
-int32 AMod::GetCost(bool bNeededCost /* = false */, APlayerCharacter* buyer /* = nullptr */) const
+int32 AMod::GetCost(bool bNeededCost /* = false */, APlayerCharacter* buyer /* = nullptr */)
 {
 	if (!bNeededCost)
 		return cost;
@@ -19,20 +19,19 @@ int32 AMod::GetCost(bool bNeededCost /* = false */, APlayerCharacter* buyer /* =
 		if (!IsValid(buyer))
 			return cost;
 
+		//array of mods we need for this mod
+		TArray<TSubclassOf<AMod> > recipeMods;
+		GetRecipe(recipeMods);
+
 		//get an array of mods that the character has
 		TArray<AMod*> mods = buyer->GetMods();
 
-		//get an array of classes for the mods
-		TArray<UClass*> modClasses;
-		for (int32 i = 0; i < mods.Num(); i++)
-			modClasses.Add(mods[i]->GetClass());
-
 		//see if they have the correct recipe and enough credits
 		int32 neededCredits = cost;
-		for (int32 j = 0; j < recipe.Num(); j++)
+		for (int32 j = 0; j < mods.Num(); j++)
 		{
-			if (modClasses.Contains(recipe[j]))
-				neededCredits -= Cast<AMod>(recipe[j]->GetDefaultObject())->cost;
+			if (recipeMods.Contains(mods[j]->GetClass()))
+				neededCredits -= mods[j]->cost;
 		}
 
 		return neededCredits;
@@ -169,28 +168,51 @@ void AMod::CharacterPurchasedMod(APlayerCharacter* buyer)
 	if (!IsValid(buyer))
 		return;
 
-	//get an array of mods that the character has
-	TArray<AMod*> mods = buyer->GetMods();
-	for (int32 i = 0; i < mods.Num(); i++)
-	{
-		if (recipe.Contains(mods[i]->GetClass()))
-			mods[i]->RemoveMod(buyer, i);
-	}
+	buyer->ChangeCredits(-1 * GetCost(true, buyer));
 
-	int32 neededCredits = cost;
-	for (int32 j = 0; j < recipe.Num(); j++)
-		neededCredits -= Cast<AMod>(recipe[j]->GetDefaultObject())->cost;
-	buyer->ChangeCredits(-1 * neededCredits);
+	TArray<TSubclassOf<AMod> > classList;
+	GetRecipe(classList);
+
+	TArray<AMod*> mods = buyer->GetMods();
+	for (int32 i = 0; i < classList.Num(); i++)
+	{
+		for (int32 j = 0; j < mods.Num(); j++)
+		{
+			if (mods[j]->GetClass() == classList[i])
+			{
+				buyer->RemoveMod(j);
+				mods.RemoveAt(j);
+			}
+		}
+	}
 }
 
-void AMod::RemoveMod(AGameCharacter* character, int32 index)
+void AMod::GetRecipe(TArray<TSubclassOf<AMod> >& recipeClasses)
 {
-	TArray<AMod*> mods = character->GetMods();
-	for (int32 i = 0; i < mods.Num(); i++)
+	for (int32 i = 0; i < recipe.Num(); i++)
 	{
-		if (recipe.Contains(mods[i]->GetClass()))
-			mods[i]->RemoveMod(character, i);
+		recipeClasses.Add(recipe[i]);
+		Cast<AMod>(recipe[i]->GetDefaultObject())->GetRecipe(recipeClasses);
 	}
+}
 
-	character->RemoveMod(index);
+void AMod::StartCooldown_Implementation(float cooldownTime)
+{
+	GetWorldTimerManager().SetTimer(cooldownTimer, cooldownTime, false);
+}
+
+float AMod::GetCooldownRemaining()
+{
+	return GetWorldTimerManager().GetTimerRemaining(cooldownTimer);
+}
+
+float AMod::GetCooldownProgressPercent()
+{
+	if (GetWorldTimerManager().GetTimerRemaining(cooldownTimer) <= 0.f)
+		return 0.f;
+
+	float timeElapsed = GetWorldTimerManager().GetTimerElapsed(cooldownTimer);
+	float totalTime = timeElapsed + GetWorldTimerManager().GetTimerRemaining(cooldownTimer);
+
+	return timeElapsed / totalTime;
 }
