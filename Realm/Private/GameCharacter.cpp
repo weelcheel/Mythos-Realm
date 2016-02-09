@@ -76,6 +76,7 @@ void AGameCharacter::Destroy(bool bNetForce /* = false */, bool bShouldModifyLev
 	autoAttackManager->Destroy();
 	statsManager->Destroy();
 	skillManager->Destroy();
+	modManager->Destroy();
 
 	Super::Destroy(bNetForce, bShouldModifyLevel);
 }

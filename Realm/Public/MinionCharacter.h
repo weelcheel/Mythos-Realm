@@ -20,6 +20,9 @@ protected:
 	/* let the specific classes have different character overlays */
 	virtual void PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, FVector CameraPosition, FVector CameraDir) override;
 
+	/* to call our destroy function */
+	void RealmDestroy();
+
 public:
 
 	/* called whenever a minion is under attack and needs help, if we aren't already helping try to help */

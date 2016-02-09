@@ -189,9 +189,6 @@ protected:
 	void HealthRegen();
 	void FlareRegen();
 
-	/** cleanup inventory */
-	virtual void Destroy(bool bNetForce  = false, bool bShouldModifyLevel = true);
-
 	/** notification when killed, for both the server and client. */
 	virtual void OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage);
 
@@ -351,6 +348,9 @@ public:
 
 	/** Pawn suicide */
 	virtual void Suicide();
+
+	/** cleanup inventory */
+	virtual void Destroy(bool bNetForce = false, bool bShouldModifyLevel = true);
 
 	/**
 	* Kills pawn.  Server/authority only.

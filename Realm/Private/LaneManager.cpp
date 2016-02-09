@@ -11,7 +11,7 @@ ALaneManager::ALaneManager(const FObjectInitializer& objectInitializer)
 	bEnemyGeneratorDestroyed = false;
 
 	minionSpawnTime = 0.87f;
-	waveTime = 55.f;
+	waveTime = 30.f;
 }
 
 void ALaneManager::MatchStarted()

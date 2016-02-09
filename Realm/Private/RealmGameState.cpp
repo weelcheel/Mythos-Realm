@@ -4,7 +4,7 @@
 ARealmGameState::ARealmGameState(const FObjectInitializer& objectInitializer)
 : Super(objectInitializer)
 {
-
+	matchStartTime = -1.f;
 }
 
 void ARealmGameState::BroadcastObjectiveDeath_Implementation(APawn* killerPawn, ARealmObjective* objectiveDestroyed)
@@ -18,4 +18,28 @@ void ARealmGameState::BroadcastObjectiveDeath_Implementation(APawn* killerPawn, 
 			TestPC->OnObjectiveDeathMessage(killerPawn, objectiveDestroyed);
 		}
 	}
+}
+
+float ARealmGameState::GetMatchTime() const
+{
+	if (matchStartTime >= 0.f)
+		return GetWorld()->GetTimeSeconds() - matchStartTime;
+	else
+		return 0.f;
+}
+
+int32 ARealmGameState::GetTeamScore(int32 index) const
+{
+	if (index >= 0 && index < teamScores.Num())
+		return teamScores[index];
+	else
+		return -1;
+}
+
+void ARealmGameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ARealmGameState, matchStartTime);
+	DOREPLIFETIME(ARealmGameState, teamScores);
 }

@@ -71,6 +71,15 @@ void ARealmGameMode::StartMatch()
 
 	FTimerHandle j;
 	GetWorldTimerManager().SetTimer(j, this, &ARealmGameMode::AmbientGameLevelUp, ambientLevelUpTime, true);
+
+	ARealmGameState* gs = GetGameState<ARealmGameState>();
+	if (IsValid(gs))
+	{
+		for (int32 i = 0; i < teams.Num(); i++)
+			gs->teamScores.Add(0);
+
+		gs->matchStartTime = GetWorld()->GetTimeSeconds();
+	}
 }
 
 void ARealmGameMode::RestartPlayer(class AController* NewPlayer)
@@ -358,7 +367,15 @@ void ARealmGameMode::PlayerDied(AController* killedPlayer, AController* playerKi
 			ps->BroadcastDeath(ps2, killerPawn);
 		}
 		if (IsValid(ps2))
+		{
 			ps2->playerKills++;
+			ARealmGameState* gs = GetGameState<ARealmGameState>();
+			if (IsValid(gs))
+			{
+				if (ps2->GetTeamIndex() >= 0 && ps2->GetTeamIndex() < gs->teamScores.Num())
+					gs->teamScores[ps2->GetTeamIndex()]++;
+			}
+		}
 
 		//award the assistors
 	}
@@ -501,13 +518,10 @@ void ARealmGameMode::PlayerLeveledUp()
 
 void ARealmGameMode::AmbientGameLevelUp()
 {
-	for (int32 i = 0; i < teams.Num(); i++)
+	for (TActorIterator<ALaneManager> laneitr(GetWorld()); laneitr; ++laneitr)
 	{
-		for (TActorIterator<ALaneManager> laneitr(GetWorld()); laneitr; ++laneitr)
-		{
-			ALaneManager* lm = (*laneitr);
-			if (IsValid(lm) && lm->teamIndex == i)
-				lm->SetMinionLevel(lm->spawnMinionLevel + 1);
-		}
+		ALaneManager* lm = (*laneitr);
+		if (IsValid(lm))
+			lm->SetMinionLevel(lm->spawnMinionLevel + 1);
 	}
 }

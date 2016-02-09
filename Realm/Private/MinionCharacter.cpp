@@ -19,6 +19,20 @@ void AMinionCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& D
 {
 	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser, realmDamage);
 
+	GetWorldTimerManager().ClearAllTimersForObject(this);
+
+	if (Role == ROLE_Authority)
+	{
+		if (IsValid(GetController()))
+		{
+			GetWorldTimerManager().ClearAllTimersForObject(GetController());
+			GetController()->SetLifeSpan(2.6f);
+		}
+
+		FTimerHandle timer;
+		GetWorldTimerManager().SetTimer(timer, this, &AMinionCharacter::RealmDestroy, 2.6f, false);
+	}
+
 	APlayerCharacter* pc = Cast<APlayerCharacter>(InstigatingPawn);
 	if (Role == ROLE_Authority && IsValid(pc))
 	{
@@ -30,16 +44,11 @@ void AMinionCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& D
 				ps->playerCreepScore++;
 		}
 	}
+}
 
-	GetWorldTimerManager().ClearAllTimersForObject(this);
-
-	if (IsValid(GetController()))
-	{
-		GetWorldTimerManager().ClearAllTimersForObject(GetController());
-		GetController()->SetLifeSpan(2.6f);
-	}
-
-	SetLifeSpan(2.6f);
+void AMinionCharacter::RealmDestroy()
+{
+	Destroy();
 }
 
 float AMinionCharacter::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser)
