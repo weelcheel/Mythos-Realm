@@ -51,7 +51,7 @@ public:
 
 	/* add/spend credits */
 	UFUNCTION(BlueprintCallable, Category=Player)
-	void ChangeCredits(int32 deltaAmount);
+	void ChangeCredits(int32 deltaAmount, const FVector& worldLoc = FVector::ZeroVector);
 
 	/* get credits */
 	UFUNCTION(BlueprintCallable, Category = Player)

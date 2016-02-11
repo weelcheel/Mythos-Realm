@@ -84,6 +84,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = Damage)
 	void ShowDamageText(FUIDamage dmg);
 
+	/* called to show where and how many credits the player earned */
+	UFUNCTION(BlueprintImplementableEvent, Category = Credits)
+	void ShowCreditGain(const FVector& worldLoc, int32 creditAmt);
+
 	//Float as FText With Precision!
 	UFUNCTION(BlueprintCallable, Category=FloatPrecision)
 	static FText GetFloatAsTextWithPrecision(float TheFloat, int32 Precision, bool IncludeLeadingZero = true)

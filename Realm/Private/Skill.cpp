@@ -100,6 +100,9 @@ void ASkill::InitializeSkill(AGameCharacter* owner)
 
 void ASkill::AddSkillPoint()
 {
+	if (Role < ROLE_Authority)
+		return;
+
 	if (skillState == ESkillState::NotLearned)
 		skillState = ESkillState::Ready;
 

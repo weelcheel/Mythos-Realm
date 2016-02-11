@@ -50,6 +50,8 @@ struct FAilmentInfo
 UCLASS(ABSTRACT, Blueprintable)
 class AGameCharacter : public ARealmCharacter
 {
+	friend class ARealmGameMode;
+
 	GENERATED_UCLASS_BODY()
 
 protected:
@@ -122,7 +124,7 @@ protected:
 	int32 level;
 
 	/* amount of skill points this character has to put on skills */
-	UPROPERTY(BlueprintReadOnly, Category = Exp)
+	UPROPERTY(BlueprintReadOnly, replicated, Category = Exp)
 	int32 skillPoints;
 
 	/*base amount of experience that this character is worth when killed */
@@ -499,4 +501,7 @@ public:
 	{
 			bNegateNextDmgEvent = true;
 	}
+
+	/* serverr function for upgrading skills*/
+	void OnUpgradeSkill(int32 index);
 };

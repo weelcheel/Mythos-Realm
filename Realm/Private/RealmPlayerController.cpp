@@ -473,6 +473,24 @@ void ARealmPlayerController::ServerReceiveEndgameUserID_Implementation(const FSt
 		GetWorld()->GetAuthGameMode<ARealmGameMode>()->ReceiveEndgameStats(userid, teamInd);
 }
 
+bool ARealmPlayerController::ServerOnUpgradeSkill_Validate(int32 index)
+{
+	return true;
+}
+
+void ARealmPlayerController::ServerOnUpgradeSkill_Implementation(int32 index)
+{
+	if (IsValid(GetPlayerCharacter()))
+		GetPlayerCharacter()->OnUpgradeSkill(index);
+}
+
+void ARealmPlayerController::ClientShowCreditGain_Implementation(const FVector& worldLoc, int32 creditAmt)
+{
+	APlayerHUD* hud = Cast<APlayerHUD>(GetHUD());
+	if (IsValid(hud))
+		hud->ShowCreditGain(worldLoc, creditAmt);
+}
+
 void ARealmPlayerController::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

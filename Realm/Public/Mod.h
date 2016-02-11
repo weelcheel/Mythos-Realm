@@ -113,4 +113,8 @@ public:
 	/* gets the amount of time left in the cooldown */
 	UFUNCTION(BlueprintCallable, Category = Mod)
 	float GetCooldownRemaining();
+
+	/* gets the ui friendly arrray of mod classes needed for the specified mod's recipe */
+	UFUNCTION(BlueprintCallable, Category = Mod)
+	static void GetUIRecipeForMod(TSubclassOf<AMod> modClass, UPARAM(ref) TArray<TSubclassOf<AMod> >& recipeArray);
 };

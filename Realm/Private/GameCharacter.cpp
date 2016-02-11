@@ -1231,6 +1231,26 @@ void AGameCharacter::CharacterCombatFinished()
 	CharacterLeftCombat();
 }
 
+void AGameCharacter::OnUpgradeSkill(int32 index)
+{
+	if (skillPoints <= 0)
+		return;
+
+	ASkillManager* sm = GetSkillManager();
+	if (IsValid(sm))
+	{
+		int32 prevSkill = -1;
+		ASkill* skill = sm->GetSkill(index);
+		if (IsValid(skill))
+		{
+			prevSkill = skill->skillPoints;
+			skill->AddSkillPoint();
+			if (prevSkill != skill->skillPoints)
+				skillPoints--;
+		}
+	}
+}
+
 void AGameCharacter::PreReplication(IRepChangedPropertyTracker & ChangedPropertyTracker)
 {
 	Super::PreReplication(ChangedPropertyTracker);
@@ -1250,6 +1270,7 @@ void AGameCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Ou
 	DOREPLIFETIME(AGameCharacter, currentAilment);
 	DOREPLIFETIME(AGameCharacter, currentTarget);
 	DOREPLIFETIME(AGameCharacter, level);
+	DOREPLIFETIME(AGameCharacter, skillPoints);
 	DOREPLIFETIME(AGameCharacter, experienceAmount);
 	DOREPLIFETIME(AGameCharacter, mods);
 	DOREPLIFETIME_CONDITION(AGameCharacter, lastTakeHitInfo, COND_Custom);

@@ -78,6 +78,15 @@ protected:
 		OnUseSkillFinished(Index);
 	}
 
+	/* template version for simple input upgrade */
+	template<int Index>
+	void OnUpgradeSkill()
+	{
+		OnUpgradeSkill(Index);
+	}
+
+	void OnUpgradeSkill(int32 index);
+
 	/* function for accepting mod use */
 	template<int Index>
 	void OnUseMod()

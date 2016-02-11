@@ -110,7 +110,7 @@ void APlayerCharacter::Respawn()
 	OnCharacterSpawned();
 }
 
-void APlayerCharacter::ChangeCredits(int32 deltaAmount)
+void APlayerCharacter::ChangeCredits(int32 deltaAmount, const FVector& worldLoc)
 {
 	if (FMath::Abs(deltaAmount) > CREDIT_CHANGE_MAX)
 		return;
@@ -122,6 +122,13 @@ void APlayerCharacter::ChangeCredits(int32 deltaAmount)
 		ARealmPlayerState* ps = Cast<ARealmPlayerState>(GetPlayerController()->PlayerState);
 		if (IsValid(ps))
 			ps->playerTotalIncome += deltaAmount;
+
+		ARealmPlayerController* pc = Cast<ARealmPlayerController>(GetPlayerController());
+		if (IsValid(pc))
+		{
+			if (deltaAmount > 0)
+				pc->ClientShowCreditGain(worldLoc, deltaAmount);
+		}
 	}
 }
 

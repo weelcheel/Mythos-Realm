@@ -16,6 +16,7 @@
 #include "RealmGameState.h"
 #include "RealmObjective.h"
 #include "RealmForestMinionCamp.h"
+#include "RealmTurret.h"
 
 ARealmGameMode::ARealmGameMode(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
@@ -44,7 +45,7 @@ ARealmGameMode::ARealmGameMode(const FObjectInitializer& objectInitializer)
 	bDelayedStart = true;
 	bRankedGame = true;
 
-	ambientLevelUpTime = 210.f;
+	ambientLevelUpTime = 130.f;
 }
 
 void ARealmGameMode::StartMatch()
@@ -343,18 +344,19 @@ void ARealmGameMode::PlayerDied(AController* killedPlayer, AController* playerKi
 	if (!IsValid(killedPlayer))
 		return;
 
-	ARealmPlayerController* killerPC = Cast<ARealmPlayerController>(playerKiller);
-	if (IsValid(killerPC))
-	{
-		//award the killer
-		APlayerCharacter* pc = killerPC->GetPlayerCharacter();
-		if (IsValid(pc))
-			pc->ChangeCredits(CalculatePlayerKillValue(killedPlayer, playerKiller));
-	}
-
 	ARealmPlayerController* killedPC = Cast<ARealmPlayerController>(killedPlayer);
 	if (IsValid(killedPC))
 	{
+		//award the killer
+		ARealmPlayerController* killerPC = Cast<ARealmPlayerController>(playerKiller);
+		if (IsValid(killerPC))
+		{
+			//award the killer
+			APlayerCharacter* pc = killerPC->GetPlayerCharacter();
+			if (IsValid(pc))
+				pc->ChangeCredits(CalculatePlayerKillValue(killedPlayer, playerKiller), killedPC->GetPlayerCharacter()->GetActorLocation());
+		}
+
 		//announce the kill to the game
 		ARealmPlayerState* ps = Cast<ARealmPlayerState>(killedPC->PlayerState);
 		ARealmPlayerState* ps2 = nullptr;
@@ -392,7 +394,7 @@ void ARealmGameMode::ObjectiveDestroyed(ARealmObjective* destroyedObjective, APa
 	{
 		APlayerCharacter* pc = (*plyitr);
 		if (IsValid(pc) && pc->GetTeamIndex() == gc->GetTeamIndex())
-			pc->ChangeCredits(destroyedObjective->playerReward);
+			pc->ChangeCredits(destroyedObjective->playerReward, destroyedObjective->GetActorLocation());
 	}
 
 	//notify the players
@@ -518,10 +520,19 @@ void ARealmGameMode::PlayerLeveledUp()
 
 void ARealmGameMode::AmbientGameLevelUp()
 {
+	//lane minions
 	for (TActorIterator<ALaneManager> laneitr(GetWorld()); laneitr; ++laneitr)
 	{
 		ALaneManager* lm = (*laneitr);
 		if (IsValid(lm))
 			lm->SetMinionLevel(lm->spawnMinionLevel + 1);
+	}
+
+	//turrets
+	for (TActorIterator<ATurret> turritr(GetWorld()); turritr; ++turritr)
+	{
+		ATurret* tr = (*turritr);
+		if (IsValid(tr) && tr->IsAlive())
+			tr->LevelUp();
 	}
 }

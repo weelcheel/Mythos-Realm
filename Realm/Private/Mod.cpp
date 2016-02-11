@@ -216,3 +216,13 @@ float AMod::GetCooldownProgressPercent()
 
 	return timeElapsed / totalTime;
 }
+
+void AMod::GetUIRecipeForMod(TSubclassOf<AMod> modClass, TArray<TSubclassOf<AMod> >& recipeArray)
+{
+	AMod* defaultMod = Cast<AMod>(modClass->GetDefaultObject());
+	if (IsValid(defaultMod))
+	{
+		for (TSubclassOf<AMod> recipeItem : defaultMod->recipe)
+			recipeArray.Add(recipeItem);
+	}
+}

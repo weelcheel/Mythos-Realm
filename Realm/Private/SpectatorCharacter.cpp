@@ -54,6 +54,12 @@ void ASpectatorCharacter::SetupPlayerInputComponent(class UInputComponent* Input
 	InputComponent->BindAction("Skill4", IE_Pressed, this, &ASpectatorCharacter::OnUseSkill<3>);
 	InputComponent->BindAction("Skill4", IE_Released, this, &ASpectatorCharacter::OnUseSkillFinished<3>);
 
+	//upgrade skills
+	InputComponent->BindAction("UpgradeSkill1", IE_Pressed, this, &ASpectatorCharacter::OnUpgradeSkill<0>);
+	InputComponent->BindAction("UpgradeSkill2", IE_Pressed, this, &ASpectatorCharacter::OnUpgradeSkill<1>);
+	InputComponent->BindAction("UpgradeSkill3", IE_Pressed, this, &ASpectatorCharacter::OnUpgradeSkill<2>);
+	InputComponent->BindAction("UpgradeSkill4", IE_Pressed, this, &ASpectatorCharacter::OnUpgradeSkill<3>);
+
 	InputComponent->BindAction("SelfCameraLock", IE_Pressed, this, &ASpectatorCharacter::OnSelfCameraLock);
 	InputComponent->BindAction("SelfCameraLock", IE_Released, this, &ASpectatorCharacter::OnUnlockCamera);
 
@@ -191,6 +197,12 @@ void ASpectatorCharacter::OnUseMod(int32 index)
 void ASpectatorCharacter::OnUseModFinished(int32 index)
 {
 
+}
+
+void ASpectatorCharacter::OnUpgradeSkill(int32 index)
+{
+	if (IsValid(playerController))
+		playerController->ServerOnUpgradeSkill(index);
 }
 
 void ASpectatorCharacter::ToggleMovementSystem(bool bEnabled)

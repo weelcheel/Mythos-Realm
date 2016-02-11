@@ -156,4 +156,12 @@ public:
 
 	/* [CLIENT] an objective in the game was destroyed */
 	void OnObjectiveDeathMessage(APawn* killerPawn, ARealmObjective* objectiveDestroyed);
+
+	/* [SERVER] player wants to upgrade a skill */
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerOnUpgradeSkill(int32 index);
+
+	/* [CLIENT] send credit gain to the HUD */
+	UFUNCTION(reliable, client)
+	void ClientShowCreditGain(const FVector& worldLoc, int32 creditAmt);
 };
