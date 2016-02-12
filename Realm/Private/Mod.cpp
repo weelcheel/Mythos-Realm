@@ -226,3 +226,21 @@ void AMod::GetUIRecipeForMod(TSubclassOf<AMod> modClass, TArray<TSubclassOf<AMod
 			recipeArray.Add(recipeItem);
 	}
 }
+
+int32 AMod::GetUIRecipeCost(TSubclassOf<AMod> modClass)
+{
+	int32 cost = 0;
+	AMod* defaultMod = Cast<AMod>(modClass->GetDefaultObject());
+	if (IsValid(defaultMod))
+	{
+		cost = defaultMod->GetCost(false);
+		for (TSubclassOf<AMod> recipeItem : defaultMod->recipe)
+		{
+			AMod* recipeMod = Cast<AMod>(recipeItem->GetDefaultObject());
+			if (IsValid(recipeMod))
+				cost -= recipeMod->GetCost(false);
+		}
+	}
+
+	return cost;
+}

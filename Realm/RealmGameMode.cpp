@@ -345,6 +345,7 @@ void ARealmGameMode::PlayerDied(AController* killedPlayer, AController* playerKi
 		return;
 
 	ARealmPlayerController* killedPC = Cast<ARealmPlayerController>(killedPlayer);
+	ARealmGameState* gs = GetGameState<ARealmGameState>();
 	if (IsValid(killedPC))
 	{
 		//award the killer
@@ -371,7 +372,6 @@ void ARealmGameMode::PlayerDied(AController* killedPlayer, AController* playerKi
 		if (IsValid(ps2))
 		{
 			ps2->playerKills++;
-			ARealmGameState* gs = GetGameState<ARealmGameState>();
 			if (IsValid(gs))
 			{
 				if (ps2->GetTeamIndex() >= 0 && ps2->GetTeamIndex() < gs->teamScores.Num())
@@ -380,6 +380,14 @@ void ARealmGameMode::PlayerDied(AController* killedPlayer, AController* playerKi
 		}
 
 		//award the assistors
+
+		//set the respawn timer for the killed
+		if (IsValid(gs) && IsValid(killedPC->GetPlayerCharacter()))
+		{
+			float respawnTime = 7.5f;
+			respawnTime += FMath::Min((gs->GetMatchTime() / 60.f), 35.f) + (float)killedPC->GetPlayerCharacter()->level * 3.5;
+			killedPC->GetPlayerCharacter()->StartRespawnTimers(respawnTime);
+		}
 	}
 }
 

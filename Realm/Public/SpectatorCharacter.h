@@ -139,4 +139,12 @@ protected:
 	void MoveCamera(FVector worldDirection);
 	FVector RightCameraMovement(float direction);
 	FVector ForwardCameraMovement(float direction);
+
+public:
+
+	/* get the rts camera */
+	UCameraComponent* GetRTSCamera() const
+	{
+		return rtsCamera;
+	}
 };

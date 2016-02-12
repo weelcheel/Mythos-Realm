@@ -22,6 +22,7 @@ ASpectatorCharacter::ASpectatorCharacter(const FObjectInitializer& objectInitial
 
 	rtsCamera->AttachTo(springArm, TEXT(""), EAttachLocation::SnapToTarget);
 	rtsCamera->SetWorldRotation(FRotator(-45.f, -45.f, 0.f));
+	rtsCamera->PostProcessSettings.bOverride_ColorSaturation = true;
 
 	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
 

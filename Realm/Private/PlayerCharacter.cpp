@@ -67,7 +67,13 @@ void APlayerCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& D
 		GetWorldTimerManager().ClearTimer(liftHitsClearTimer);
 	}
 
-	float respawnTime = GetWorld()->TimeSeconds / 10.f;
+	ASpectatorCharacter* sc = Cast<ASpectatorCharacter>(playerController->GetCharacter());
+	if (IsValid(sc) && IsValid(sc->GetRTSCamera()))
+		sc->GetRTSCamera()->PostProcessSettings.ColorSaturation = FVector::ZeroVector;
+}
+
+void APlayerCharacter::StartRespawnTimers_Implementation(float respawnTime)
+{
 	GetWorldTimerManager().SetTimer(respawnTimer, this, &APlayerCharacter::Respawn, respawnTime);
 	GetWorldTimerManager().SetTimer(liftHitsClearTimer, this, &APlayerCharacter::ClearLifeHits, respawnTime, false);
 }
@@ -108,6 +114,10 @@ void APlayerCharacter::Respawn()
 	ClearLifeHits();
 
 	OnCharacterSpawned();
+
+	ASpectatorCharacter* sc = Cast<ASpectatorCharacter>(playerController->GetCharacter());
+	if (IsValid(sc) && IsValid(sc->GetRTSCamera()))
+		sc->GetRTSCamera()->PostProcessSettings.ColorSaturation = FVector(1.f, 1.f, 1.f);
 }
 
 void APlayerCharacter::ChangeCredits(int32 deltaAmount, const FVector& worldLoc)

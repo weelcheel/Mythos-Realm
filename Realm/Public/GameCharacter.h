@@ -219,7 +219,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category=Actions)
 	FTimerHandle actionTimer;
 
+	UPROPERTY(BlueprintReadOnly, Category=Respawn)
 	FTimerHandle respawnTimer;
+
 	FTimerHandle healthRegen, flareRegen;
 
 	/* check whether or not this character has movement enabled */

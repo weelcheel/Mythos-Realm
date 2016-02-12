@@ -784,6 +784,8 @@ bool AGameCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent, A
 	GetCharacterMovement()->ForceReplicationUpdate();
 
 	GetWorldTimerManager().ClearAllTimersForObject(this);
+	StopAutoAttack();
+	bAutoAttackOnCooldown = false;
 	OnDeath(KillingDamage, DamageEvent, Killer, DamageCauser, realmDamage);
 
 	return true;

@@ -62,4 +62,8 @@ public:
 
 	/* starts the ambient credit income */
 	void StartAmbientCreditIncome(int32 amount);
+
+	/* starts the respawn timers */
+	UFUNCTION(reliable, NetMulticast)
+	void StartRespawnTimers(float respawnTime);
 };

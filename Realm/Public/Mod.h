@@ -117,4 +117,8 @@ public:
 	/* gets the ui friendly arrray of mod classes needed for the specified mod's recipe */
 	UFUNCTION(BlueprintCallable, Category = Mod)
 	static void GetUIRecipeForMod(TSubclassOf<AMod> modClass, UPARAM(ref) TArray<TSubclassOf<AMod> >& recipeArray);
+
+	/* gets the recipe amount of extra credits we need for UI */
+	UFUNCTION(BlueprintCallable, Category = Mod)
+	static int32 GetUIRecipeCost(TSubclassOf<AMod> modClass);
 };
