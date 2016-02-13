@@ -783,7 +783,6 @@ bool AGameCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent, A
 	NetUpdateFrequency = GetDefault<AGameCharacter>()->NetUpdateFrequency;
 	GetCharacterMovement()->ForceReplicationUpdate();
 
-	GetWorldTimerManager().ClearAllTimersForObject(this);
 	StopAutoAttack();
 	bAutoAttackOnCooldown = false;
 	OnDeath(KillingDamage, DamageEvent, Killer, DamageCauser, realmDamage);
@@ -864,11 +863,6 @@ void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& Dam
 	GetCharacterMovement()->SetMovementMode(MOVE_None);
 
 	// disable collisions on capsule
-	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Overlap);
-
-	GetMesh()->SetCollisionResponseToAllChannels(ECR_Ignore);
-	GetMesh()->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
-	GetMesh()->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 
 	/*if (GetMesh())
 	{

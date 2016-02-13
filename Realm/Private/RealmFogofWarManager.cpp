@@ -1,6 +1,7 @@
 #include "Realm.h"
 #include "RealmFogofWarManager.h"
 #include "GameCharacter.h"
+#include "PlayerCharacter.h"
 #include "RealmPlayerController.h"
 
 ARealmFogofWarManager::ARealmFogofWarManager(const FObjectInitializer& objectInitializer)
@@ -21,11 +22,16 @@ void ARealmFogofWarManager::CalculateTeamVisibility()
 	TArray<AGameCharacter*> newSightArray;
 
 	//get which characters are on our team
-	teamCharacters.Empty();
 	for (TActorIterator<AGameCharacter> chr(GetWorld()); chr; ++chr)
 	{
 		AGameCharacter* gc = *chr;
-		if (IsValid(gc) && gc->GetTeamIndex() == teamIndex)
+		if (IsValid(gc) && gc->GetTeamIndex() == teamIndex && gc->IsAlive())
+			teamCharacters.AddUnique(gc);
+	}
+	for (TActorIterator<APlayerCharacter> chr(GetWorld()); chr; ++chr)
+	{
+		APlayerCharacter* gc = *chr;
+		if (IsValid(gc) && gc->GetTeamIndex() == teamIndex && gc->IsAlive())
 			teamCharacters.AddUnique(gc);
 	}
 
