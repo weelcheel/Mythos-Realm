@@ -206,14 +206,20 @@ void URealmGameInstance::AttemptLogin(FString username, FString password)
 {
 	//try to establish a connection to the login server
 	loginSocket = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(NAME_Stream, TEXT("login"), false);
+	auto resolveInfo = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetHostByName("mythosrealm.ddns.net");
 
-	FString address = TEXT("192.168.1.4");
+	while (!resolveInfo->IsComplete());
+
+	uint32 outip = 0;
+	if (resolveInfo->GetErrorCode() == 0)
+	{
+		const FInternetAddr* addr = &resolveInfo->GetResolvedAddress();
+		addr->GetIp(outip);
+	}
+
 	int32 port = 3308;
-	FIPv4Address ip;
-	FIPv4Address::Parse(address, ip);
-
 	TSharedRef<FInternetAddr> addr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
-	addr->SetIp(ip.GetValue());
+	addr->SetIp(outip);
 	addr->SetPort(port);
 
 	bool connected = loginSocket->Connect(*addr);
@@ -256,14 +262,20 @@ void URealmGameInstance::AttemptCreateLogin(FString username, FString password, 
 {
 	//try to establish a connection to the login server
 	loginSocket = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(NAME_Stream, TEXT("login"), false);
+	auto resolveInfo = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetHostByName("mythosrealm.ddns.net");
 
-	FString address = TEXT("192.168.1.4");
+	while (!resolveInfo->IsComplete());
+
+	uint32 outip = 0;
+	if (resolveInfo->GetErrorCode() == 0)
+	{
+		const FInternetAddr* addr = &resolveInfo->GetResolvedAddress();
+		addr->GetIp(outip);
+	}
+
 	int32 port = 3308;
-	FIPv4Address ip;
-	FIPv4Address::Parse(address, ip);
-
 	TSharedRef<FInternetAddr> addr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
-	addr->SetIp(ip.GetValue());
+	addr->SetIp(outip);
 	addr->SetPort(port);
 
 	bool connected = loginSocket->Connect(*addr);
@@ -308,14 +320,21 @@ void URealmGameInstance::SendMatchComplete(ARealmGameMode* gameMode)
 	{
 		//try to establish a connection to the multiplayer master server
 		loginSocket = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(NAME_Stream, TEXT("multiplayer"), false);
+		auto resolveInfo = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetHostByName("mythosrealm.ddns.net");
 
-		FString address = TEXT("192.168.1.4");
+		while (!resolveInfo->IsComplete());
+
+		uint32 outip = 0;
+		if (resolveInfo->GetErrorCode() == 0)
+		{
+			const FInternetAddr* addr = &resolveInfo->GetResolvedAddress();
+			addr->GetIp(outip);
+		}
+
 		int32 port = 3310;
-		FIPv4Address ip;
-		FIPv4Address::Parse(address, ip);
 
 		TSharedRef<FInternetAddr> addr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
-		addr->SetIp(ip.GetValue());
+		addr->SetIp(outip);
 		addr->SetPort(port);
 
 		bool connected = loginSocket->Connect(*addr);
@@ -341,4 +360,24 @@ void URealmGameInstance::SendMatchComplete(ARealmGameMode* gameMode)
 		if (!StartTCPReceiver(loginSocket))
 			return;
 	}
+}
+
+FString URealmGameInstance::GetRealmServerIP(int32 port)
+{
+	auto resolveInfo = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetHostByName("mythosrealm.ddns.net");
+
+	while (!resolveInfo->IsComplete());
+
+	uint32 outip = 0;
+	if (resolveInfo->GetErrorCode() == 0)
+	{
+		const FInternetAddr* addr = &resolveInfo->GetResolvedAddress();
+		addr->GetIp(outip);
+	}
+
+	FIPv4Address ip = FIPv4Address(outip);
+	FString ipstr = ip.ToText().ToString();
+	ipstr += ":" + port;
+
+	return ipstr;
 }

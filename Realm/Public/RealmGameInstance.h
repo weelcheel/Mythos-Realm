@@ -63,6 +63,7 @@ protected:
 
 	FString StringFromBinaryArray(const TArray<uint8>& BinaryArray);
 
+	void SetupInternetAddresses();
 public:
 
 	/* attempts to contact the login server and perform a login */
@@ -79,4 +80,7 @@ public:
 	{
 		return currentUserid;
 	}
+
+	UFUNCTION(BlueprintCallable, Category=Game)
+	static FString GetRealmServerIP(int32 port);
 };

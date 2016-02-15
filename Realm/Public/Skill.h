@@ -133,4 +133,11 @@ public:
 	/* sets the current skill state */
 	UFUNCTION(BlueprintCallable, Category=Skill)
 	void SetSkillState(ESkillState newState);
+
+	/* gets the skill's name */
+	UFUNCTION(BlueprintCallable, Category = CharacterName)
+	const FText& GetSkillName() const
+	{
+		return skillName;
+	}
 };

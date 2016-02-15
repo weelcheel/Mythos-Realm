@@ -290,7 +290,9 @@ bool ASpectatorCharacter::ServerSetLocation_Validate(FVector newLocation, AActor
 
 void ASpectatorCharacter::ServerSetLocation_Implementation(FVector newLocation, AActor* attachActor = nullptr)
 {
-	SetActorLocation(newLocation);
+	//SetActorLocation(newLocation);
+	TeleportTo(newLocation, GetActorRotation());
+	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 
 	if (IsValid(attachActor))
 		AttachRootComponentTo(attachActor->GetRootComponent());

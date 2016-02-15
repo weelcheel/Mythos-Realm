@@ -173,6 +173,10 @@ protected:
 	/* timer for this character's combat phase */
 	FTimerHandle combatTimeout;
 
+	/* text for the name of this character to show in-game */
+	UPROPERTY(EditDefaultsOnly, Category = CharacterName)
+	FText characterName;
+
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 
@@ -501,7 +505,23 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Damage)
 	void SetNegateNextDamage()
 	{
-			bNegateNextDmgEvent = true;
+		bNegateNextDmgEvent = true;
+	}
+
+	/* gets the character's name */
+	UFUNCTION(BlueprintCallable, Category=CharacterName)
+	void GetCharacterName(FText& outText) const
+	{
+		outText = characterName;
+	}
+
+	/* gets the name of a specified character class */
+	UFUNCTION(BlueprintCallable, Category = characterName)
+	static void GetCharacterClassName(TSubclassOf<AGameCharacter> characterClass, FText& outText)
+	{
+		AGameCharacter* gc = Cast<AGameCharacter>(characterClass->GetDefaultObject());
+		if (IsValid(gc))
+			gc->GetCharacterName(outText);
 	}
 
 	/* serverr function for upgrading skills*/

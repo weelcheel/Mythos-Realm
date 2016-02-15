@@ -88,6 +88,14 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = Credits)
 	void ShowCreditGain(const FVector& worldLoc, int32 creditAmt);
 
+	/* called whenever this player's character dies */
+	UFUNCTION(BlueprintImplementableEvent, Category = Death)
+	void PlayerCharacterDied();
+
+	/* called whenever this player's character respawns */
+	UFUNCTION(BlueprintImplementableEvent, Category = Death)
+	void PlayerCharacterRespawned();
+
 	//Float as FText With Precision!
 	UFUNCTION(BlueprintCallable, Category=FloatPrecision)
 	static FText GetFloatAsTextWithPrecision(float TheFloat, int32 Precision, bool IncludeLeadingZero = true)
