@@ -57,6 +57,9 @@ float AStatsManager::GetUnaffectedValueForStat(EStat stat) const
 
 AEffect* AStatsManager::AddEffect(FText const& effectName, FText const& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration, FString const& keyName, bool bStacking, bool bMultipleInfliction)
 {
+	if (!IsValid(owningCharacter) || (IsValid(owningCharacter) && !owningCharacter->IsAlive())) //return if the character isnt valid or dead
+		return nullptr;
+
 	if (effectsMap.Contains(keyName) && !bMultipleInfliction) //return if this effect is already inflicted and can't be inflicted multiple times
 		return nullptr;
 

@@ -770,8 +770,9 @@ bool AGameCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent, A
 				}
 			}
 		}
+
+		statsManager->RemoveAllEffects();
 	}
-	statsManager->RemoveAllEffects();
 
 	// if this is an environmental death then refer to the previous killer so that they receive credit (knocked into lava pits, etc)
 	UDamageType const* const DamageType = DamageEvent.DamageTypeClass ? DamageEvent.DamageTypeClass->GetDefaultObject<UDamageType>() : GetDefault<UDamageType>();
@@ -1036,6 +1037,9 @@ void AGameCharacter::GiveCharacterExperience(int32 amount)
 
 void AGameCharacter::LevelUp()
 {
+	if (level + 1 > 15)
+		return;
+
 	level++;
 	skillPoints++;
 

@@ -97,5 +97,6 @@ ALaneManager* ALaneManager::GetEnemyLaneManager() const
 
 void ALaneManager::SetMinionLevel(int32 newLevel)
 {
-	spawnMinionLevel = newLevel;
+	if (newLevel + 1 <= 15)
+		spawnMinionLevel = newLevel;
 }

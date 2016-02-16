@@ -385,7 +385,7 @@ void ARealmGameMode::PlayerDied(AController* killedPlayer, AController* playerKi
 		if (IsValid(gs) && IsValid(killedPC->GetPlayerCharacter()))
 		{
 			float respawnTime = 7.5f;
-			respawnTime += FMath::Min((gs->GetMatchTime() / 60.f), 35.f) + (float)killedPC->GetPlayerCharacter()->level * 3.5;
+			respawnTime += FMath::Min((gs->GetMatchTime() / 300.f), 35.f) + (float)killedPC->GetPlayerCharacter()->level * 1.5f;
 			killedPC->GetPlayerCharacter()->StartRespawnTimers(respawnTime);
 		}
 	}
