@@ -68,6 +68,9 @@ public:
 	/* whether or not this projectile is used for an auto attack */
 	bool bAutoAttackProjectile = false;
 
+	/* sound we play on hit */
+	USoundCue* hitSound;
+
 	/* initialize and launch the projectile */
 	void InitializeProjectile(const FVector& AimDir, float damage, TSubclassOf<UDamageType> projDamage, AGameCharacter* projSpawner, AGameCharacter* projTarget, FRealmDamage const& realmDamage);
 

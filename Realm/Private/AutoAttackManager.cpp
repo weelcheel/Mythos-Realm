@@ -80,6 +80,22 @@ void AAutoAttackManager::SetAutoAttackIndex(int32 newIndex)
 		currentAttackIndex = newIndex;
 }
 
+USoundCue* AAutoAttackManager::GetCurrentAutoAttackLaunchSound() const
+{
+	if (currentAttackIndex < autoAttacks.Num())
+		return autoAttacks[currentAttackIndex].attackLaunchSound;
+	else
+		return nullptr;
+}
+
+USoundCue* AAutoAttackManager::GetCurrentAutoAttackHitSound() const
+{
+	if (currentAttackIndex < autoAttacks.Num())
+		return autoAttacks[currentAttackIndex].attackHitSound;
+	else
+		return nullptr;
+}
+
 void AAutoAttackManager::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

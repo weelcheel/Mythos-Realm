@@ -91,6 +91,9 @@ void AProjectile::OnHit(class AActor* OtherActor, class UPrimitiveComponent* Oth
 		if (!damageType)
 			return;
 
+		//play hit sound
+		gc->PlayCharacterSound(hitSound);
+
 		FDamageEvent damageEvent(damageType);
 		//gc->TakeDamage(damage, damageEvent, projectileSpawner->GetRealmController(), this);
 		gc->CharacterTakeDamage(damage, damageEvent, projectileSpawner->GetRealmController(), this, realmDamage);

@@ -355,6 +355,10 @@ void AGameCharacter::LaunchAutoAttack()
 		}
 	}
 
+	//play launch sound
+	if (autoAttackManager->GetCurrentAutoAttackLaunchSound())
+		PlayCharacterSound(autoAttackManager->GetCurrentAutoAttackLaunchSound());
+
 	if (autoAttackManager->IsCurrentAttackProjectile())
 	{
 		//launch a projectile
@@ -365,6 +369,7 @@ void AGameCharacter::LaunchAutoAttack()
 		if (IsValid(attackProjectile))
 		{
 			attackProjectile->bAutoAttackProjectile = true;
+			attackProjectile->hitSound = autoAttackManager->GetCurrentAutoAttackLaunchSound();
 			attackProjectile->InitializeProjectile(dir.Vector(), dmg, UPhysicalDamage::StaticClass(), this, GetCurrentTarget(), rdmg);
 		}
 	}
@@ -1249,6 +1254,17 @@ void AGameCharacter::OnUpgradeSkill(int32 index)
 				skillPoints--;
 		}
 	}
+}
+
+void AGameCharacter::PlayCharacterSound_Implementation(USoundBase* sound, bool bAttachedToCharacter /* = false */)
+{
+	if (!sound)
+		return;
+
+	if (bAttachedToCharacter)
+		UGameplayStatics::PlaySoundAttached(sound, GetRootComponent());
+	else
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), sound, GetActorLocation(), GetActorRotation());
 }
 
 void AGameCharacter::PreReplication(IRepChangedPropertyTracker & ChangedPropertyTracker)

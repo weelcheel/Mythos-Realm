@@ -33,6 +33,14 @@ struct FAutoAttack
 	/* length of time it takes for the attack to launch */
 	UPROPERTY(EditDefaultsOnly, Category = AA)
 	float launchTime;
+
+	/* sound to play when the attack is launched */
+	UPROPERTY(EditDefaultsOnly, Category = AA)
+	USoundCue* attackLaunchSound;
+
+	/* sound to play when the attack makes contact */
+	UPROPERTY(EditDefaultsOnly, Category = AA)
+	USoundCue* attackHitSound;
 };
 
 UCLASS()
@@ -84,4 +92,12 @@ public:
 	/* lets the auto attack index of the character to be set */
 	UFUNCTION(BlueprintCallable, Category = AutoAttack)
 	void SetAutoAttackIndex(int32 newIndex);
+
+	/* gets the auto attack launch sound */
+	UFUNCTION(BlueprintCallable, Category = AutoAttack)
+	USoundCue* GetCurrentAutoAttackLaunchSound() const;
+
+	/* gets the auto attack hit sound */
+	UFUNCTION(BlueprintCallable, Category = AutoAttack)
+	USoundCue* GetCurrentAutoAttackHitSound() const;
 };

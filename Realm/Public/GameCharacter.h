@@ -524,6 +524,10 @@ public:
 			gc->GetCharacterName(outText);
 	}
 
-	/* serverr function for upgrading skills*/
+	/* server function for upgrading skills*/
 	void OnUpgradeSkill(int32 index);
+
+	/* function to call for this character to play a sound over the network */
+	UFUNCTION(BlueprintCallable, reliable, NetMulticast, Category = CharacterSound)
+	void PlayCharacterSound(USoundBase* sound, bool bAttachedToCharacter = false);
 };
