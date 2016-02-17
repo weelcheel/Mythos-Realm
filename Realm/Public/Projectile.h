@@ -69,6 +69,7 @@ public:
 	bool bAutoAttackProjectile = false;
 
 	/* sound we play on hit */
+	UPROPERTY(replicated)
 	USoundCue* hitSound;
 
 	/* initialize and launch the projectile */

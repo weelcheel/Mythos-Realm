@@ -177,6 +177,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = CharacterName)
 	FText characterName;
 
+	/* sound attenuation to use for character sounds */
+	UPROPERTY()
+	USoundAttenuation* soundAttenuation;
+
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 
@@ -527,7 +531,7 @@ public:
 	/* server function for upgrading skills*/
 	void OnUpgradeSkill(int32 index);
 
-	/* function to call for this character to play a sound over the network */
+	/* function to call for this character to play a sound over the network ONCE */
 	UFUNCTION(BlueprintCallable, reliable, NetMulticast, Category = CharacterSound)
 	void PlayCharacterSound(USoundBase* sound, bool bAttachedToCharacter = false);
 };

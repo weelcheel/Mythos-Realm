@@ -77,6 +77,8 @@ void AProjectile::OnHit(class AActor* OtherActor, class UPrimitiveComponent* Oth
 		
 	if (homingTarget && OtherActor == homingTarget)
 	{
+		homingTarget->PlayCharacterSound(hitSound);
+
 		FDamageEvent damageEvent(damageType);
 		homingTarget->CharacterTakeDamage(damage, damageEvent, projectileSpawner->GetRealmController(), this, realmDamage);
 
@@ -116,4 +118,5 @@ void AProjectile::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AProjectile, homingTarget);
+	DOREPLIFETIME(AProjectile, hitSound);
 }

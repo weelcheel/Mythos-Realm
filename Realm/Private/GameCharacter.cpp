@@ -14,6 +14,11 @@
 AGameCharacter::AGameCharacter(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer.SetDefaultSubobjectClass<URealmCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
+	//SoundAttenuation'/Game/Realm/Sounds/GeneralRealmAttenuation.GeneralRealmAttenuation'
+	static ConstructorHelpers::FObjectFinder<USoundAttenuation> soundAttObj(TEXT("/Game/Realm/Sounds/GeneralRealmAttenuation"));
+	if (soundAttObj.Succeeded())
+		soundAttenuation = soundAttObj.Object;
+
 	AIControllerClass = AAIController::StaticClass();
 	bAlwaysRelevant = true;
 
@@ -369,12 +374,16 @@ void AGameCharacter::LaunchAutoAttack()
 		if (IsValid(attackProjectile))
 		{
 			attackProjectile->bAutoAttackProjectile = true;
-			attackProjectile->hitSound = autoAttackManager->GetCurrentAutoAttackLaunchSound();
+			attackProjectile->hitSound = autoAttackManager->GetCurrentAutoAttackHitSound();
 			attackProjectile->InitializeProjectile(dir.Vector(), dmg, UPhysicalDamage::StaticClass(), this, GetCurrentTarget(), rdmg);
 		}
 	}
 	else
 	{
+		//sound
+		if (autoAttackManager->GetCurrentAutoAttackHitSound())
+			PlayCharacterSound(autoAttackManager->GetCurrentAutoAttackHitSound());
+
 		//instant damage
 		FDamageEvent de(UPhysicalDamage::StaticClass());
 
@@ -1262,9 +1271,9 @@ void AGameCharacter::PlayCharacterSound_Implementation(USoundBase* sound, bool b
 		return;
 
 	if (bAttachedToCharacter)
-		UGameplayStatics::PlaySoundAttached(sound, GetRootComponent());
+		UGameplayStatics::SpawnSoundAttached(sound, GetRootComponent(), NAME_None, FVector(ForceInit), EAttachLocation::KeepRelativeOffset, false, 0.5f, 1.f, 0.f, soundAttenuation);
 	else
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), sound, GetActorLocation(), GetActorRotation());
+		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), sound, GetActorLocation(), FRotator::ZeroRotator, 0.5f, 1.f, 0.f, soundAttenuation);
 }
 
 void AGameCharacter::PreReplication(IRepChangedPropertyTracker & ChangedPropertyTracker)
