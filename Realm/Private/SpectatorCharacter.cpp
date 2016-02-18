@@ -124,12 +124,18 @@ void ASpectatorCharacter::Tick(float deltaSeconds)
 		}
 	}
 
-	if (Role < ROLE_Authority)
+	if (Role < ROLE_Authority || GetNetMode() == NM_Standalone)
 	{
 		if (camDirection != FVector::ZeroVector)
 			MoveCamera(camDirection * camSpeed);
 		//else
 			//MoveCamera(GetCharacterMovement()->Velocity.IsNearlyZero(40.f) ? FVector::ZeroVector : GetCharacterMovement()->Velocity * -1);
+	}
+
+	if (Role == ROLE_Authority)
+	{ 
+		if (IsValid(cameraLockTarget))
+			SetActorLocation(cameraLockTarget->GetActorLocation());
 	}
 }
 
@@ -253,34 +259,23 @@ void ASpectatorCharacter::OnSelfCameraLock()
 	if (!IsValid(playerController) || !IsValid(playerController->GetPlayerCharacter()))
 		return;
 
-	LockCamera(playerController->GetPlayerCharacter());
-}
-
-void ASpectatorCharacter::LockCamera(AActor* focusedActor)
-{
-	springArm->AttachTo(focusedActor->GetRootComponent());
-	AttachRootComponentTo(focusedActor->GetRootComponent());
-	cameraLockTarget = focusedActor;
+	springArm->AttachTo(playerController->GetPlayerCharacter()->GetRootComponent());
+	playerController->ServerLockPlayerCamera(playerController->GetPlayerCharacter());
 }
 
 void ASpectatorCharacter::OnUnlockCamera()
 {
-	if (cameraLockTarget)
-		ServerSetLocation(cameraLockTarget->GetActorLocation());
+	//if (cameraLockTarget)
+		//ServerSetLocation(cameraLockTarget->GetActorLocation());
 		//SetActorLocation(cameraLockTarget->GetActorLocation());
+
+	if (!IsValid(playerController))
+		return;
+
+	playerController->ServerUnlockPlayerCamera();
 
 	springArm->DetachFromParent(false);
 	springArm->AttachTo(GetRootComponent());
-
-	DetachRootComponentFromParent(false);
-
-	UnlockCamera();
-}
-
-void ASpectatorCharacter::UnlockCamera()
-{
-	cameraLockTarget = nullptr;
-	bLockedOnCharacter = false;
 }
 
 bool ASpectatorCharacter::ServerSetLocation_Validate(FVector newLocation, AActor* attachActor = nullptr)

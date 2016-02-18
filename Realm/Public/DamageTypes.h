@@ -8,6 +8,7 @@ enum class ERealmDamageSource: uint8
 	ERDS_AutoAttack UMETA(DisplayName = "From Auto Attack"),
 	ERDS_Skill UMETA(DisplayName = "From Skill"),
 	ERDS_Effect UMETA(DisplayName = "From Effect"),
+	ERDS_Turret UMETA(DisplayName = "From Turret"),
 	ERDS_Max UMETA(Hidden),
 };
 

@@ -360,6 +360,10 @@ void AGameCharacter::LaunchAutoAttack()
 		}
 	}
 
+	ATurret* tr = Cast<ATurret>(this);
+	if (IsValid(tr))
+		rdmg.damageSource = ERealmDamageSource::ERDS_Turret;
+
 	//play launch sound
 	if (autoAttackManager->GetCurrentAutoAttackLaunchSound())
 		PlayCharacterSound(autoAttackManager->GetCurrentAutoAttackLaunchSound());
@@ -590,7 +594,6 @@ float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent cons
 	else if (DamageEvent.DamageTypeClass == USpecialDamage::StaticClass() && statsManager->GetCurrentValueForStat(EStat::ES_SpDef) >= 0)
 		Damage -= statsManager->GetCurrentValueForStat(EStat::ES_SpDef);
 
-	CharacterDamaged(Damage, DamageEvent.DamageTypeClass, damageCausingGC, DamageCauser);
 	if (bNegateNextDmgEvent)
 	{
 		bNegateNextDmgEvent = false;
@@ -612,6 +615,12 @@ float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent cons
 		damageCausingGC->HurtAnother(this, DamageEvent, Damage, realmDamage);
 
 	CharacterCombatAction();
+	CharacterDamaged(Damage, DamageEvent.DamageTypeClass, damageCausingGC, DamageCauser);
+
+	TArray<ASkill*> skills;
+	skillManager->GetSkills(skills);
+	for (int32 i = 0; i < skills.Num(); i++)
+		skills[i]->InterruptSkill(ESkillInterruptReason::SIR_Damaged);
 
 	if (Damage > 0.f)
 	{
@@ -786,6 +795,11 @@ bool AGameCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent, A
 		}
 
 		statsManager->RemoveAllEffects();
+
+		TArray<ASkill*> skills;
+		skillManager->GetSkills(skills);
+		for (int32 i = 0; i < skills.Num(); i++)
+			skills[i]->InterruptSkill(ESkillInterruptReason::SIR_Died);
 	}
 
 	// if this is an environmental death then refer to the previous killer so that they receive credit (knocked into lava pits, etc)
@@ -1267,7 +1281,7 @@ void AGameCharacter::OnUpgradeSkill(int32 index)
 
 void AGameCharacter::PlayCharacterSound_Implementation(USoundBase* sound, bool bAttachedToCharacter /* = false */)
 {
-	if (!sound)
+	if (!sound || bHidden)
 		return;
 
 	if (bAttachedToCharacter)

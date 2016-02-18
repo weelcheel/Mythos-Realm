@@ -170,6 +170,14 @@ void ASkill::ServerSkillPerformed_Implementation(FVector mouseHitLoc, AGameChara
 	characterOwner->UseFlare(cost);
 }
 
+void ASkill::InterruptSkill(ESkillInterruptReason interruptReason)
+{
+	if (skillState != ESkillState::Performing)
+		return;
+
+	OnCanInterruptSkill(interruptReason);
+}
+
 void ASkill::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

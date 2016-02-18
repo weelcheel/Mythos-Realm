@@ -16,6 +16,16 @@ enum class ESkillState : uint8
 	MAX
 };
 
+UENUM()
+enum class ESkillInterruptReason : uint8
+{
+	SIR_Damaged UMETA(DisplayName = "Damaged While Performing"),
+	SIR_CC UMETA(DisplayName = "CC'd while Performing"),
+	SIR_Knock UMETA(DisplayName = "Knocked Up/Back while Performing"),
+	SIR_Died UMETA(DisplayName = "Character Died"),
+	SIR_Max UMETA(Hidden),
+};
+
 UCLASS()
 class ASkill : public AActor
 {
@@ -140,4 +150,12 @@ public:
 	{
 		return skillName;
 	}
+
+	/* called whenever this skill should be interrupted (if its being performed) */
+	UFUNCTION(BlueprintCallable, Category = Skill)
+	void InterruptSkill(ESkillInterruptReason interruptReason);
+
+	/* event called whenever this skill is interrupted for blueprints */
+	UFUNCTION(BlueprintImplementableEvent, Category = Skill)
+	void OnCanInterruptSkill(ESkillInterruptReason interruptReason);
 };

@@ -6,6 +6,8 @@
 UCLASS()
 class ASpectatorCharacter : public ARealmCharacter
 {
+	friend class ARealmPlayerController;
+
 	GENERATED_UCLASS_BODY()
 
 protected:
@@ -19,6 +21,7 @@ protected:
 	bool bLockedOnCharacter;
 
 	/* actor were locked on */
+	UPROPERTY()
 	AActor* cameraLockTarget;
 
 	UPROPERTY()
@@ -120,10 +123,6 @@ protected:
 
 	/* on self (player character, not spectator) lock */
 	void OnSelfCameraLock();
-
-	/* lock the camera on any specified actor */
-	void LockCamera(AActor* focusedActor);
-	void UnlockCamera();
 
 	/* unlock the camera from any current target */
 	void OnUnlockCamera();

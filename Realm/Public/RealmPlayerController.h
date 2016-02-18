@@ -122,6 +122,14 @@ public:
 	UFUNCTION(reliable, client)
 	void ClientOpenEndgameUI(int32 winningTeam);
 
+	/* [SERVER] player is focused on a certain actor */
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerLockPlayerCamera(AActor* newFocus);
+
+	/* [SERVER] player is done focusing on a certain actor */
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerUnlockPlayerCamera();
+
 	/* get the hit results under this character's mouse */
 	UFUNCTION(BlueprintCallable, Category = Commands)
 	bool GetUnitsUnderMouse(ECollisionChannel TraceChannel, bool bTraceComplex, TArray<FHitResult>& hits) const;

@@ -491,6 +491,38 @@ void ARealmPlayerController::ClientShowCreditGain_Implementation(const FVector& 
 		hud->ShowCreditGain(worldLoc, creditAmt);
 }
 
+bool ARealmPlayerController::ServerLockPlayerCamera_Validate(AActor* newFocus)
+{
+	return true;
+}
+
+bool ARealmPlayerController::ServerUnlockPlayerCamera_Validate()
+{
+	return true;
+}
+
+void ARealmPlayerController::ServerLockPlayerCamera_Implementation(AActor* newFocus)
+{
+	ASpectatorCharacter* sc = Cast<ASpectatorCharacter>(GetCharacter());
+	if (!IsValid(sc))
+		return;
+
+	sc->cameraLockTarget = newFocus;
+}
+
+void ARealmPlayerController::ServerUnlockPlayerCamera_Implementation()
+{
+	ASpectatorCharacter* sc = Cast<ASpectatorCharacter>(GetCharacter());
+	if (!IsValid(sc))
+		return;
+
+	if (IsValid(sc->cameraLockTarget))
+		sc->SetActorLocation(sc->cameraLockTarget->GetActorLocation());
+
+	sc->cameraLockTarget = nullptr;
+	sc->bLockedOnCharacter = false;
+}
+
 void ARealmPlayerController::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
