@@ -841,7 +841,7 @@ void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& Dam
 				continue;
 
 			float distsq = (gc->GetActorLocation() - GetActorLocation()).SizeSquared2D();
-			if (distsq <= FMath::Square(experienceRewardRange) && GetTeamIndex() != gc->GetTeamIndex())
+			if (distsq <= FMath::Square(experienceRewardRange) && GetTeamIndex() != gc->GetTeamIndex() && gc != PawnInstigator)
 				gcs.AddUnique(gc);
 		}
 
@@ -860,6 +860,9 @@ void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& Dam
 	GetWorldTimerManager().ClearTimer(healthRegen);
 
 	AGameCharacter* gc = Cast<AGameCharacter>(PawnInstigator);
+
+	if (IsValid(gc))
+		gc->GiveCharacterExperience((baseExpReward + (level * 2.45f)));
 
 	if ((IsValid(gc) && gc->playerController == GetWorld()->GetFirstPlayerController()) || playerController == GetWorld()->GetFirstPlayerController())
 	{

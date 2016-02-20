@@ -298,9 +298,6 @@ bool ARealmPlayerController::ServerBuyPlayerMod_Validate(TSubclassOf<AMod> wante
 
 void ARealmPlayerController::ServerBuyPlayerMod_Implementation(TSubclassOf<AMod> wantedMod)
 {
-	if (GetPlayerCharacter()->GetModCount() + 1 > 6)
-		return;
-
 	AMod* modToBuy = Cast<AMod>(wantedMod->GetDefaultObject());
 	if (modToBuy)
 	{

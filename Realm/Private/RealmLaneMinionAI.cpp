@@ -135,6 +135,9 @@ void ARealmLaneMinionAI::NeedsNewCommand()
 	for (TActorIterator<AGameCharacter> chritr(GetWorld()); chritr; ++chritr)
 	{
 		AGameCharacter* gc = *chritr;
+		if (gc->IsA(ARealmObjective::StaticClass()))
+			continue;
+
 		if (IsValid(gc) && gc->IsAlive() && gc != minionCharacter && gc->GetTeamIndex() != minionCharacter->GetTeamIndex())
 		{
 			float dist = (gc->GetActorLocation() - minionCharacter->GetActorLocation()).Size2D();
