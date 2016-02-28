@@ -126,11 +126,21 @@ float ASkill::GetCooldownRemaining()
 	return GetWorldTimerManager().GetTimerRemaining(cooldownTimer);
 }
 
-void ASkill::StartCooldown()
+void ASkill::StartCooldown(float manualCooldown)
 {
 	skillState = ESkillState::OnCooldown;
 
 	cooldownTime = SkillLevelScale(cooldownMin, cooldownMax, false);
+	if (manualCooldown > 0.f)
+		cooldownTime = manualCooldown;
+	else if (manualCooldown == 0.f)
+	{
+		CooldownFinished();
+		return;
+	}
+	else
+		cooldownTime -= cooldownTime * FMath::Min(50.f, characterOwner->GetCurrentValueForStat(EStat::ES_CDR)) / 100.f;
+
 	GetWorldTimerManager().SetTimer(cooldownTimer, this, &ASkill::CooldownFinished, cooldownTime);
 }
 
@@ -175,6 +185,7 @@ void ASkill::InterruptSkill(ESkillInterruptReason interruptReason)
 	if (skillState != ESkillState::Performing)
 		return;
 
+	StartCooldown();
 	OnCanInterruptSkill(interruptReason);
 }
 

@@ -77,7 +77,7 @@ FText AMod::GetStatsDescription()
 				currentLine = FText::Format(NSLOCTEXT("Realm", "modaarangedesc", "+{0} Auto Attack Range\n"), FText::AsNumber(FMath::RoundToInt(deltaStats[i])));
 				break;
 			case EStat::ES_AtkSp:
-				currentLine = FText::Format(NSLOCTEXT("Realm", "modatkspdesc", "+{0} % Attack Speed\n"), FText::AsNumber(FMath::RoundToInt(deltaStats[i] * 100.f)));
+				currentLine = FText::Format(NSLOCTEXT("Realm", "modatkspdesc", "+{0} % Attack Speed\n"), FText::AsNumber(FMath::RoundToInt(deltaStats[i])));
 				break;
 			case EStat::ES_AtkSpPL:
 				currentLine = FText::Format(NSLOCTEXT("Realm", "modatksppldesc", "+{0} Attack Speed per Level\n"), FText::AsNumber(deltaStats[i]));
@@ -86,7 +86,7 @@ FText AMod::GetStatsDescription()
 				currentLine = FText::Format(NSLOCTEXT("Realm", "modmovespdesc", "+{0} Movement Speed\n"), FText::AsNumber(FMath::RoundToInt(deltaStats[i])));
 				break;
 			case EStat::ES_CDR:
-				currentLine = FText::Format(NSLOCTEXT("Realm", "modcdreddesc", "+{0} % Cooldown Reduction\n"), FText::AsNumber(FMath::RoundToInt(deltaStats[i] * 100.f)));
+				currentLine = FText::Format(NSLOCTEXT("Realm", "modcdreddesc", "+{0} % Cooldown Reduction\n"), FText::AsNumber(FMath::RoundToInt(deltaStats[i])));
 				break;
 			case EStat::ES_HP:
 				currentLine = FText::Format(NSLOCTEXT("Realm", "modhpdesc", "+{0} Health\n"), FText::AsNumber(FMath::RoundToInt(deltaStats[i])));
@@ -113,13 +113,13 @@ FText AMod::GetStatsDescription()
 				currentLine = FText::Format(NSLOCTEXT("Realm", "modflareregenpldesc", "+{0} Flare Regen per Second per Level\n"), FText::AsNumber(deltaStats[i]));
 				break;
 			case EStat::ES_CritChance:
-				currentLine = FText::Format(NSLOCTEXT("Realm", "modcritdesc", "+{0} % Critical Hit Chance\n"), FText::AsNumber(FMath::RoundToInt(deltaStats[i] * 100.f)));
+				currentLine = FText::Format(NSLOCTEXT("Realm", "modcritdesc", "+{0} % Critical Hit Chance\n"), FText::AsNumber(FMath::RoundToInt(deltaStats[i])));
 				break;
 			case EStat::ES_CritRatio:
-				currentLine = FText::Format(NSLOCTEXT("Realm", "modcritratiodesc", "+{0} % Critical Hit Damage\n"), FText::AsNumber(FMath::RoundToInt(deltaStats[i] * 100.f)));
+				currentLine = FText::Format(NSLOCTEXT("Realm", "modcritratiodesc", "+{0} % Critical Hit Damage\n"), FText::AsNumber(FMath::RoundToInt(deltaStats[i])));
 				break;
 			case EStat::ES_HPDrain:
-				currentLine = FText::Format(NSLOCTEXT("Realm", "modhpdraindesc", "+{0} % Health Drain\n"), FText::AsNumber(FMath::RoundToInt(deltaStats[i] * 100.f)));
+				currentLine = FText::Format(NSLOCTEXT("Realm", "modhpdraindesc", "+{0} % Health Drain\n"), FText::AsNumber(FMath::RoundToInt(deltaStats[i])));
 				break;
 			}
 			statsDesc = FText::Format(NSLOCTEXT("Realm", "moditemdesc", "{0}{1}"), statsDesc, currentLine);
@@ -139,9 +139,6 @@ bool AMod::CanCharacterBuyThisMod(APlayerCharacter* buyer)
 	if (!IsValid(buyer))
 		return false;
 
-	if (buyer->GetCredits() >= cost)
-		return true;
-
 	//get an array of mods that the character has
 	TArray<AMod*> mods;
 	for (int32 i = 0; i < buyer->GetMods().Num(); i++)
@@ -153,6 +150,7 @@ bool AMod::CanCharacterBuyThisMod(APlayerCharacter* buyer)
 
 	//see if they have the correct recipe and enough credits
 	int32 neededCredits = cost;
+	int32 removeCount = 0;
 	for (int32 i = 0; i < classList.Num(); i++)
 	{
 		for (int32 j = 0; j < mods.Num(); j++)
@@ -162,12 +160,16 @@ bool AMod::CanCharacterBuyThisMod(APlayerCharacter* buyer)
 				neededCredits -= mods[j]->GetCost(false);
 				mods.RemoveAt(j);
 				classList.RemoveAt(i);
+				removeCount++;
 			}
 		}
 	}
 
-	if (mods.Num() + 1 > 5)
+	if ((buyer->GetModCount() - removeCount) + 1 > 5)
 		return false;
+
+	if (buyer->GetCredits() >= cost)
+		return true;
 
 	return buyer->GetCredits() >= neededCredits;
 }

@@ -103,22 +103,22 @@ void ASpectatorCharacter::Tick(float deltaSeconds)
 	if (gameViewport->IsFocused(gameViewport->Viewport) && gameViewport->GetMousePosition(mousePosition))
 	{
 		//Check if the mouse is at the left or right edge of the screen and move accordingly
-		if (mousePosition.X / viewportSize.X <= 0.15f)
+		if (mousePosition.X / viewportSize.X <= 0.04f)
 		{
 			//MoveCameraRight(-1.0f * deltaSeconds);
 			camDirection += RightCameraMovement(-1.0f * deltaSeconds);
 		}
-		else if (mousePosition.X / viewportSize.X >= 0.85f)
+		else if (mousePosition.X / viewportSize.X >= 0.96f)
 		{
 			camDirection += RightCameraMovement(1.0f * deltaSeconds);
 		}
 
 		//Check if the mouse is at the top or bottom edge of the screen and move accordingly
-		if (mousePosition.Y / viewportSize.Y <= 0.15f)
+		if (mousePosition.Y / viewportSize.Y <= 0.04f)
 		{
 			camDirection += ForwardCameraMovement(1.0f * deltaSeconds);
 		}
-		else if (mousePosition.Y / viewportSize.Y >= 0.85f)
+		else if (mousePosition.Y / viewportSize.Y >= 0.96f)
 		{
 			camDirection += ForwardCameraMovement(-1.0f * deltaSeconds);
 		}

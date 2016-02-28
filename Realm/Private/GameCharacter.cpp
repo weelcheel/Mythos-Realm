@@ -338,25 +338,26 @@ void AGameCharacter::LaunchAutoAttack()
 	FRealmDamage rdmg;
 
 	//calculate critcal hit
-	float crit = FMath::RandRange(0, 100);
 	float dmg = GetCurrentValueForStat(EStat::ES_Atk);
+	float critPercent = GetCurrentValueForStat(EStat::ES_CritChance);
 
 	if (currentAilment.newAilment == EAilment::AL_Blind)
 		dmg = 0.f;
 
 	if (bGuaranteeCrit)
 	{
-		dmg += dmg * GetCurrentValueForStat(EStat::ES_CritRatio);
+		dmg += dmg * (GetCurrentValueForStat(EStat::ES_CritRatio) / 100.f);
 		bGuaranteeCrit = false;
 		rdmg.bCriticalHit = true;
 	}
-	else
+	else if (critPercent > 0.f)
 	{
-		float critPercent = GetCurrentValueForStat(EStat::ES_CritChance);
-		if ((critPercent > 0.f && crit <= critPercent))
+		float crit = FMath::RandRange(0, 100);
+
+		if (crit <= critPercent)
 		{
 			rdmg.bCriticalHit = true;
-			dmg += dmg * GetCurrentValueForStat(EStat::ES_CritRatio);
+			dmg += dmg * (GetCurrentValueForStat(EStat::ES_CritRatio) / 100.f);
 		}
 	}
 
@@ -841,7 +842,7 @@ void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& Dam
 				continue;
 
 			float distsq = (gc->GetActorLocation() - GetActorLocation()).SizeSquared2D();
-			if (distsq <= FMath::Square(experienceRewardRange) && GetTeamIndex() != gc->GetTeamIndex() && gc != PawnInstigator)
+			if (distsq <= FMath::Square(experienceRewardRange) && GetTeamIndex() != gc->GetTeamIndex() && gc != PawnInstigator && gc->IsAlive())
 				gcs.AddUnique(gc);
 		}
 
@@ -997,6 +998,9 @@ void AGameCharacter::PostRenderFor(class APlayerController* PC, class UCanvas* C
 
 void AGameCharacter::AddMod(AMod* newMod)
 {
+	if (GetModCount() + 1 > 5)
+		return;
+
 	if (IsValid(newMod))
 		mods.Add(newMod);
 
@@ -1037,6 +1041,16 @@ void AGameCharacter::CharacterDash(FVector dashEndLocation)
 	URealmCharacterMovementComponent* rmc = Cast<URealmCharacterMovementComponent>(GetCharacterMovement());
 	if (rmc)
 	{
+		//account for impassible geometry
+		TArray<FHitResult> hits;
+		GetWorld()->LineTraceMultiByChannel(hits, GetActorLocation(), dashEndLocation, ECC_Camera);
+		for (int32 i = 0; i < hits.Num(); i++)
+		{
+			if ((IsValid(hits[i].GetActor()) && hits[i].GetActor()->ActorHasTag("impassible")) || (IsValid(hits[i].GetComponent()) && hits[i].GetComponent()->ComponentHasTag("impassible")))
+				dashEndLocation = hits[i].ImpactPoint;
+		}
+
+		//perform dash
 		rmc->DashLaunch(dashEndLocation);
 		CharacterDashStarted();
 	}
@@ -1239,7 +1253,7 @@ void AGameCharacter::HurtAnother(AGameCharacter* hurtCharacter, struct FDamageEv
 	//apply any effects we need to
 	//health drain
 	if (DamageEvent.DamageTypeClass == UPhysicalDamage::StaticClass() && GetCurrentValueForStat(EStat::ES_HPDrain) > 0.f)
-		statsManager->RemoveHealth(damageAmount * GetCurrentValueForStat(EStat::ES_HPDrain) * -1.f);
+		statsManager->RemoveHealth(damageAmount * (GetCurrentValueForStat(EStat::ES_HPDrain) / 100.f) * -1.f);
 }
 
 void AGameCharacter::CharacterCombatAction()

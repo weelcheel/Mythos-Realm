@@ -22,7 +22,8 @@ enum class ESkillInterruptReason : uint8
 	SIR_Damaged UMETA(DisplayName = "Damaged While Performing"),
 	SIR_CC UMETA(DisplayName = "CC'd while Performing"),
 	SIR_Knock UMETA(DisplayName = "Knocked Up/Back while Performing"),
-	SIR_Died UMETA(DisplayName = "Character Died"),
+	SIR_Died UMETA(DisplayName = "Character Died while Performing"),
+	SIR_UserCancelled UMETA(DisplayName = "User Cancelled while Performing"),
 	SIR_Max UMETA(Hidden),
 };
 
@@ -107,7 +108,7 @@ public:
 
 	/* start cooldown for the skill */
 	UFUNCTION(BlueprintCallable, Category = Skill)
-		void StartCooldown();
+	void StartCooldown(float manualCooldown = -1.f);
 
 	/* [SERVER] add a skill point */
 	UFUNCTION(BlueprintCallable, Category = Skill)

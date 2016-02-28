@@ -22,6 +22,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = PlayerLogin)
 	void AttemptCreateLogin(FString username, FString password, FString email, FString ingameAlias);
 
+	/* attempts to join the specified matchmaking queue */
+	UFUNCTION(BlueprintCallable, Category = PlayerLogin)
+	void AttemptJoinMatchmakingSolo(const FString& queue);
+
+	/* attempts to join the specified matchmaking queue */
+	UFUNCTION(BlueprintCallable, Category = PlayerLogin)
+	void PlayerConfirmMatch(const FString& matchID);
+
 	/* server sent back a successful login */
 	UFUNCTION(BlueprintImplementableEvent, Category = PlayerLogin)
 	void PlayerLoginSuccessful(const FString& userid, int32 experience, int32 mythosPoints, const FString& alias);
@@ -37,4 +45,24 @@ public:
 	/* the server unsuccessfully created a new account */
 	UFUNCTION(BlueprintImplementableEvent, Category = PlayerLogin)
 	void CreatePlayerLoginUnsuccessful(const FString& reason);
+
+	/* the player joined matchmaking queue */
+	UFUNCTION(BlueprintImplementableEvent, Category = PlayerLogin)
+	void JoinMMQueueSuccessful();
+
+	/* the player failed to join matchmaking */
+	UFUNCTION(BlueprintImplementableEvent, Category = PlayerLogin)
+	void JoinMMQueueFailed();
+
+	/* the player found a match and needs to confirm */
+	UFUNCTION(BlueprintImplementableEvent, Category = PlayerLogin)
+	void FoundMatch(const FString& matchID);
+
+	/* the player found a confirmed match */
+	UFUNCTION(BlueprintImplementableEvent, Category = PlayerLogin)
+	void FoundConfirmedMatch(const FString& matchAddress);
+
+	/* the player failed to accept/confirm the match */
+	UFUNCTION(BlueprintImplementableEvent, Category = PlayerLogin)
+	void FailedToConfirmMatch();
 };

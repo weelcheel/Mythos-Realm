@@ -12,6 +12,9 @@ float* UGameCharacterData::GetCharacterBaseStats() const
 {
 	float* baseStats = new float[(uint8)EStat::ES_Max];
 
+	for (int32 i = 0; i < (int32)EStat::ES_Max; i++)
+		baseStats[i] = 0.f;
+
 	baseStats[(uint8)EStat::ES_Atk] = attack;
 	baseStats[(uint8)EStat::ES_Def] = defense;
 	baseStats[(uint8)EStat::ES_AtkPL] = attackPerLevel;

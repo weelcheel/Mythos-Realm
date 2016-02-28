@@ -30,7 +30,7 @@ void AStatsManager::InitializeStats(float* initBaseStats, AGameCharacter* ownerC
 	for (int32 i = 0; i < (int32)EStat::ES_Max; i++)
 		baseStats[i] = initBaseStats[i];
 
-	baseStats[(int32)EStat::ES_CritRatio] = 1.f;
+	baseStats[(int32)EStat::ES_CritRatio] = 100.f;
 
 	bInitialized = true;
 
@@ -182,7 +182,7 @@ void AStatsManager::UpdateModStats(TArray<AMod*>& mods)
 		for (int32 i = 0; i < (int32)EStat::ES_Max; i++)
 		{
 			if (i == (int32)EStat::ES_AtkSp)
-				modStats[i] += GetCurrentValueForStat(EStat::ES_AtkSp) * mod->deltaStats[i];
+				modStats[i] += (GetCurrentValueForStat(EStat::ES_AtkSp) / 100.f) * mod->deltaStats[i];
 			else
 				modStats[i] += mod->deltaStats[i];
 		}

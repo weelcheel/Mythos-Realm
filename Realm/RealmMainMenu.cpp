@@ -27,3 +27,17 @@ void ARealmMainMenu::AttemptCreateLogin(FString username, FString password, FStr
 	if (gi)
 		gi->AttemptCreateLogin(username, password, email, ingameAlias);
 }
+
+void ARealmMainMenu::AttemptJoinMatchmakingSolo(const FString& queue)
+{
+	URealmGameInstance* gi = Cast<URealmGameInstance>(GetGameInstance());
+	if (gi)
+		gi->AttemptJoinSoloMMQueue(queue);
+}
+
+void ARealmMainMenu::PlayerConfirmMatch(const FString& matchID)
+{
+	URealmGameInstance* gi = Cast<URealmGameInstance>(GetGameInstance());
+	if (gi)
+		gi->SendConfirmMatch(matchID);
+}

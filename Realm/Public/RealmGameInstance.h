@@ -6,6 +6,7 @@
 #include "Engine/GameInstance.h"
 #include "RankDivisions.h"
 #include "Networking.h"
+#include "RealmSocketListener.h"
 #include "RealmGameInstance.generated.h"
 
 class ARealmGameMode;
@@ -38,32 +39,25 @@ protected:
 	int32 currentPlayerDivision;
 
 	/* socket connection to the login server */
+	FRealmSocketListener* loginSocketThread;
+	FRealmSocketListener* multiplayerSocketThread;
+
 	FSocket* loginSocket;
-	FSocket* listenerSocket;
-	FSocket* connectionSocket;
+	FSocket* multiplayerSocket;
+
 	FIPv4Endpoint RemoteAddressForConnection;
 
-	bool StartTCPReceiver(
-		const FString& YourChosenSocketName,
-		const FString& TheIP,
-		const int32 ThePort
-		);
-
-	bool StartTCPReceiver(FSocket* loginSocket);
-
-	FSocket* CreateTCPConnectionListener(
-		const FString& YourChosenSocketName,
-		const FString& TheIP,
-		const int32 ThePort,
-		const int32 ReceiveBufferSize = 2 * 1024 * 1024
-		);
-
-	void TCPConnectionListener();
-	void TCPSocketListener();
+	FTimerHandle loginSocketListenTimer, multiplayerSocketListenTimer;
 
 	FString StringFromBinaryArray(const TArray<uint8>& BinaryArray);
 
 	void SetupInternetAddresses();
+
+	void ConnectLoginSocket();
+	void ConnectMultiplayerSocket();
+	void ListenLoginSocket();
+	void ListenMultiplayerSocket();
+
 public:
 
 	/* attempts to contact the login server and perform a login */
@@ -72,15 +66,25 @@ public:
 	/* attempts to contact the login server to create a new account with the provided credentials */
 	void AttemptCreateLogin(FString username, FString password, FString email, FString ingameAlias);
 
+	/* attempts to join solo queue */
+	void AttemptJoinSoloMMQueue(const FString& queue);
+
 	/* send match complete info to the database server from a game server */
 	void SendMatchComplete(ARealmGameMode* gameMode);
 
+	/* send confirm match to the multiplayer server */
+	UFUNCTION(BlueprintCallable, Category=MatchConfirm)
+	void SendConfirmMatch(const FString& matchID);
+
 	/* get the current userid */
-	FString GetUserID() const
+	const FString& GetUserID() const
 	{
 		return currentUserid;
 	}
 
 	UFUNCTION(BlueprintCallable, Category=Game)
 	static FString GetRealmServerIP(int32 port);
+
+	void ParseLoginSocketData(const TArray<uint8>& data);
+	void ParseMultiplayerSocketData(const TArray<uint8>& data);
 };
