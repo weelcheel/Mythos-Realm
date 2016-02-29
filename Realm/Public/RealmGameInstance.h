@@ -59,6 +59,7 @@ protected:
 	void ListenMultiplayerSocket();
 
 public:
+	~URealmGameInstance();
 
 	/* attempts to contact the login server and perform a login */
 	void AttemptLogin(FString username, FString password);

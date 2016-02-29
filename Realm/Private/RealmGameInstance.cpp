@@ -9,6 +9,12 @@ URealmGameInstance::URealmGameInstance(const FObjectInitializer& objectInitializ
 	
 }
 
+URealmGameInstance::~URealmGameInstance()
+{
+	loginSocketThread->EnsureCompletion();
+	multiplayerSocketThread->EnsureCompletion();
+}
+
 FString URealmGameInstance::StringFromBinaryArray(const TArray<uint8>& BinaryArray)
 {
 	//Create a string from a byte array!
