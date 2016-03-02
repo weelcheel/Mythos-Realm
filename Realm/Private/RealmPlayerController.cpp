@@ -48,19 +48,19 @@ void ARealmPlayerController::Possess(APawn* aPawn)
 	Super::Possess(aPawn);
 
 	//@todo: get the character class the player chose to play with
-
-	if (!IsValid(moveController) && Role == ROLE_Authority)
+	ASpectatorCharacter* sc = Cast<ASpectatorCharacter>(aPawn);
+	if (!IsValid(moveController))
 	{
 		moveController = GetWorld()->SpawnActor<ARealmMoveController>(FVector::ZeroVector, FRotator::ZeroRotator);
 		moveController->SetOwner(this);
 
-		ASpectatorCharacter* sc = Cast<ASpectatorCharacter>(aPawn);
 		if (sc)
 		{
-			sc->SetPlayerController(this);
-			sc->GetCharacterMovement()->SetMovementMode(MOVE_Flying);;
+			//sc->SetPlayerController(this);
+			//sc->GetCharacterMovement()->SetMovementMode(MOVE_Flying);;
 			//sc->GetCharacterMovement()->MaxFlySpeed = 600.f;
 			SetViewTarget(sc);
+			//ClientSetRTSCameraViewTarget(sc);
 		}
 
 		if (!playerCharacter)
@@ -85,6 +85,11 @@ void ARealmPlayerController::Possess(APawn* aPawn)
 			}
 		}
 	}
+}
+
+void ARealmPlayerController::ClientSetRTSCameraViewTarget_Implementation(ASpectatorCharacter* scharacter)
+{
+	
 }
 
 bool ARealmPlayerController::ServerMoveCommand_Validate(FVector targetLocation)
@@ -304,7 +309,7 @@ void ARealmPlayerController::ServerBuyPlayerMod_Implementation(TSubclassOf<AMod>
 		AMod* modToAdd;
 		if (modToBuy->CanCharacterBuyThisMod(GetPlayerCharacter()))
 		{
-			modToAdd = GetWorld()->SpawnActor<AMod>(wantedMod, GetCharacter()->GetActorLocation(), GetCharacter()->GetActorRotation());
+			modToAdd = GetWorld()->SpawnActor<AMod>(wantedMod, GetPlayerCharacter()->GetActorLocation(), GetPlayerCharacter()->GetActorRotation());
 			if (IsValid(modToAdd))
 			{
 				modToAdd->SetCharacterOwner(GetPlayerCharacter());

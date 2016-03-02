@@ -56,6 +56,10 @@ protected:
 	/* [CLIENT] player selects a target */
 	void OnTargetSelect();
 
+	/* [CLIENT] sets the client's view target */
+	UFUNCTION(reliable, client)
+	void ClientSetRTSCameraViewTarget(ASpectatorCharacter* scharacter);
+
 public:
 
 	/* [SERVER] calls the server to send the calculated world position to the move controller */

@@ -15,7 +15,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& objectInitializer)
 
 void APlayerCharacter::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, FVector CameraPosition, FVector CameraDir)
 {
-	if (!IsValid(PC->GetCharacter()))
+	if (!IsValid(PC))
 		return;
 
 	if (bHidden)
@@ -78,7 +78,7 @@ void APlayerCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& D
 
 	if (IsValid(playerController))
 	{
-		ASpectatorCharacter* sc = Cast<ASpectatorCharacter>(playerController->GetCharacter());
+		ASpectatorCharacter* sc = Cast<ASpectatorCharacter>(playerController->GetPawn());
 		if (IsValid(sc) && IsValid(sc->GetRTSCamera()))
 			sc->GetRTSCamera()->PostProcessSettings.ColorSaturation = FVector::ZeroVector;
 	}
@@ -133,7 +133,7 @@ void APlayerCharacter::Respawn()
 
 	if (IsValid(playerController))
 	{
-		ASpectatorCharacter* sc = Cast<ASpectatorCharacter>(playerController->GetCharacter());
+		ASpectatorCharacter* sc = Cast<ASpectatorCharacter>(playerController->GetPawn());
 		if (IsValid(sc) && IsValid(sc->GetRTSCamera()))
 			sc->GetRTSCamera()->PostProcessSettings.ColorSaturation = FVector(1.f, 1.f, 1.f);
 	}

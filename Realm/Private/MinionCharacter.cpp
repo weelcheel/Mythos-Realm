@@ -66,7 +66,7 @@ float AMinionCharacter::TakeDamage(float Damage, struct FDamageEvent const& Dama
 
 void AMinionCharacter::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, FVector CameraPosition, FVector CameraDir)
 {
-	if (!IsValid(PC->GetCharacter()))
+	if (!IsValid(PC))
 		return;
 
 	if (bHidden)

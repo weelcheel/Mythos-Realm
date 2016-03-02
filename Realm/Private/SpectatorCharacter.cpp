@@ -9,6 +9,10 @@ ASpectatorCharacter::ASpectatorCharacter(const FObjectInitializer& objectInitial
 {
 	springArm = objectInitializer.CreateDefaultSubobject<USpringArmComponent>(this, TEXT("CameraBoom"));
 	rtsCamera = objectInitializer.CreateDefaultSubobject<UCameraComponent>(this, TEXT("RTS Camera"));
+	capsule = objectInitializer.CreateDefaultSubobject<UCapsuleComponent>(this, TEXT("Capsule"));
+
+	RootComponent = capsule;
+	capsule->SetCollisionResponseToAllChannels(ECR_Ignore);
 
 	springArm->AttachParent = RootComponent;
 
@@ -24,18 +28,16 @@ ASpectatorCharacter::ASpectatorCharacter(const FObjectInitializer& objectInitial
 	rtsCamera->SetWorldRotation(FRotator(-45.f, -45.f, 0.f));
 	rtsCamera->PostProcessSettings.bOverride_ColorSaturation = true;
 
-	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
+	//GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
 
-	camSpeed = 475.f;
+	camSpeed = 35.f;
+
+	bReplicates = true;
 }
 
 void ASpectatorCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	GetCharacterMovement()->MaxFlySpeed = 1710.f;
-	GetCharacterMovement()->BrakingDecelerationFlying = 1710.f;
-	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 }
 
 void ASpectatorCharacter::SetupPlayerInputComponent(class UInputComponent* InputComponent)
@@ -124,7 +126,7 @@ void ASpectatorCharacter::Tick(float deltaSeconds)
 		}
 	}
 
-	if (Role < ROLE_Authority || GetNetMode() == NM_Standalone)
+	if (Role < ROLE_Authority)
 	{
 		if (camDirection != FVector::ZeroVector)
 			MoveCamera(camDirection * camSpeed);
@@ -151,7 +153,7 @@ void ASpectatorCharacter::OnDirectedMoveStop()
 
 void ASpectatorCharacter::CalculateDirectedMove()
 {
-	ARealmPlayerController* pc = Cast<ARealmPlayerController>(GetWorld()->GetFirstPlayerController());
+	ARealmPlayerController* pc = Cast<ARealmPlayerController>(GetController());
 	FHitResult hit;
 
 	if (pc && pc->SelectUnitUnderMouse(ECC_Visibility, true, hit))
@@ -160,7 +162,7 @@ void ASpectatorCharacter::CalculateDirectedMove()
 		{
 			AGameCharacter* gc = Cast<AGameCharacter>(hit.GetActor());
 			int32 team1 = gc->GetTeamIndex();
-			int32 team2 = playerController->GetPlayerCharacter()->GetTeamIndex();
+			int32 team2 = pc->GetPlayerCharacter()->GetTeamIndex();
 
 			if (gc && team1 != team2)// && !playerController->IsCharacterOnTeam(mc->GetTeam()))
 				pc->ServerStartAutoAttack(gc);
@@ -177,11 +179,12 @@ void ASpectatorCharacter::CalculateDirectedMove()
 void ASpectatorCharacter::OnUseSkill(int32 index)
 {
 	FHitResult hit;
+	ARealmPlayerController* pc = Cast<ARealmPlayerController>(GetController());
 
-	if (playerController)
+	if (pc)
 	{
-		playerController->SelectUnitUnderMouse(ECC_Visibility, true, hit);
-		playerController->ServerUseSkill(index, hit.Location);
+		pc->SelectUnitUnderMouse(ECC_Visibility, true, hit);
+		pc->ServerUseSkill(index, hit.Location);
 	}
 }
 
@@ -193,11 +196,12 @@ void ASpectatorCharacter::OnUseSkillFinished(int32 index)
 void ASpectatorCharacter::OnUseMod(int32 index)
 {
 	FHitResult hit;
+	ARealmPlayerController* pc = Cast<ARealmPlayerController>(GetController());
 
-	if (IsValid(playerController))
+	if (IsValid(pc))
 	{
-		playerController->SelectUnitUnderMouse(ECC_Visibility, true, hit);
-		playerController->ServerUseMod(index, hit);
+		pc->SelectUnitUnderMouse(ECC_Visibility, true, hit);
+		pc->ServerUseMod(index, hit);
 	}
 }
 
@@ -208,8 +212,9 @@ void ASpectatorCharacter::OnUseModFinished(int32 index)
 
 void ASpectatorCharacter::OnUpgradeSkill(int32 index)
 {
-	if (IsValid(playerController))
-		playerController->ServerOnUpgradeSkill(index);
+	ARealmPlayerController* pc = Cast<ARealmPlayerController>(GetController());
+	if (IsValid(pc))
+		pc->ServerOnUpgradeSkill(index);
 }
 
 void ASpectatorCharacter::ToggleMovementSystem(bool bEnabled)
@@ -235,7 +240,8 @@ FRotator ASpectatorCharacter::GetIsolatedCameraYaw()
 
 void ASpectatorCharacter::MoveCamera(FVector worldDirection)
 {
-	AddMovementInput(worldDirection, 50.f);
+	//AddMovementInput(worldDirection * camSpeed, 1.f);
+	SetActorLocation(GetActorLocation() + worldDirection);
 }
 
 FVector ASpectatorCharacter::RightCameraMovement(float direction)
@@ -256,23 +262,19 @@ FVector ASpectatorCharacter::ForwardCameraMovement(float direction)
 
 void ASpectatorCharacter::OnSelfCameraLock()
 {
-	if (!IsValid(playerController) || !IsValid(playerController->GetPlayerCharacter()))
+	ARealmPlayerController* pc = Cast<ARealmPlayerController>(GetController());
+	if (!IsValid(pc) || !IsValid(pc->GetPlayerCharacter()))
 		return;
 
-	springArm->AttachTo(playerController->GetPlayerCharacter()->GetRootComponent());
-	playerController->ServerLockPlayerCamera(playerController->GetPlayerCharacter());
+	springArm->AttachTo(pc->GetPlayerCharacter()->GetRootComponent());
+	cameraLockTarget = pc->GetPlayerCharacter();
+	//playerController->ServerLockPlayerCamera(pc->GetPlayerCharacter());
 }
 
 void ASpectatorCharacter::OnUnlockCamera()
 {
-	//if (cameraLockTarget)
-		//ServerSetLocation(cameraLockTarget->GetActorLocation());
-		//SetActorLocation(cameraLockTarget->GetActorLocation());
-
-	if (!IsValid(playerController))
-		return;
-
-	playerController->ServerUnlockPlayerCamera();
+	if (cameraLockTarget)
+		SetActorLocation(cameraLockTarget->GetActorLocation());
 
 	springArm->DetachFromParent(false);
 	springArm->AttachTo(GetRootComponent());
@@ -287,7 +289,6 @@ void ASpectatorCharacter::ServerSetLocation_Implementation(FVector newLocation, 
 {
 	//SetActorLocation(newLocation);
 	TeleportTo(newLocation, GetActorRotation());
-	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 
 	if (IsValid(attachActor))
 		AttachRootComponentTo(attachActor->GetRootComponent());

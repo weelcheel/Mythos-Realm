@@ -93,3 +93,4 @@ void URealmCharacterMovementComponent::ClearMovementIgnorance()
 
 	SetMovementMode(MOVE_Walking);
 }
+

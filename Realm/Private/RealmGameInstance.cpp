@@ -11,7 +11,10 @@ URealmGameInstance::URealmGameInstance(const FObjectInitializer& objectInitializ
 
 URealmGameInstance::~URealmGameInstance()
 {
-	loginSocketThread->EnsureCompletion();
+	if (loginSocketThread)
+		loginSocketThread->EnsureCompletion();
+
+	if (multiplayerSocketThread)
 	multiplayerSocketThread->EnsureCompletion();
 }
 

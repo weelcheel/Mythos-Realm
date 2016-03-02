@@ -4,7 +4,7 @@
 #include "SpectatorCharacter.generated.h"
 
 UCLASS()
-class ASpectatorCharacter : public ARealmCharacter
+class ASpectatorCharacter : public APawn
 {
 	friend class ARealmPlayerController;
 
@@ -34,6 +34,10 @@ protected:
 	/* rts camera */
 	UPROPERTY(EditDefaultsOnly, Category = Camera)
 	UCameraComponent* rtsCamera;
+
+	/* capsule component to attach to */
+	UPROPERTY(EditDefaultsOnly, Category = Camera)
+	UCapsuleComponent* capsule;
 
 	FTimerHandle lockTimer;
 

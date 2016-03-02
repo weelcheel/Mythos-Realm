@@ -47,34 +47,5 @@ void APlayerHUD::DrawHUD()
 {
 	Super::DrawHUD();
 
-	if (!IsValid(Canvas))
-		return;
-
-	float ts = GetWorld()->TimeSeconds;
-
-	for (int32 index = 0; index < floatingDamage.Num(); index++)
-	{
-		float deltaSeconds = ts - floatingDamage[index].originTime;
-		if (deltaSeconds < 3.f)
-		{
-			FVector screenPos = Project(floatingDamage[index].worldPosition);
-			//floatingDamage[index].posY = FMath::FInterpConstantTo(floatingDamage[index].posY, floatingDamage[index].posY - 35, GetWorld()->GetDeltaSeconds(), 17.f);
-
-			FString dText = FString::FromInt(floatingDamage[index].amount);
-			FColor fontColor = FColor::White;
-
-			//DrawText(dText, fontColor, screenPos.X, screenPos.Y - (deltaSeconds/3.f * 90.f), uiFont);
-
-			if (floatingDamage[index].damageType == UPhysicalDamage::StaticClass())
-				Canvas->SetDrawColor(FColor(232.f, 125.f, 143.f));
-			else if (floatingDamage[index].damageType == USpecialDamage::StaticClass())
-				Canvas->SetDrawColor(FColor(93.f, 123.f, 186.f));
-			else
-				Canvas->SetDrawColor(fontColor);
-
-			Canvas->DrawText(uiFont, dText, screenPos.X, screenPos.Y - (deltaSeconds / 3.f * 90.f));
-		}
-		else
-			floatingDamage.RemoveAt(index);
-	}
+	//DrawActorOverlays(FVector::ZeroVector, FRotator::ZeroRotator);
 }
