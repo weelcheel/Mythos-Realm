@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Chat.h"
 #include "RealmPlayerController.generated.h"
 
 class ARealmMoveController;
@@ -176,4 +177,14 @@ public:
 	/* [CLIENT] send credit gain to the HUD */
 	UFUNCTION(reliable, client)
 	void ClientShowCreditGain(const FVector& worldLoc, int32 creditAmt);
+
+	/* [CLIENT] receive a chat from the game mode */
+	void ClientReceiveChat(const FRealmChatEntry& incomingChat);
+
+	/* [CLIENT] player toggled their chat mode */
+	void ClientToggleChat();
+
+	/* receive a chat from a client to broadcast to everyone */
+	UFUNCTION(Reliable, Server, WithValidation, BlueprintCallable, Category = Chat)
+	void ServerReceiveChat(const FRealmChatEntry& broadcastChat);
 };

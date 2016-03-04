@@ -79,6 +79,9 @@ void ASpectatorCharacter::SetupPlayerInputComponent(class UInputComponent* Input
 	InputComponent->BindAction("Mod5", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<4>);
 	InputComponent->BindAction("Mod6", IE_Pressed, this, &ASpectatorCharacter::OnUseMod<5>);
 	InputComponent->BindAction("Mod6", IE_Released, this, &ASpectatorCharacter::OnUseModFinished<5>);
+
+	//chat
+	InputComponent->BindAction("PlayerToggleChat", IE_Pressed, this, &ASpectatorCharacter::OnToggleChat);
 }
 
 void ASpectatorCharacter::Tick(float deltaSeconds)
@@ -294,4 +297,11 @@ void ASpectatorCharacter::ServerSetLocation_Implementation(FVector newLocation, 
 		AttachRootComponentTo(attachActor->GetRootComponent());
 	else
 		DetachRootComponentFromParent(true);
+}
+
+void ASpectatorCharacter::OnToggleChat()
+{
+	ARealmPlayerController* pc = Cast<ARealmPlayerController>(GetController());
+	if (IsValid(pc))
+		pc->ClientToggleChat();
 }

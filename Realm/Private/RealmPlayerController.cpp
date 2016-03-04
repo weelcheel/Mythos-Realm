@@ -525,6 +525,32 @@ void ARealmPlayerController::ServerUnlockPlayerCamera_Implementation()
 	sc->bLockedOnCharacter = false;
 }
 
+void ARealmPlayerController::ClientReceiveChat(const FRealmChatEntry& incomingChat)
+{
+	APlayerHUD* hud = Cast<APlayerHUD>(GetHUD());
+	if (IsValid(hud))
+		hud->PlayerReceiveChat(incomingChat);
+}
+
+void ARealmPlayerController::ClientToggleChat()
+{
+	APlayerHUD* hud = Cast<APlayerHUD>(GetHUD());
+	if (IsValid(hud))
+		hud->PlayerToogleChat();
+}
+
+bool ARealmPlayerController::ServerReceiveChat_Validate(const FRealmChatEntry& broadcastChat)
+{
+	return true;
+}
+
+void ARealmPlayerController::ServerReceiveChat_Implementation(const FRealmChatEntry& broadcastChat)
+{
+	ARealmGameState* gs = Cast<ARealmGameState>(GetWorld()->GetGameState());
+	if (IsValid(gs))
+		gs->BroadcastChat(broadcastChat);
+}
+
 void ARealmPlayerController::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

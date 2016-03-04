@@ -2,6 +2,7 @@
 
 #include "DamageInstance.h"
 #include "DamageTypes.h"
+#include "Chat.h"
 #include "PlayerHUD.generated.h"
 
 class AGameCharacter;
@@ -95,6 +96,14 @@ public:
 	/* called whenever this player's character respawns */
 	UFUNCTION(BlueprintImplementableEvent, Category = Death)
 	void PlayerCharacterRespawned();
+
+	/* called whenever this player receives a chat */
+	UFUNCTION(BlueprintImplementableEvent, Category = Chat)
+	void PlayerReceiveChat(const FRealmChatEntry& incomingChat);
+
+	/* called when the player toggles chat mode */
+	UFUNCTION(BlueprintImplementableEvent, Category = Chat)
+	void PlayerToogleChat();
 
 	//Float as FText With Precision!
 	UFUNCTION(BlueprintCallable, Category=FloatPrecision)

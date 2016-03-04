@@ -131,6 +131,9 @@ protected:
 	/* unlock the camera from any current target */
 	void OnUnlockCamera();
 
+	/* toggle chat mode for the player */
+	void OnToggleChat();
+
 	/* server set location, useful for things with the camera */
 	UFUNCTION(reliable, server, WithValidation)
 	void ServerSetLocation(FVector newLocation, AActor* attachActor = nullptr);
