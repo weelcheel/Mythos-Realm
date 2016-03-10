@@ -97,3 +97,16 @@ void ARealmMoveController::CharacterInAttackRange()
 {
 
 }
+
+void ARealmMoveController::GameEnded()
+{
+	StopMovement();
+	GetWorldTimerManager().ClearAllTimersForObject(this);
+
+	AGameCharacter* gc = Cast<AGameCharacter>(GetCharacter());
+	if (IsValid(gc))
+	{
+		gc->StopAutoAttack();
+		gc->GetCharacterMovement()->SetMovementMode(MOVE_None);
+	}
+}

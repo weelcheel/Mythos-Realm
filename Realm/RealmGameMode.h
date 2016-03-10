@@ -42,6 +42,7 @@ UCLASS()
 class REALM_API ARealmGameMode : public AGameMode
 {
 	friend class URealmGameInstance;
+	friend class ARealmPlayerController;
 
 	GENERATED_UCLASS_BODY()
 
@@ -78,6 +79,10 @@ protected:
 	/* amount of credits players normally start out with */
 	UPROPERTY(EditDefaultsOnly, Category = Kills)
 	int32 startingCreditCount;
+
+	/* amount of skill points each player starts with */
+	UPROPERTY(EditDefaultsOnly, Category = Kills)
+	int32 startingSkillPoints;
 
 	/* whether or not this game counts towards player's competitive rank */
 	bool bRankedGame = false;

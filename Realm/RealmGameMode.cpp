@@ -17,6 +17,7 @@
 #include "RealmObjective.h"
 #include "RealmForestMinionCamp.h"
 #include "RealmTurret.h"
+#include "RealmMoveController.h"
 
 ARealmGameMode::ARealmGameMode(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
@@ -449,12 +450,26 @@ void ARealmGameMode::EndRealmMatch()
 	}*/
 
 	CalculateEndgame();
+	for (TActorIterator<ALaneManager> laneitr(GetWorld()); laneitr; ++laneitr)
+	{
+		GetWorldTimerManager().ClearAllTimersForObject(*laneitr);
+	}
 
 	for (FConstPlayerControllerIterator plyr = GetWorld()->GetPlayerControllerIterator(); plyr; ++plyr)
 	{
 		ARealmPlayerController* pc = Cast<ARealmPlayerController>((*plyr));
 		if (IsValid(pc))
+		{
+			//pc->GameEnded();
 			pc->ClientOpenEndgameUI(winningTeamIndex);
+		}
+	}
+
+	for (TActorIterator<ARealmMoveController> mvCtr(GetWorld()); mvCtr; ++mvCtr)
+	{
+		ARealmMoveController* mc = (*mvCtr);
+		if (IsValid(mc))
+			mc->GameEnded();
 	}
 }
 

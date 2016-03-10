@@ -51,6 +51,7 @@ UCLASS(ABSTRACT, Blueprintable)
 class AGameCharacter : public ARealmCharacter
 {
 	friend class ARealmGameMode;
+	friend class ARealmPlayerController;
 
 	GENERATED_UCLASS_BODY()
 

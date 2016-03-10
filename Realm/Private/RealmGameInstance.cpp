@@ -25,10 +25,10 @@ FString URealmGameInstance::StringFromBinaryArray(const TArray<uint8>& BinaryArr
 	return FString(cstr.c_str());
 }
 
-void URealmGameInstance::ConnectLoginSocket()
+bool URealmGameInstance::ConnectLoginSocket()
 {
 	//try to establish a connection to the login server
-	if (!loginSocketThread)
+	if (!loginSocketThread || !loginSocket || loginSocket->GetConnectionState() != SCS_Connected)
 	{
 		FSocket* ls = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(NAME_Stream, TEXT("login"), false);
 		auto resolveInfo = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetHostByName("mythosrealm.ddns.net");
@@ -40,6 +40,11 @@ void URealmGameInstance::ConnectLoginSocket()
 		{
 			const FInternetAddr* addr = &resolveInfo->GetResolvedAddress();
 			addr->GetIp(outip);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("failed to resolve the hostname"));
+			return false;
 		}
 
 		int32 port = 3308;
@@ -56,7 +61,7 @@ void URealmGameInstance::ConnectLoginSocket()
 		if (!connected)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("failed to connect to the login server"));
-			return;
+			return false;
 		}
 
 		loginSocketThread = FRealmSocketListener::CreateListener(ls, true);
@@ -67,13 +72,17 @@ void URealmGameInstance::ConnectLoginSocket()
 			GetWorld()->GetTimerManager().SetTimer(loginSocketListenTimer, this, &URealmGameInstance::ListenLoginSocket, 0.03f, true);
 
 		UE_LOG(LogTemp, Warning, TEXT("connected to the login server"));
+
+		return true;
 	}
+
+	return true;
 }
 
-void URealmGameInstance::ConnectMultiplayerSocket()
+bool URealmGameInstance::ConnectMultiplayerSocket()
 {
 	//try to establish a connection to the multiplayer master server
-	if (!multiplayerSocketThread)
+	if (!multiplayerSocketThread || !multiplayerSocket || multiplayerSocket->GetConnectionState() != SCS_Connected)
 	{
 		FSocket* ms = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(NAME_Stream, TEXT("multiplayer"), false);
 		auto resolveInfo = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetHostByName("mythosrealm.ddns.net");
@@ -85,6 +94,11 @@ void URealmGameInstance::ConnectMultiplayerSocket()
 		{
 			const FInternetAddr* addr = &resolveInfo->GetResolvedAddress();
 			addr->GetIp(outip);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("failed to resolve the hostname"));
+			return false;
 		}
 
 		int32 port = 3310;
@@ -102,7 +116,7 @@ void URealmGameInstance::ConnectMultiplayerSocket()
 		if (!connected)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("failed to connect to the multiplayer server"));
-			return;
+			return false;
 		}
 
 		multiplayerSocketThread = FRealmSocketListener::CreateListener(ms, false);
@@ -113,7 +127,10 @@ void URealmGameInstance::ConnectMultiplayerSocket()
 			GetWorld()->GetTimerManager().SetTimer(multiplayerSocketListenTimer, this, &URealmGameInstance::ListenMultiplayerSocket, 0.03f, true);
 
 		UE_LOG(LogTemp, Warning, TEXT("connected to the multiplayer server"));
+		return true;
 	}
+
+	return true;
 }
 
 void URealmGameInstance::ListenLoginSocket()
@@ -190,6 +207,11 @@ void URealmGameInstance::ParseLoginSocketData(const TArray<uint8>& ReceivedData)
 			mm->CreatePlayerLoginUnsuccessful(data[1]);
 			UE_LOG(LogTemp, Warning, TEXT("Couldn't create new account. Reason: %s"), *data[1]);
 		}
+		if (data[0].Equals("updateInfo"))
+		{
+			ReceiveInfoUpdate(data[1], FCString::Atoi(*data[2]));
+			UE_LOG(LogTemp, Warning, TEXT("Received info update"));
+		}
 
 		//multiplayer lobby parsing
 
@@ -246,9 +268,10 @@ void URealmGameInstance::ParseMultiplayerSocketData(const TArray<uint8>& Receive
 	}
 }
 
-void URealmGameInstance::AttemptLogin(FString username, FString password)
+bool URealmGameInstance::AttemptLogin(FString username, FString password)
 {
-	ConnectLoginSocket();
+	if (!ConnectLoginSocket())
+		return false;
 
 	//encode username
 	FString serialized = "login|username|";
@@ -280,12 +303,18 @@ void URealmGameInstance::AttemptLogin(FString username, FString password)
 	if (bSuccesfullySent)
 		UE_LOG(LogTemp, Warning, TEXT("sent %d bytes to the server"), sent);
 	if (!bSuccesfullySent)
+	{
 		UE_LOG(LogTemp, Warning, TEXT("failed to send"));
+		return false;
+	}
+
+	return true;
 }
 
-void URealmGameInstance::AttemptCreateLogin(FString username, FString password, FString email, FString ingameAlias)
+bool URealmGameInstance::AttemptCreateLogin(FString username, FString password, FString email, FString ingameAlias)
 {
-	ConnectLoginSocket();
+	if (!ConnectLoginSocket())
+		return false;
 
 	FString sendStr = "loginCreate|username|";
 	sendStr += username;
@@ -314,7 +343,12 @@ void URealmGameInstance::AttemptCreateLogin(FString username, FString password, 
 	if (bSuccesfullySent)
 		UE_LOG(LogTemp, Warning, TEXT("sent %d bytes to the server"), sent);
 	if (!bSuccesfullySent)
+	{
 		UE_LOG(LogTemp, Warning, TEXT("failed to send"));
+		return false;
+	}
+
+	return true;
 }
 
 void URealmGameInstance::SendMatchComplete(ARealmGameMode* gameMode)
@@ -324,7 +358,8 @@ void URealmGameInstance::SendMatchComplete(ARealmGameMode* gameMode)
 
 	if (gameMode->bRankedGame)
 	{
-		ConnectMultiplayerSocket();
+		if (!ConnectMultiplayerSocket())
+			return;
 
 		FString sendStr = "rankedGameFinished|";
 		for (int32 i = 0; i < gameMode->endgameUserids.Num(); i++)
@@ -345,7 +380,15 @@ void URealmGameInstance::SendMatchComplete(ARealmGameMode* gameMode)
 			UE_LOG(LogTemp, Warning, TEXT("sent %d bytes to the server"), sent);
 		if (!bSuccesfullySent)
 			UE_LOG(LogTemp, Warning, TEXT("failed to send"));
+
+		FTimerHandle exitTimer;
+		gameMode->GetWorldTimerManager().SetTimer(exitTimer, this, &URealmGameInstance::CloseGameInstance, 35.f, false);
 	}
+}
+
+void URealmGameInstance::CloseGameInstance()
+{
+	FGenericPlatformMisc::RequestExit(false);
 }
 
 FString URealmGameInstance::GetRealmServerIP(int32 port)
@@ -368,9 +411,10 @@ FString URealmGameInstance::GetRealmServerIP(int32 port)
 	return ipstr;
 }
 
-void URealmGameInstance::AttemptJoinSoloMMQueue(const FString& queue)
+bool URealmGameInstance::AttemptJoinSoloMMQueue(const FString& queue)
 {
-	ConnectMultiplayerSocket();
+	if (!ConnectMultiplayerSocket())
+		return false;
 
 	FString sendStr = "playerWantsMMQueue|" + GetUserID() + "|" + queue;
 
@@ -384,12 +428,18 @@ void URealmGameInstance::AttemptJoinSoloMMQueue(const FString& queue)
 	if (bSuccesfullySent)
 		UE_LOG(LogTemp, Warning, TEXT("sent %d bytes to the server"), sent);
 	if (!bSuccesfullySent)
+	{
 		UE_LOG(LogTemp, Warning, TEXT("failed to send"));
+		return false;
+	}
+
+	return true;
 }
 
-void URealmGameInstance::SendConfirmMatch(const FString& matchID)
+bool URealmGameInstance::SendConfirmMatch(const FString& matchID)
 {
-	ConnectMultiplayerSocket();
+	if (!ConnectMultiplayerSocket())
+		return false;
 
 	FString sendStr = "playerConfirmMatch|" + GetUserID() + "|" + matchID;
 
@@ -403,5 +453,41 @@ void URealmGameInstance::SendConfirmMatch(const FString& matchID)
 	if (bSuccesfullySent)
 		UE_LOG(LogTemp, Warning, TEXT("sent %d bytes to the server"), sent);
 	if (!bSuccesfullySent)
+	{
 		UE_LOG(LogTemp, Warning, TEXT("failed to send"));
+		return false;
+	}
+
+	return true;
+}
+
+void URealmGameInstance::QueryLoginServerForUpdate()
+{
+	if (!ConnectLoginSocket())
+		return;
+
+	FString sendStr = "getInfoUpdate|" + GetUserID();
+
+	//send the data to the server
+	TCHAR *serializedChar = sendStr.GetCharArray().GetData();
+	int32 encSize = FCString::Strlen(serializedChar);
+	int32 sent = 0;
+
+	//send and store whether or not it was successful
+	bool bSuccesfullySent = loginSocket->Send((uint8*)TCHAR_TO_UTF8(serializedChar), encSize, sent);
+	if (bSuccesfullySent)
+		UE_LOG(LogTemp, Warning, TEXT("sent %d bytes to the server"), sent);
+	if (!bSuccesfullySent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("failed to send"));
+		return;
+	}
+}
+
+void URealmGameInstance::ReceiveInfoUpdate(const FString& alias, int32 mp)
+{
+	currentAlias = alias;
+	currentMythosPoints = mp;
+
+	UE_LOG(LogTemp, Warning, TEXT("received info update"));
 }

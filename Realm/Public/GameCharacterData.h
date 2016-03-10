@@ -66,6 +66,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = Stats)
 	float flareRegenPerLevel;
 
+	UPROPERTY(EditDefaultsOnly, Category = Portrait)
+	UTexture2D* portrait;
+
 public:
 
 	/* gets an array of stats to use for the game character class */

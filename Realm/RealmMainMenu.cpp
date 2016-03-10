@@ -14,30 +14,38 @@ void ARealmMainMenu::BeginPlay()
 	Super::BeginPlay();
 }
 
-void ARealmMainMenu::AttemptLogin(FString username, FString password)
+bool ARealmMainMenu::AttemptLogin(FString username, FString password)
 {
 	URealmGameInstance* gi = Cast<URealmGameInstance>(GetGameInstance());
 	if (gi)
-		gi->AttemptLogin(username, password);
+		return gi->AttemptLogin(username, password);
+
+	return false;
 }
 
-void ARealmMainMenu::AttemptCreateLogin(FString username, FString password, FString email, FString ingameAlias)
+bool ARealmMainMenu::AttemptCreateLogin(FString username, FString password, FString email, FString ingameAlias)
 {
 	URealmGameInstance* gi = Cast<URealmGameInstance>(GetGameInstance());
 	if (gi)
-		gi->AttemptCreateLogin(username, password, email, ingameAlias);
+		return gi->AttemptCreateLogin(username, password, email, ingameAlias);
+	
+	return false;
 }
 
-void ARealmMainMenu::AttemptJoinMatchmakingSolo(const FString& queue)
+bool ARealmMainMenu::AttemptJoinMatchmakingSolo(const FString& queue)
 {
 	URealmGameInstance* gi = Cast<URealmGameInstance>(GetGameInstance());
 	if (gi)
-		gi->AttemptJoinSoloMMQueue(queue);
+		return gi->AttemptJoinSoloMMQueue(queue);
+
+	return false;
 }
 
-void ARealmMainMenu::PlayerConfirmMatch(const FString& matchID)
+bool ARealmMainMenu::PlayerConfirmMatch(const FString& matchID)
 {
 	URealmGameInstance* gi = Cast<URealmGameInstance>(GetGameInstance());
 	if (gi)
-		gi->SendConfirmMatch(matchID);
+		return gi->SendConfirmMatch(matchID);
+
+	return false;
 }

@@ -53,7 +53,7 @@ void ARealmLaneMinionAI::OnTargetEnterRadius(class APawn* pawn)
 		ELaneMinionTargetPriority priority;
 
 		gc->IsA(APlayerCharacter::StaticClass()) ? priority = ELaneMinionTargetPriority::LMTP_ClosestMythos : priority = ELaneMinionTargetPriority::LMTP_ClosestMinion;
-		if (gc->IsA(ATurret::StaticClass()))
+		if (gc->IsA(ARealmObjective::StaticClass()))
 			priority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
 
 		SetNewTarget(gc, priority);

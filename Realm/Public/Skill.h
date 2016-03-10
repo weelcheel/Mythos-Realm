@@ -79,6 +79,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Skill)
 	FText skillName;
 
+	/* description of the skill */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Skill)
+	FText skillDesc;
+
 	/* called when cooldown is finished */
 	void CooldownFinished();
 
@@ -147,9 +151,16 @@ public:
 
 	/* gets the skill's name */
 	UFUNCTION(BlueprintCallable, Category = CharacterName)
-	const FText& GetSkillName() const
+	FText GetSkillName() const
 	{
 		return skillName;
+	}
+
+	/* gets the skill's desc */
+	UFUNCTION(BlueprintCallable, Category = CharacterName)
+	FText GetSkillDesc() const
+	{
+		return skillDesc;
 	}
 
 	/* called whenever this skill should be interrupted (if its being performed) */

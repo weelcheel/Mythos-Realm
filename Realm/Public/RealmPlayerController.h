@@ -187,4 +187,7 @@ public:
 	/* receive a chat from a client to broadcast to everyone */
 	UFUNCTION(Reliable, Server, WithValidation, BlueprintCallable, Category = Chat)
 	void ServerReceiveChat(const FRealmChatEntry& broadcastChat);
+
+	/* called when the game ends */
+	void GameEnded();
 };

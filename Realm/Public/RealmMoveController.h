@@ -32,4 +32,7 @@ public:
 	virtual void CharacterDamaged(AGameCharacter* damageCauser);
 
 	virtual void CharacterInAttackRange();
+
+	/* called whenever the game has ended */
+	void GameEnded();
 };

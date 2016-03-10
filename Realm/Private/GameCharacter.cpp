@@ -203,7 +203,7 @@ void AGameCharacter::UseSkill_Implementation(int32 index, FVector mouseHitLoc, A
 		return;
 
 	ESkillState skillState = skillManager->GetSkill(index)->GetSkillState();
-	if (skillState == ESkillState::Disabled || skillState == ESkillState::OnCooldown || skillState == ESkillState::Performing)
+	if (skillState == ESkillState::Disabled || skillState == ESkillState::OnCooldown || skillState == ESkillState::Performing || skillState == ESkillState::NotLearned)
 		return;
 
 	float curr = statsManager->GetFlare();

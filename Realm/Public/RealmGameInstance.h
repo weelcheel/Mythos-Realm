@@ -53,29 +53,35 @@ protected:
 
 	void SetupInternetAddresses();
 
-	void ConnectLoginSocket();
-	void ConnectMultiplayerSocket();
+	bool ConnectLoginSocket();
+	bool ConnectMultiplayerSocket();
 	void ListenLoginSocket();
 	void ListenMultiplayerSocket();
+
+	void ReceiveInfoUpdate(const FString& alias, int32 mp);
 
 public:
 	~URealmGameInstance();
 
 	/* attempts to contact the login server and perform a login */
-	void AttemptLogin(FString username, FString password);
+	bool AttemptLogin(FString username, FString password);
 
 	/* attempts to contact the login server to create a new account with the provided credentials */
-	void AttemptCreateLogin(FString username, FString password, FString email, FString ingameAlias);
+	bool AttemptCreateLogin(FString username, FString password, FString email, FString ingameAlias);
 
 	/* attempts to join solo queue */
-	void AttemptJoinSoloMMQueue(const FString& queue);
+	bool AttemptJoinSoloMMQueue(const FString& queue);
 
 	/* send match complete info to the database server from a game server */
 	void SendMatchComplete(ARealmGameMode* gameMode);
 
+	/* query login server for info update */
+	UFUNCTION(BlueprintCallable, Category=Info)
+	void QueryLoginServerForUpdate();
+
 	/* send confirm match to the multiplayer server */
 	UFUNCTION(BlueprintCallable, Category=MatchConfirm)
-	void SendConfirmMatch(const FString& matchID);
+	bool SendConfirmMatch(const FString& matchID);
 
 	/* get the current userid */
 	const FString& GetUserID() const
@@ -88,4 +94,6 @@ public:
 
 	void ParseLoginSocketData(const TArray<uint8>& data);
 	void ParseMultiplayerSocketData(const TArray<uint8>& data);
+
+	void CloseGameInstance();
 };

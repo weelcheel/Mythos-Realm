@@ -94,7 +94,7 @@ void ARealmEnabler::OnDeath(float KillingDamage, struct FDamageEvent const& Dama
 
 void ARealmEnabler::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, FVector CameraPosition, FVector CameraDir)
 {
-	if (!IsValid(PC->GetCharacter()))
+	if (!IsValid(PC))
 		return;
 
 	if (bHidden)

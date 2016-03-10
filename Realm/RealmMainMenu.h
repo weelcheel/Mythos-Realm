@@ -16,19 +16,19 @@ public:
 
 	/* attempts to contact the login server and perform a login */
 	UFUNCTION(BlueprintCallable, Category=PlayerLogin)
-	void AttemptLogin(FString username, FString password);
+	bool AttemptLogin(FString username, FString password);
 
 	/* attempts to contact the login server to create a new account with the provided credentials */
 	UFUNCTION(BlueprintCallable, Category = PlayerLogin)
-	void AttemptCreateLogin(FString username, FString password, FString email, FString ingameAlias);
+	bool AttemptCreateLogin(FString username, FString password, FString email, FString ingameAlias);
 
 	/* attempts to join the specified matchmaking queue */
 	UFUNCTION(BlueprintCallable, Category = PlayerLogin)
-	void AttemptJoinMatchmakingSolo(const FString& queue);
+	bool AttemptJoinMatchmakingSolo(const FString& queue);
 
 	/* attempts to join the specified matchmaking queue */
 	UFUNCTION(BlueprintCallable, Category = PlayerLogin)
-	void PlayerConfirmMatch(const FString& matchID);
+	bool PlayerConfirmMatch(const FString& matchID);
 
 	/* server sent back a successful login */
 	UFUNCTION(BlueprintImplementableEvent, Category = PlayerLogin)

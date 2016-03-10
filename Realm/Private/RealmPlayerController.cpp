@@ -75,6 +75,7 @@ void ARealmPlayerController::Possess(APawn* aPawn)
 				playerCharacter->SetPlayerController(this);
 				playerCharacter->SetOwner(this);
 				playerCharacter->ChangeCredits(GetWorld()->GetAuthGameMode<ARealmGameMode>()->GetStartingCredits());
+				playerCharacter->skillPoints = GetWorld()->GetAuthGameMode<ARealmGameMode>()->startingSkillPoints;
 				playerCharacter->OnCharacterSpawned();
 
 				if (ps)
@@ -549,6 +550,11 @@ void ARealmPlayerController::ServerReceiveChat_Implementation(const FRealmChatEn
 	ARealmGameState* gs = Cast<ARealmGameState>(GetWorld()->GetGameState());
 	if (IsValid(gs))
 		gs->BroadcastChat(broadcastChat);
+}
+
+void ARealmPlayerController::GameEnded()
+{
+	
 }
 
 void ARealmPlayerController::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
