@@ -40,17 +40,19 @@ void AGameCharacter::BeginPlay()
 		statsManager = GetWorld()->SpawnActor<AStatsManager>(GetActorLocation(), GetActorRotation());
 		autoAttackManager = GetWorld()->SpawnActor<AAutoAttackManager>(GetActorLocation(), GetActorRotation());
 		skillManager = GetWorld()->SpawnActor<ASkillManager>(GetActorLocation(), GetActorRotation());
+		shieldManager = GetWorld()->SpawnActor<AShieldManager>();
 		modManager = GetWorld()->SpawnActor<AModManager>();
 
 		//initialize stats
-		if (characterData)
-			statsManager->InitializeStats(characterData->GetDefaultObject<UGameCharacterData>()->GetCharacterBaseStats(), this);
-	
+		statsManager->InitializeStats(characterData->GetDefaultObject<UGameCharacterData>()->GetCharacterBaseStats(), this);
+		shieldManager->owningCharacter = this;
+		shieldManager->SetOwner(this);
 		autoAttackManager->InitializeManager(autoAttacks, statsManager);
 		autoAttackManager->SetOwner(playerController);
 		statsManager->AttachRootComponentToActor(this);
 		autoAttackManager->AttachRootComponentToActor(this);
 		skillManager->AttachRootComponentToActor(this);
+		modManager->SetOwner(this);
 
 		statsManager->SetMaxHealth();
 		statsManager->SetMaxFlare();
@@ -600,6 +602,9 @@ float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent cons
 		bNegateNextDmgEvent = false;
 		return 0.f;
 	}
+
+	if (shieldManager)
+		Damage = shieldManager->TryAbsorbDamage(Damage, DamageEvent.DamageTypeClass);
 
 	if (aipc)
 	{
@@ -1307,6 +1312,12 @@ void AGameCharacter::PlayCharacterSound_Implementation(USoundBase* sound, bool b
 		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), sound, GetActorLocation(), FRotator::ZeroRotator, 0.5f, 1.f, 0.f, soundAttenuation);
 }
 
+void AGameCharacter::AddShield(FCharacterShield newShield)
+{
+	if (IsValid(shieldManager))
+		shieldManager->AddShield(newShield);
+}
+
 void AGameCharacter::PreReplication(IRepChangedPropertyTracker & ChangedPropertyTracker)
 {
 	Super::PreReplication(ChangedPropertyTracker);
@@ -1322,6 +1333,7 @@ void AGameCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Ou
 	DOREPLIFETIME(AGameCharacter, statsManager);
 	DOREPLIFETIME(AGameCharacter, autoAttackManager);
 	DOREPLIFETIME(AGameCharacter, skillManager);
+	DOREPLIFETIME(AGameCharacter, shieldManager);
 	DOREPLIFETIME(AGameCharacter, teamIndex);
 	DOREPLIFETIME(AGameCharacter, currentAilment);
 	DOREPLIFETIME(AGameCharacter, currentTarget);

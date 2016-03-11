@@ -155,9 +155,9 @@ void ASkill::OnCooldownTimerSet()
 	GetWorldTimerManager().SetTimer(cooldownTimer, this, &ASkill::CooldownFinished, cooldownTime);
 }
 
-void ASkill::SkillFinished()
+void ASkill::SkillFinished(float manualCooldown)
 {
-	StartCooldown();
+	StartCooldown(manualCooldown);
 }
 
 float ASkill::GetCost()

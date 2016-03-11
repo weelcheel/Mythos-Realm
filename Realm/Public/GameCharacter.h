@@ -8,6 +8,7 @@
 #include "ModManager.h"
 #include "Mod.h"
 #include "GameCharacterData.h"
+#include "ShieldManager.h"
 #include "GameCharacter.generated.h"
 
 /* max level for characters */
@@ -80,6 +81,10 @@ protected:
 	/* mod manager this character can use */
 	UPROPERTY(replicated)
 	AModManager* modManager;
+	
+	/* shield manager this character can use */
+	UPROPERTY(replicated)
+	AShieldManager* shieldManager;
 
 	/* array of auto attacks this character can use */
 	UPROPERTY(EditDefaultsOnly, Category = AA)
@@ -535,4 +540,8 @@ public:
 	/* function to call for this character to play a sound over the network ONCE */
 	UFUNCTION(BlueprintCallable, reliable, NetMulticast, Category = CharacterSound)
 	void PlayCharacterSound(USoundBase* sound, bool bAttachedToCharacter = false);
+
+	/* requests to add a shield to the shield manager */
+	UFUNCTION(BlueprintCallable, Category = Shield)
+	void AddShield(FCharacterShield newShield);
 };

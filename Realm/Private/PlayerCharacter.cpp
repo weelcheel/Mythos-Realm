@@ -15,7 +15,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& objectInitializer)
 
 void APlayerCharacter::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, FVector CameraPosition, FVector CameraDir)
 {
-	if (!IsValid(PC))
+	if (!IsValid(PC) || !IsValid(shieldManager))
 		return;
 
 	if (bHidden)
@@ -48,6 +48,9 @@ void APlayerCharacter::PostRenderFor(class APlayerController* PC, class UCanvas*
 		//flare bar
 		Canvas->K2_DrawTexture(nullptr, FVector2D(screenPos.X - (125.f / 2.f), screenPos.Y + 12.f), FVector2D(125.f, 6.f), FVector2D::ZeroVector, FVector2D::UnitVector, FLinearColor::Black);
 		Canvas->K2_DrawTexture(nullptr, FVector2D(screenPos.X - (125.f / 2.f), screenPos.Y + 12.f), FVector2D((GetFlare() / GetCurrentValueForStat(EStat::ES_Flare)) * 125.f, 6.f), FVector2D::ZeroVector, FVector2D::UnitVector, FColor::Blue);
+
+		//shield bar
+		Canvas->K2_DrawTexture(nullptr, FVector2D(screenPos.X + (125.f / 2.f) - ((shieldManager->GetTotalShieldAmount() / GetCurrentValueForStat(EStat::ES_HP)) * 125.f), screenPos.Y - 6.f), FVector2D((shieldManager->GetTotalShieldAmount() / GetCurrentValueForStat(EStat::ES_HP)) * 125.f, 18.f), FVector2D::ZeroVector, FVector2D::UnitVector, FColor::White);
 
 		Canvas->K2_DrawText(UEngine::GetLargeFont(), playerName, FVector2D(screenPos.X - (125.f / 2.f), screenPos.Y - 26.f));
 	}

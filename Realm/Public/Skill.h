@@ -140,7 +140,7 @@ public:
 
 	/* called after the skill is finished being performed to use flare and start cooldowns */
 	UFUNCTION(BlueprintCallable, Category = Cooldown)
-	void SkillFinished();
+	void SkillFinished(float manualCooldown = -1.f);
 
 	/* gets the current skill state */
 	ESkillState GetSkillState() const;
