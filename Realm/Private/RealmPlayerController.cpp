@@ -162,18 +162,20 @@ void ARealmPlayerController::ServerClearAttackCommands_Implementation()
 	playerCharacter->StopAutoAttack();
 }
 
-bool ARealmPlayerController::ServerUseSkill_Validate(int32 index, FVector mouseHitLoc)
+bool ARealmPlayerController::ServerUseSkill_Validate(int32 index, const FHitResult& hitInfo)
 {
 	return true;
 }
 
-void ARealmPlayerController::ServerUseSkill_Implementation(int32 index, FVector mouseHitLoc)
+void ARealmPlayerController::ServerUseSkill_Implementation(int32 index, const FHitResult& hitInfo)
 {
 	if (!IsValid(playerCharacter))
 		return;
 
+	AGameCharacter* gc = Cast<AGameCharacter>(hitInfo.GetActor());
+
 	if (playerCharacter->CanPerformSkills())
-		playerCharacter->UseSkill(index, mouseHitLoc, playerCharacter->GetCurrentTarget());
+		playerCharacter->UseSkill(index, hitInfo.ImpactPoint, gc);
 }
 
 bool ARealmPlayerController::ServerUseMod_Validate(int32 index, FHitResult const& hit)
@@ -372,6 +374,9 @@ bool ARealmPlayerController::SelectUnitUnderMouse(ECollisionChannel TraceChannel
 		{
 			AGameCharacter* gc = Cast<AGameCharacter>(testHit.GetActor());
 			if (!IsValid(gc))
+				continue;
+
+			if (!gc->IsTargetable())
 				continue;
 
 			if (gc->GetTeamIndex() != GetPlayerCharacter()->GetTeamIndex())

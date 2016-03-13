@@ -187,7 +187,7 @@ void ASpectatorCharacter::OnUseSkill(int32 index)
 	if (pc)
 	{
 		pc->SelectUnitUnderMouse(ECC_Visibility, true, hit);
-		pc->ServerUseSkill(index, hit.Location);
+		pc->ServerUseSkill(index, hit);
 	}
 }
 

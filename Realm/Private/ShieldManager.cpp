@@ -79,6 +79,8 @@ void AShieldManager::ShieldFinished(FCharacterShield finishingShield)
 
 	owningCharacter->GetWorld()->GetTimerManager().ClearTimer(finishingShield.timer);
 	shields.Remove(finishingShield.key);
+
+	UpdateTotalShieldAmount();
 }
 
 void AShieldManager::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const

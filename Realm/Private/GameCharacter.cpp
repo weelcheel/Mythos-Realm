@@ -597,12 +597,6 @@ float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent cons
 	else if (DamageEvent.DamageTypeClass == USpecialDamage::StaticClass() && statsManager->GetCurrentValueForStat(EStat::ES_SpDef) >= 0)
 		Damage -= statsManager->GetCurrentValueForStat(EStat::ES_SpDef);
 
-	if (bNegateNextDmgEvent)
-	{
-		bNegateNextDmgEvent = false;
-		return 0.f;
-	}
-
 	if (shieldManager)
 		Damage = shieldManager->TryAbsorbDamage(Damage, DamageEvent.DamageTypeClass);
 
@@ -616,17 +610,27 @@ float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent cons
 		damageCausingGC = pc->GetPlayerCharacter();
 		pc->GetMoveController()->CharacterDamaged(this);
 	}
+
+	if (bOnlySpecificCharactersCanDamage && !specificDamagingCharacters.Contains(damageCausingGC))
+		return 0.f;
+
+	CharacterDamaged(Damage, DamageEvent.DamageTypeClass, damageCausingGC, DamageCauser);
 	
 	if (IsValid(damageCausingGC))
 		damageCausingGC->HurtAnother(this, DamageEvent, Damage, realmDamage);
 
 	CharacterCombatAction();
-	CharacterDamaged(Damage, DamageEvent.DamageTypeClass, damageCausingGC, DamageCauser);
 
 	TArray<ASkill*> skills;
 	skillManager->GetSkills(skills);
 	for (int32 i = 0; i < skills.Num(); i++)
 		skills[i]->InterruptSkill(ESkillInterruptReason::SIR_Damaged);
+
+	if (bNegateNextDmgEvent)
+	{
+		bNegateNextDmgEvent = false;
+		return 0.f;
+	}
 
 	if (Damage > 0.f)
 	{
@@ -1318,6 +1322,21 @@ void AGameCharacter::AddShield(FCharacterShield newShield)
 		shieldManager->AddShield(newShield);
 }
 
+void AGameCharacter::AddSpecificDamager(AGameCharacter* specificCharacter)
+{
+	specificDamagingCharacters.AddUnique(specificCharacter);
+}
+
+void AGameCharacter::SetOnlySpecificDamage(bool bNewSpecificDamage)
+{
+	bOnlySpecificCharactersCanDamage = bNewSpecificDamage;
+}
+
+void AGameCharacter::ClearSpecificDamagers()
+{
+	specificDamagingCharacters.Empty();
+}
+
 void AGameCharacter::PreReplication(IRepChangedPropertyTracker & ChangedPropertyTracker)
 {
 	Super::PreReplication(ChangedPropertyTracker);
@@ -1341,5 +1360,6 @@ void AGameCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Ou
 	DOREPLIFETIME(AGameCharacter, skillPoints);
 	DOREPLIFETIME(AGameCharacter, experienceAmount);
 	DOREPLIFETIME(AGameCharacter, mods);
+	DOREPLIFETIME(AGameCharacter, bIsTargetable);
 	DOREPLIFETIME_CONDITION(AGameCharacter, lastTakeHitInfo, COND_Custom);
 }

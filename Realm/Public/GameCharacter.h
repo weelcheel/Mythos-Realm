@@ -175,6 +175,18 @@ protected:
 	/* period of time this character needs to take no damage or perform combat actions to leave combat */
 	UPROPERTY(EditDefaultsOnly, Category = Combat)
 	float combatTimeoutDelay;
+	
+	/* whether or not this character is targetable */
+	UPROPERTY(replicated)
+	bool bIsTargetable = true;
+
+	/* whether or not this character can only be damaged by specific characters */
+	UPROPERTY()
+	bool bOnlySpecificCharactersCanDamage = false;
+
+	/* list of characters that can damage us in specific damage mode */
+	UPROPERTY()
+	TArray<AGameCharacter*> specificDamagingCharacters;
 
 	/* timer for this character's combat phase */
 	FTimerHandle combatTimeout;
@@ -534,6 +546,20 @@ public:
 			gc->GetCharacterName(outText);
 	}
 
+	/* gets whether or not this character is targetable */
+	UFUNCTION(BlueprintCallable, Category = Targetable)
+	bool IsTargetable() const
+	{
+		return bIsTargetable;
+	}
+
+	/* sets this character's targetability */
+	UFUNCTION(BlueprintCallable, Category=Targetable)
+	void SetTargetable(bool bNewIsTargetable)
+	{
+		bIsTargetable = bNewIsTargetable;
+	}
+
 	/* server function for upgrading skills*/
 	void OnUpgradeSkill(int32 index);
 
@@ -544,4 +570,16 @@ public:
 	/* requests to add a shield to the shield manager */
 	UFUNCTION(BlueprintCallable, Category = Shield)
 	void AddShield(FCharacterShield newShield);
+
+	/* adds a specific damager to this character's list */
+	UFUNCTION(BlueprintCallable, Category = Damage)
+	void AddSpecificDamager(AGameCharacter* specificCharacter);
+
+	/* sets whether or not we obey specific damagers */
+	UFUNCTION(BlueprintCallable, Category = Damage)
+	void SetOnlySpecificDamage(bool bNewSpecificDamage);
+
+	/* clears the specific damager array */
+	UFUNCTION(BlueprintCallable, Category = Damage)
+	void ClearSpecificDamagers();
 };

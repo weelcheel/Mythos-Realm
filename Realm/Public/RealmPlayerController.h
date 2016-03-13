@@ -81,7 +81,7 @@ public:
 
 	/* [SERVER] called when the player wants to use a skill */
 	UFUNCTION(reliable, server, WithValidation)
-	void ServerUseSkill(int32 index, FVector mouseHitLoc);
+	void ServerUseSkill(int32 index, const FHitResult& hitInfo);
 
 	/* [SERVER] called when the player wants to use a mod */
 	UFUNCTION(reliable, server, WithValidation)
