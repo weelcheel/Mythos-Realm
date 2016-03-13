@@ -57,6 +57,9 @@ protected:
 	/* [CLIENT] player selects a target */
 	void OnTargetSelect();
 
+	/* [CLIENT] on player start base teleport */
+	void OnBaseTeleport();
+
 	/* [CLIENT] sets the client's view target */
 	UFUNCTION(reliable, client)
 	void ClientSetRTSCameraViewTarget(ASpectatorCharacter* scharacter);
@@ -134,6 +137,18 @@ public:
 	/* [SERVER] player is done focusing on a certain actor */
 	UFUNCTION(reliable, server, WithValidation)
 	void ServerUnlockPlayerCamera();
+
+	/* [SERVER] server start base teleport */
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerStartBaseTeleport();
+
+	/* [SERVER] server stop base teleport */
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerStopBaseTeleport();
+
+	/* [ALL] base teleport multicast */
+	UFUNCTION(reliable, NetMulticast)
+	void StartBaseTeleport(bool bStarting);
 
 	/* get the hit results under this character's mouse */
 	UFUNCTION(BlueprintCallable, Category = Commands)

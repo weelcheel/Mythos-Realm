@@ -41,6 +41,7 @@ void ARealmPlayerController::SetupInputComponent()
 
 	InputComponent->BindAction("IngameStore", IE_Pressed, this, &ARealmPlayerController::OnToggleIngameStore);
 	InputComponent->BindAction("TargetClick", IE_Pressed, this, &ARealmPlayerController::OnTargetSelect);
+	InputComponent->BindAction("BaseTeleport", IE_Pressed, this, &ARealmPlayerController::OnBaseTeleport);
 }
 
 void ARealmPlayerController::Possess(APawn* aPawn)
@@ -107,6 +108,7 @@ void ARealmPlayerController::ServerMoveCommand_Implementation(FVector targetLoca
 		return;
 	
 	ServerClearAttackCommands();
+	ServerStopBaseTeleport();
 
 	if (IsValid(moveController))
 		moveController->MoveToLocation(targetLocation);
@@ -129,6 +131,7 @@ void ARealmPlayerController::ServerStartAutoAttack_Implementation(AGameCharacter
 		return;
 
 	ServerClearMoveCommands();
+	ServerStopBaseTeleport();
 
 	playerCharacter->SetCurrentTarget(target);
 	GetPlayerInAutoAttackRange();
@@ -175,7 +178,10 @@ void ARealmPlayerController::ServerUseSkill_Implementation(int32 index, const FH
 	AGameCharacter* gc = Cast<AGameCharacter>(hitInfo.GetActor());
 
 	if (playerCharacter->CanPerformSkills())
+	{
+		ServerStopBaseTeleport();
 		playerCharacter->UseSkill(index, hitInfo.ImpactPoint, gc);
+	}
 }
 
 bool ARealmPlayerController::ServerUseMod_Validate(int32 index, FHitResult const& hit)
@@ -529,6 +535,42 @@ void ARealmPlayerController::ServerUnlockPlayerCamera_Implementation()
 
 	sc->cameraLockTarget = nullptr;
 	sc->bLockedOnCharacter = false;
+}
+
+void ARealmPlayerController::OnBaseTeleport()
+{
+	ServerStartBaseTeleport();
+}
+
+void ARealmPlayerController::StartBaseTeleport_Implementation(bool bStarting)
+{
+	if (!IsValid(playerCharacter))
+		return;
+
+	if (bStarting)
+		playerCharacter->StartBaseTeleport();
+	else
+		playerCharacter->StopBaseTeleport();
+}
+
+bool ARealmPlayerController::ServerStartBaseTeleport_Validate()
+{
+	return true;
+}
+
+void ARealmPlayerController::ServerStartBaseTeleport_Implementation()
+{
+	StartBaseTeleport(true);
+}
+
+bool ARealmPlayerController::ServerStopBaseTeleport_Validate()
+{
+	return true;
+}
+
+void ARealmPlayerController::ServerStopBaseTeleport_Implementation()
+{
+	StartBaseTeleport(false);
 }
 
 void ARealmPlayerController::ClientReceiveChat(const FRealmChatEntry& incomingChat)

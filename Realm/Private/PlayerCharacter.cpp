@@ -175,6 +175,9 @@ void APlayerCharacter::ReplicateHit(float damage, struct FDamageEvent const& dam
 {
 	Super::ReplicateHit(damage, damageEvent, instigatingPawn, damageCauser, bKilled, realmDamage);
 
+	if (Role == ROLE_Authority)
+		GetPlayerController()->ServerStopBaseTeleport();
+
 	lifeHits.Add(lastTakeHitInfo);
 	GetWorldTimerManager().SetTimer(liftHitsClearTimer, this, &APlayerCharacter::ClearLifeHits, 3.5f, false);
 }
@@ -194,6 +197,42 @@ void APlayerCharacter::OnAmbientCreditIncome()
 void APlayerCharacter::ClearLifeHits()
 {
 	lifeHits.Empty();
+}
+
+void APlayerCharacter::StartBaseTeleport()
+{
+	if (bIsDying)
+		return;
+
+	if (Role == ROLE_Authority)
+	{
+		GetWorldTimerManager().SetTimer(baseTeleportTimer, this, &APlayerCharacter::PerformBaseTeleport, 7.f, false);
+		GetCharacterMovement()->StopMovementImmediately();
+		ApplyCharacterAction("Base Teleport", 7.f, true);
+	}
+	else
+		GetWorldTimerManager().SetTimer(baseTeleportTimer, 7.f, false);
+}
+
+void APlayerCharacter::StopBaseTeleport()
+{
+	GetWorldTimerManager().ClearTimer(baseTeleportTimer);
+	GetWorldTimerManager().ClearTimer(actionTimer);
+}
+
+void APlayerCharacter::PerformBaseTeleport()
+{
+	if (bIsDying)
+		return;
+
+	if (Role == ROLE_Authority)
+	{
+		AActor* start = GetWorld()->GetAuthGameMode<ARealmGameMode>()->FindPlayerStart(playerController);
+		if (start)
+			SetActorLocation(start->GetActorLocation());
+		else
+			SetActorLocation(playerController->StartSpot->GetActorLocation());
+	}
 }
 
 void APlayerCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const

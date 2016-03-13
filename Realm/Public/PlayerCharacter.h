@@ -29,6 +29,10 @@ protected:
 	/* amount for ambient credit income per second */
 	int32 ambientCreditAmount;
 
+	/* back timer */
+	UPROPERTY(BlueprintReadOnly, Category = BaseTeleport)
+	FTimerHandle baseTeleportTimer;
+
 	/* function to clear out all of the hits for this player */
 	void ClearLifeHits();
 
@@ -66,4 +70,13 @@ public:
 	/* starts the respawn timers */
 	UFUNCTION(reliable, NetMulticast)
 	void StartRespawnTimers(float respawnTime);
+
+	/* starts the backing sequence to teleport this player back to base */
+	void StartBaseTeleport();
+
+	/* stops the backing sequence */
+	void StopBaseTeleport();
+
+	/* actually perform the base teleport */
+	void PerformBaseTeleport();
 };
