@@ -10,6 +10,7 @@ ASpectatorCharacter::ASpectatorCharacter(const FObjectInitializer& objectInitial
 	springArm = objectInitializer.CreateDefaultSubobject<USpringArmComponent>(this, TEXT("CameraBoom"));
 	rtsCamera = objectInitializer.CreateDefaultSubobject<UCameraComponent>(this, TEXT("RTS Camera"));
 	capsule = objectInitializer.CreateDefaultSubobject<UCapsuleComponent>(this, TEXT("Capsule"));
+	hoverLight = objectInitializer.CreateDefaultSubobject<UPointLightComponent>(this, TEXT("Hover Light"));
 
 	RootComponent = capsule;
 	capsule->SetCollisionResponseToAllChannels(ECR_Ignore);
@@ -27,6 +28,11 @@ ASpectatorCharacter::ASpectatorCharacter(const FObjectInitializer& objectInitial
 	rtsCamera->AttachTo(springArm, TEXT(""), EAttachLocation::SnapToTarget);
 	rtsCamera->SetWorldRotation(FRotator(-45.f, -45.f, 0.f));
 	rtsCamera->PostProcessSettings.bOverride_ColorSaturation = true;
+
+	hoverLight->SetAttenuationRadius(100.f);
+	hoverLight->SetSourceRadius(80.f);
+	hoverLight->Intensity = 4500.f;
+	hoverLight->SetVisibility(false);
 
 	//GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
 
@@ -127,6 +133,17 @@ void ASpectatorCharacter::Tick(float deltaSeconds)
 		{
 			camDirection += ForwardCameraMovement(-1.0f * deltaSeconds);
 		}
+
+		//check for hovering targets to display targeting aura's
+		ARealmPlayerController* pc = Cast<ARealmPlayerController>(GetController());
+		if (IsValid(pc))
+		{
+			FHitResult hit;
+			if (pc->SelectUnitUnderMouse(ECC_Visibility, true, hit) && IsValid(Cast<AGameCharacter>(hit.GetActor())))
+				SetHoverTarget(Cast<AGameCharacter>(hit.GetActor()));
+			else
+				RemoveHoverTarget();
+		}
 	}
 
 	if (Role < ROLE_Authority)
@@ -136,11 +153,40 @@ void ASpectatorCharacter::Tick(float deltaSeconds)
 		//else
 			//MoveCamera(GetCharacterMovement()->Velocity.IsNearlyZero(40.f) ? FVector::ZeroVector : GetCharacterMovement()->Velocity * -1);
 	}
+}
 
-	if (Role == ROLE_Authority)
-	{ 
-		if (IsValid(cameraLockTarget))
-			SetActorLocation(cameraLockTarget->GetActorLocation());
+void ASpectatorCharacter::SetHoverTarget(AGameCharacter* newTarget)
+{
+	ARealmPlayerController* pc = Cast<ARealmPlayerController>(GetController());
+	if (!IsValid(pc) || !IsValid(pc->GetPlayerCharacter()))
+		return;
+
+	if (IsValid(newTarget))
+		hoverTarget = newTarget;
+	else
+		return;
+
+	if (hoverTarget->GetTeamIndex() == pc->GetPlayerCharacter()->GetTeamIndex())
+		hoverLight->SetLightColor(FColor::Cyan);
+	else
+		hoverLight->SetLightColor(FColor::Red);
+
+	hoverLight->AttachTo(hoverTarget->GetRootComponent());
+	hoverLight->SetVisibility(true);
+
+	hoverLight->SetAttenuationRadius(hoverTarget->GetSimpleCollisionRadius() * 15.f);
+	hoverLight->SetSourceRadius(hoverTarget->GetSimpleCollisionRadius() * 10.f);
+	hoverLight->SetRelativeLocation(FVector(0.f, 0.f, -0.85f* hoverTarget->GetSimpleCollisionHalfHeight()));
+}
+
+void ASpectatorCharacter::RemoveHoverTarget()
+{
+	if (hoverTarget != nullptr)
+	{
+		hoverLight->DetachFromParent();
+		hoverLight->SetVisibility(false);
+
+		hoverTarget = nullptr;
 	}
 }
 

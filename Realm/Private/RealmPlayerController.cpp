@@ -542,7 +542,7 @@ void ARealmPlayerController::OnBaseTeleport()
 	ServerStartBaseTeleport();
 }
 
-void ARealmPlayerController::StartBaseTeleport_Implementation(bool bStarting)
+void ARealmPlayerController::StartBaseTeleport(bool bStarting)
 {
 	if (!IsValid(playerCharacter))
 		return;

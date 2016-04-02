@@ -41,6 +41,13 @@ protected:
 
 	FTimerHandle lockTimer;
 
+	/* target that is being hovered over by the player's mouse right now */
+	AGameCharacter* hoverTarget;
+
+	/* point light used to identify hover targets */
+	UPROPERTY()
+	UPointLightComponent* hoverLight;
+
 	/* speed that the spectator camera travels at */
 	UPROPERTY()
 	float camSpeed;
@@ -145,6 +152,12 @@ protected:
 	void MoveCamera(FVector worldDirection);
 	FVector RightCameraMovement(float direction);
 	FVector ForwardCameraMovement(float direction);
+
+	/* set a new hover target */
+	void SetHoverTarget(AGameCharacter* newTarget);
+
+	/* gets rid of the current hover target */
+	void RemoveHoverTarget();
 
 public:
 

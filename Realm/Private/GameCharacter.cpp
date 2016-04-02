@@ -10,6 +10,7 @@
 #include "RealmCharacterMovementComponent.h"
 #include "RealmLaneMinionAI.h"
 #include "RealmFogofWarManager.h"
+#include "OverheadWidget.h"
 
 AGameCharacter::AGameCharacter(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer.SetDefaultSubobjectClass<URealmCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -75,6 +76,16 @@ void AGameCharacter::BeginPlay()
 		APlayerHUD* hud = Cast<APlayerHUD>((*objItr));
 		if (hud)
 			hud->AddPostRenderedActor(this);
+	}
+
+	if (overheadWidgetClass)
+	{
+		overheadWidget = CreateWidget<UOverheadWidget>(GetWorld(), overheadWidgetClass);
+		if (overheadWidget)
+		{
+			overheadWidget->SetParentCharacter(this);
+			overheadWidget->AddToViewport();
+		}
 	}
 }
 
@@ -1003,6 +1014,20 @@ void AGameCharacter::PostRenderFor(class APlayerController* PC, class UCanvas* C
 
 	int32 otherTeam = Cast<ARealmPlayerController>(PC)->GetPlayerCharacter()->GetTeamIndex();
 	otherTeam == teamIndex ? Canvas->SetDrawColor(FColor::Blue) : Canvas->SetDrawColor(FColor::Red);
+
+	if (IsAlive())
+	{
+		if (!overheadWidget)
+			return;
+
+		FVector hudPos = GetActorLocation();
+		hudPos.Z += GetSimpleCollisionHalfHeight() * 2.f;
+
+		FVector screenPos = Canvas->Project(hudPos);
+		screenPos.X -= overheadWidget->GetDesiredSize().X / 2.f;
+
+		overheadWidget->SetPositionInViewport(FVector2D(screenPos.X, screenPos.Y));
+	}
 }
 
 void AGameCharacter::AddMod(AMod* newMod)

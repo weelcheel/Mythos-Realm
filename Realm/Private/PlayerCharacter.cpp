@@ -199,7 +199,7 @@ void APlayerCharacter::ClearLifeHits()
 	lifeHits.Empty();
 }
 
-void APlayerCharacter::StartBaseTeleport()
+void APlayerCharacter::StartBaseTeleport_Implementation()
 {
 	if (bIsDying)
 		return;
@@ -214,13 +214,13 @@ void APlayerCharacter::StartBaseTeleport()
 		GetWorldTimerManager().SetTimer(baseTeleportTimer, 7.f, false);
 }
 
-void APlayerCharacter::StopBaseTeleport()
+void APlayerCharacter::StopBaseTeleport_Implementation()
 {
 	GetWorldTimerManager().ClearTimer(baseTeleportTimer);
 	GetWorldTimerManager().ClearTimer(actionTimer);
 }
 
-void APlayerCharacter::PerformBaseTeleport()
+void APlayerCharacter::PerformBaseTeleport_Implementation()
 {
 	if (bIsDying)
 		return;

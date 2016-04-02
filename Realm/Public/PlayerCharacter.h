@@ -72,11 +72,14 @@ public:
 	void StartRespawnTimers(float respawnTime);
 
 	/* starts the backing sequence to teleport this player back to base */
+	UFUNCTION(reliable, NetMulticast)
 	void StartBaseTeleport();
 
 	/* stops the backing sequence */
+	UFUNCTION(reliable, NetMulticast)
 	void StopBaseTeleport();
 
 	/* actually perform the base teleport */
+	UFUNCTION(reliable, NetMulticast)
 	void PerformBaseTeleport();
 };

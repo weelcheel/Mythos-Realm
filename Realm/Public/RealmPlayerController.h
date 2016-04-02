@@ -147,7 +147,6 @@ public:
 	void ServerStopBaseTeleport();
 
 	/* [ALL] base teleport multicast */
-	UFUNCTION(reliable, NetMulticast)
 	void StartBaseTeleport(bool bStarting);
 
 	/* get the hit results under this character's mouse */

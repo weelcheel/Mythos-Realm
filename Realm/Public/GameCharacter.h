@@ -16,6 +16,7 @@ const static int32 MAX_LEVEL = 15;
 const static float EXP_CONST = 2.f / FMath::Sqrt(128.f);
 
 class ARealmFogofWarManager;
+class UOverheadWidget;
 
 /* types for hard Crowd Control (Ailments) */
 UENUM(BlueprintType)
@@ -198,6 +199,14 @@ protected:
 	/* sound attenuation to use for character sounds */
 	UPROPERTY()
 	USoundAttenuation* soundAttenuation;
+
+	/* class of UI widget to display above the character's head */
+	UPROPERTY(EditDefaultsOnly, Category = UI)
+	TSubclassOf<UOverheadWidget> overheadWidgetClass;
+
+	/* UI widget to display above this character's head for UI info about them */
+	UPROPERTY()
+	UOverheadWidget* overheadWidget;
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
