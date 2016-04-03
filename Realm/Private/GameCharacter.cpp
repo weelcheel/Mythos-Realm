@@ -30,6 +30,7 @@ AGameCharacter::AGameCharacter(const FObjectInitializer& objectInitializer)
 	experienceRewardRange = 1500.f;
 	sightRadius = 1350.f;
 	combatTimeoutDelay = 3.5f;
+	overheadHalfHeightMultiplier = 2.5f;
 }
 
 void AGameCharacter::BeginPlay()
@@ -78,13 +79,13 @@ void AGameCharacter::BeginPlay()
 			hud->AddPostRenderedActor(this);
 	}
 
-	if (overheadWidgetClass)
+	if (overheadWidgetClass && GetNetMode() != NM_DedicatedServer)
 	{
 		overheadWidget = CreateWidget<UOverheadWidget>(GetWorld(), overheadWidgetClass);
 		if (overheadWidget)
 		{
 			overheadWidget->SetParentCharacter(this);
-			overheadWidget->AddToViewport();
+			overheadWidget->AddOverheadWidgetToViewport();
 		}
 	}
 }
@@ -1015,19 +1016,28 @@ void AGameCharacter::PostRenderFor(class APlayerController* PC, class UCanvas* C
 	int32 otherTeam = Cast<ARealmPlayerController>(PC)->GetPlayerCharacter()->GetTeamIndex();
 	otherTeam == teamIndex ? Canvas->SetDrawColor(FColor::Blue) : Canvas->SetDrawColor(FColor::Red);
 
+	if (!overheadWidget)
+		return;
+
 	if (IsAlive())
 	{
-		if (!overheadWidget)
-			return;
+		overheadWidget->SetVisibility(ESlateVisibility::Visible);
+
+		if (bHidden)
+			overheadWidget->SetVisibility(ESlateVisibility::Hidden);
+		else
+			overheadWidget->SetVisibility(ESlateVisibility::Visible);
 
 		FVector hudPos = GetActorLocation();
-		hudPos.Z += GetSimpleCollisionHalfHeight() * 2.f;
+		hudPos.Z += GetSimpleCollisionHalfHeight() * overheadHalfHeightMultiplier;
 
 		FVector screenPos = Canvas->Project(hudPos);
 		screenPos.X -= overheadWidget->GetDesiredSize().X / 2.f;
 
 		overheadWidget->SetPositionInViewport(FVector2D(screenPos.X, screenPos.Y));
 	}
+	else
+		overheadWidget->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void AGameCharacter::AddMod(AMod* newMod)

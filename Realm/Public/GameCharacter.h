@@ -208,6 +208,10 @@ protected:
 	UPROPERTY()
 	UOverheadWidget* overheadWidget;
 
+	/* how many times the character's half height to place the overhead widget over head */
+	UPROPERTY(EditDefaultsOnly, Category = UI)
+	float overheadHalfHeightMultiplier;
+
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 

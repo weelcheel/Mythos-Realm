@@ -382,7 +382,7 @@ bool ARealmPlayerController::SelectUnitUnderMouse(ECollisionChannel TraceChannel
 			if (!IsValid(gc))
 				continue;
 
-			if (!gc->IsTargetable())
+			if (!gc->IsTargetable() || gc->bHidden)
 				continue;
 
 			if (gc->GetTeamIndex() != GetPlayerCharacter()->GetTeamIndex())

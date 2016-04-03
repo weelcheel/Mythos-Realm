@@ -13,7 +13,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& objectInitializer)
 	ambientCreditAmount = 4;
 }
 
-void APlayerCharacter::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, FVector CameraPosition, FVector CameraDir)
+/*void APlayerCharacter::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, FVector CameraPosition, FVector CameraDir)
 {
 	if (!IsValid(PC) || !IsValid(shieldManager))
 		return;
@@ -54,7 +54,7 @@ void APlayerCharacter::PostRenderFor(class APlayerController* PC, class UCanvas*
 
 		Canvas->K2_DrawText(UEngine::GetLargeFont(), playerName, FVector2D(screenPos.X - (125.f / 2.f), screenPos.Y - 26.f));
 	}
-}
+}*/
 
 void APlayerCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage)
 {

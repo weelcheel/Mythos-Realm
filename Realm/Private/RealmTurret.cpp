@@ -164,7 +164,7 @@ void ATurret::TargetOutofRange()
 	}
 }
 
-void ATurret::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, FVector CameraPosition, FVector CameraDir)
+/*void ATurret::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, FVector CameraPosition, FVector CameraDir)
 {
 	if (!IsValid(PC))
 		return;
@@ -184,7 +184,7 @@ void ATurret::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, 
 		Canvas->K2_DrawTexture(nullptr, FVector2D(screenPos.X - (150.f / 2.f), screenPos.Y), FVector2D(150.f, 8.f), FVector2D::ZeroVector, FVector2D::UnitVector, FLinearColor::Black);
 		Canvas->K2_DrawTexture(nullptr, FVector2D(screenPos.X - (150.f / 2.f), screenPos.Y), FVector2D((GetHealth() / GetCurrentValueForStat(EStat::ES_HP)) * 150.f, 8.f), FVector2D::ZeroVector, FVector2D::UnitVector, Canvas->DrawColor);
 	}
-}
+}*/
 
 void ATurret::ReceiveCallForHelp(AGameCharacter* distressedUnit, AGameCharacter* enemyTarget)
 {

@@ -64,7 +64,7 @@ float AMinionCharacter::TakeDamage(float Damage, struct FDamageEvent const& Dama
 	return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 }
 
-void AMinionCharacter::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, FVector CameraPosition, FVector CameraDir)
+/*void AMinionCharacter::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, FVector CameraPosition, FVector CameraDir)
 {
 	if (!IsValid(PC))
 		return;
@@ -84,7 +84,7 @@ void AMinionCharacter::PostRenderFor(class APlayerController* PC, class UCanvas*
 		Canvas->K2_DrawTexture(nullptr, FVector2D(screenPos.X - (75.f / 2.f), screenPos.Y), FVector2D(75.f, 5.f), FVector2D::ZeroVector, FVector2D::UnitVector, FLinearColor::Black);
 		Canvas->K2_DrawTexture(nullptr, FVector2D(screenPos.X - (75.f / 2.f), screenPos.Y), FVector2D((GetHealth() / GetCurrentValueForStat(EStat::ES_HP)) * 75.f, 5.f), FVector2D::ZeroVector, FVector2D::UnitVector, Canvas->DrawColor);
 	}
-}
+}*/
 
 void AMinionCharacter::ReceiveCallForHelp(AGameCharacter* distressedUnit, AGameCharacter* enemyTarget)
 {

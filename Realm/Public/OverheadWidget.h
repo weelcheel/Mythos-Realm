@@ -21,4 +21,8 @@ public:
 
 	/* sets the parent character */
 	void SetParentCharacter(AGameCharacter* newCharacter);
+
+	/* event that lets the blueprint decide the z order for the widget and add it to the viewport */
+	UFUNCTION(BlueprintImplementableEvent, Category = UI)
+	void AddOverheadWidgetToViewport();
 };
