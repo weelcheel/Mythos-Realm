@@ -17,6 +17,7 @@ const static float EXP_CONST = 2.f / FMath::Sqrt(128.f);
 
 class ARealmFogofWarManager;
 class UOverheadWidget;
+class UUserWidget;
 
 /* types for hard Crowd Control (Ailments) */
 UENUM(BlueprintType)
@@ -37,15 +38,19 @@ struct FAilmentInfo
 	GENERATED_USTRUCT_BODY()
 
 	/* type of ailment this is */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ailment)
 	EAilment newAilment;
 
 	/* text to represent the ailment */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ailment)
 	FString ailmentText;
 
 	/* duration this ailment normally lasts for */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ailment)
 	float ailmentDuration;
 
 	/* any directional and magnitude info associated with the ailment */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ailment)
 	FVector ailmentDir;
 };
 
@@ -54,6 +59,7 @@ class AGameCharacter : public ARealmCharacter
 {
 	friend class ARealmGameMode;
 	friend class ARealmPlayerController;
+	friend class URealmCharacterMovementComponent;
 
 	GENERATED_UCLASS_BODY()
 
@@ -150,6 +156,7 @@ protected:
 	TQueue<FAilmentInfo> ailmentQueue;
 
 	/* timer for handling aimlments */
+	UPROPERTY(BlueprintReadOnly, Category=Ailment)
 	FTimerHandle ailmentTimer;
 
 	/* radius this character can see */
@@ -185,6 +192,10 @@ protected:
 	UPROPERTY()
 	bool bOnlySpecificCharactersCanDamage = false;
 
+	/* whether or not this unit is accepting move commands right now */
+	UPROPERTY()
+	bool bAcceptingMoveCommands = true;
+
 	/* list of characters that can damage us in specific damage mode */
 	UPROPERTY()
 	TArray<AGameCharacter*> specificDamagingCharacters;
@@ -207,6 +218,10 @@ protected:
 	/* UI widget to display above this character's head for UI info about them */
 	UPROPERTY()
 	UOverheadWidget* overheadWidget;
+
+	/* UI widget to display for this character on the minimap. Should probably make this base class in C++ eventually */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI)
+	TSubclassOf<UUserWidget> minimapIconClass;
 
 	/* how many times the character's half height to place the overhead widget over head */
 	UPROPERTY(EditDefaultsOnly, Category = UI)

@@ -45,7 +45,10 @@ void URealmCharacterMovementComponent::EndDash()
 
 	AGameCharacter* gc = Cast<AGameCharacter>(CharacterOwner);
 	if (IsValid(gc))
+	{
+		gc->bAcceptingMoveCommands = true;
 		gc->CharacterDashFinished();
+	}
 }
 
 bool URealmCharacterMovementComponent::HandlePendingLaunch()

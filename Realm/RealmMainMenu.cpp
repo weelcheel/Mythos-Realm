@@ -1,11 +1,14 @@
 #include "Realm.h"
 #include "RealmMainMenu.h"
 #include "RealmGameInstance.h"
+#include "RealmPlayerState.h"
 
 ARealmMainMenu::ARealmMainMenu(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
 {
 	//pause spawning any pawns
+	PlayerStateClass = ARealmPlayerState::StaticClass();
+
 	bDelayedStart = true;
 }
 

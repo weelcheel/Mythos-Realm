@@ -188,6 +188,15 @@ void ARealmGameMode::BeginPlay()
 
 	gameStatus = EGameStatus::GS_Pregame;
 
+	uint32 epn = 0;
+	if (FParse::Value(FCommandLine::Get(), TEXT("epn"), epn))
+	{
+		expectedPlayerCount = epn;
+		teamSizeMax = expectedPlayerCount / teamCount;
+	}
+	else
+		expectedPlayerCount = 1;
+
 	if (sightManagers.Num() <= 0)
 	{
 		for (FTeam inTeam : teams)
@@ -280,11 +289,11 @@ void ARealmGameMode::CheckForCharacterSelect()
 	if (gameStatus > EGameStatus::GS_Pregame)
 		return;
 
-	bool bShouldGoToCharacterSelect = false;
+	int32 playerCount = 0; 
 	for (int32 i = 0; i < teams.Num(); i++)
-		bShouldGoToCharacterSelect = teams[i].players.Num() >= teamSizeMin;
+		playerCount += teams[i].players.Num();
 
-	if (bShouldGoToCharacterSelect)
+	if (playerCount >= expectedPlayerCount)
 	{
 		gameStatus = EGameStatus::GS_CharacterSelect;
 		FTimerHandle h;

@@ -9,6 +9,7 @@
 #include "RealmPlayerState.h"
 #include "RealmGameMode.h"
 #include "RealmGameInstance.h"
+#include "MinimapActor.h"
 
 ARealmPlayerController::ARealmPlayerController(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
@@ -134,7 +135,9 @@ void ARealmPlayerController::ServerStartAutoAttack_Implementation(AGameCharacter
 	ServerStopBaseTeleport();
 
 	playerCharacter->SetCurrentTarget(target);
-	GetPlayerInAutoAttackRange();
+
+	if (playerCharacter->CanMove())
+		GetPlayerInAutoAttackRange();
 }
 
 bool ARealmPlayerController::ServerClearMoveCommands_Validate()
@@ -301,8 +304,19 @@ void ARealmPlayerController::OnTargetSelect()
 
 	if (SelectUnitUnderMouse(ECC_Visibility, true, hit))
 	{
-
+		AGameCharacter* gc = Cast<AGameCharacter>(hit.GetActor());
+		if (IsValid(gc))
+		{
+			if (gc->IsAlive())
+				infoTarget = gc;
+			else
+				infoTarget = nullptr;
+		}
+		else
+			infoTarget = nullptr;
 	}
+	else
+		infoTarget = nullptr;
 }
 
 bool ARealmPlayerController::ServerBuyPlayerMod_Validate(TSubclassOf<AMod> wantedMod)
@@ -331,12 +345,23 @@ void ARealmPlayerController::ServerBuyPlayerMod_Implementation(TSubclassOf<AMod>
 
 bool ARealmPlayerController::ServerSellPlayerMod_Validate(int32 index)
 {
-	return (index >= 0 && index < 7);
+	return true;
 }
 
 void ARealmPlayerController::ServerSellPlayerMod_Implementation(int32 index)
 {
-	
+	APlayerCharacter* pc = GetPlayerCharacter();
+	if (!IsValid(pc) || index < 0 || index > 6)
+		return;
+
+	if (index < pc->GetModCount())
+	{
+		AMod* modToSell = pc->GetMods()[index];
+		if (IsValid(modToSell))
+			pc->ChangeCredits(modToSell->GetCost() / 2.f, pc->GetActorLocation());
+	}
+
+	pc->RemoveMod(index);
 }
 
 ARealmMoveController* ARealmPlayerController::GetMoveController() const
@@ -440,6 +465,17 @@ void ARealmPlayerController::ClientSetVisibleCharacters_Implementation(const TAr
 			continue;
 
 		gc->SetActorHiddenInGame(!characters.Contains(gc));
+	}
+
+	for (TActorIterator<AMinimapActor> minimap(GetWorld()); minimap; ++minimap)
+	{
+		AMinimapActor* mapActor = *minimap;
+		APlayerHUD* hud = Cast<APlayerHUD>(GetHUD());
+		if (IsValid(hud))
+		{
+			mapActor->hud = hud;
+			mapActor->ReceiveCharacterVisibilityUpdate(characters);
+		}
 	}
 }
 

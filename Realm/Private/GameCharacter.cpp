@@ -190,7 +190,7 @@ void AGameCharacter::OnRep_LastTakeHitInfo()
 
 bool AGameCharacter::CanMove() const
 {
-	return (currentAilment.newAilment != EAilment::AL_Knockup && currentAilment.newAilment != EAilment::AL_Stun);
+	return (currentAilment.newAilment != EAilment::AL_Knockup && currentAilment.newAilment != EAilment::AL_Stun && bAcceptingMoveCommands);
 }
 
 bool AGameCharacter::CanAutoAttack() const
@@ -1097,6 +1097,8 @@ void AGameCharacter::CharacterDash(FVector dashEndLocation)
 		//perform dash
 		rmc->DashLaunch(dashEndLocation);
 		CharacterDashStarted();
+
+		bAcceptingMoveCommands = false;
 	}
 }
 
@@ -1161,7 +1163,7 @@ void AGameCharacter::EffectsUpdated()
 
 void AGameCharacter::OnRepAilment()
 {
-
+	GetWorldTimerManager().SetTimer(ailmentTimer, currentAilment.ailmentDuration, false);
 }
 
 void AGameCharacter::GiveCharacterAilment(FAilmentInfo info)

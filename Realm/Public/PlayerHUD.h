@@ -3,6 +3,7 @@
 #include "DamageInstance.h"
 #include "DamageTypes.h"
 #include "Chat.h"
+#include "MinimapActor.h"
 #include "PlayerHUD.generated.h"
 
 class AGameCharacter;
@@ -104,6 +105,10 @@ public:
 	/* called when the player toggles chat mode */
 	UFUNCTION(BlueprintImplementableEvent, Category = Chat)
 	void PlayerToogleChat();
+
+	/* called when the minimap actor has a new list of visible characters */
+	UFUNCTION(BlueprintImplementableEvent, Category = Minimap)
+	void OnMinimapVisibleCharactersUpdate(const TArray<FMinimapEntry>& visibleCharacters);
 
 	//Float as FText With Precision!
 	UFUNCTION(BlueprintCallable, Category=FloatPrecision)

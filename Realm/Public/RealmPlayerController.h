@@ -66,6 +66,10 @@ protected:
 
 public:
 
+	/* info target information */
+	UPROPERTY(BlueprintReadOnly, Category = Target)
+	AGameCharacter* infoTarget;
+
 	/* [SERVER] calls the server to send the calculated world position to the move controller */
 	UFUNCTION(reliable, server, WithValidation)
 	void ServerMoveCommand(FVector targetLocation);
@@ -115,7 +119,7 @@ public:
 	void ServerBuyPlayerMod(TSubclassOf<AMod> wantedMod);
 
 	/* [CLIENT] try to sell a mod */
-	UFUNCTION(reliable, server, WithValidation)
+	UFUNCTION(reliable, server, WithValidation, BlueprintCallable, Category = Mods)
 	void ServerSellPlayerMod(int32 index);
 
 	/* [CLIENT] server needs to be sent an end game user id */

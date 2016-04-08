@@ -44,4 +44,5 @@ void ARealmPlayerState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > &
 	DOREPLIFETIME(ARealmPlayerState, playerCreepScore);
 	DOREPLIFETIME(ARealmPlayerState, playerTotalIncome);
 	DOREPLIFETIME(ARealmPlayerState, playerAssists);
+	DOREPLIFETIME(ARealmPlayerState, mythosPoints);
 }

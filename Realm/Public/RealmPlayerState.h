@@ -46,6 +46,10 @@ public:
 	UPROPERTY(replicated, BlueprintReadOnly, Category = Stats)
 	int32 playerCreepScore;
 
+	/* amount of player's mythos points for UI */
+	UPROPERTY(replicated, BlueprintReadWrite, Category = Stats)
+	int32 mythosPoints;
+
 	UFUNCTION(BlueprintCallable, Category = Team)
 	int32 GetTeamIndex() const;
 

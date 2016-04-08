@@ -64,6 +64,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = Teams)
 	int32 teamSizeMin;
 
+	/* expected numbere of players in the game */
+	int32 expectedPlayerCount;
+
 	/* the array of characters this gametype can use */
 	UPROPERTY(EditDefaultsOnly, Category = Characters)
 	TArray<TSubclassOf<APlayerCharacter> > availableCharacters;
