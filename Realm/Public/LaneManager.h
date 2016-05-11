@@ -37,10 +37,6 @@ protected:
 	/* what lane this is a spawner for */
 	int32 lane;
 
-	/* whhat team this is a spawner for */
-	UPROPERTY(EditAnywhere, Category = Spawner)
-	int32 teamIndex;
-
 	/* array of minion types to spawn for a normal wave */
 	UPROPERTY(EditAnywhere, Category = Spawner)
 	TArray<TSubclassOf<AMinionCharacter> > normalWave;
@@ -68,6 +64,14 @@ public:
 	/* reference to the enemy's lane manager of the same lane */
 	UPROPERTY(EditAnywhere, Category = Spawner)
 	ALaneManager* enemyLane;
+
+	/* where to spawn a raider in this lane */
+	UPROPERTY(EditAnywhere, Category = Raiders)
+	ATargetPoint* raiderSpawnLocation;
+
+	/* whhat team this is a spawner for */
+	UPROPERTY(EditAnywhere, Category = Spawner)
+	int32 teamIndex;
 
 	/* called when the game mode starts the match */
 	void MatchStarted();

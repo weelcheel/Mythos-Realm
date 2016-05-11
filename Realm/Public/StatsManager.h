@@ -45,6 +45,7 @@ class AStatsManager : public AActor
 	friend class AAutoAttackManager;
 	friend class AEffect;
 	friend class AGameCharacter;
+	friend class ARaiderCharacter;
 
 	GENERATED_UCLASS_BODY()
 
@@ -144,6 +145,7 @@ public:
 	void RemoveAllEffects();
 
 	/* take damage and update health accordingly */
+	UFUNCTION(BlueprintCallable, Category = Healing)
 	void RemoveHealth(float amount);
 
 	/* use or add flare*/

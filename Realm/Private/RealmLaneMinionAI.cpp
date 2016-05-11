@@ -76,8 +76,12 @@ void ARealmLaneMinionAI::CheckReachedObjective()
 		if (dist < 350.f && (objectiveTarget->GetTeamIndex() == mc->GetTeamIndex() || !objectiveTarget->IsAlive()))
 		{
 			objectives.Dequeue(objectiveTarget);
-			MoveToActor(objectiveTarget);
-			currentTargetPriority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
+
+			if (!IsValid(mc->GetCurrentTarget()))
+			{
+				MoveToActor(objectiveTarget);
+				currentTargetPriority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
+			}
 		}
 	}
 }

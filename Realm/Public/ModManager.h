@@ -18,4 +18,5 @@ public:
 
 	/* whenever this character is damaged, let the mods know */
 	void CharacterDamaged(int32 dmgAmount, TSubclassOf<UDamageType> damageType, AGameCharacter* dmgCauser, AActor* actorCauser, FRealmDamage realmDamage);
+	void CharacterDealtDamage(int32 dmgAmount, TSubclassOf<UDamageType> damageType, AActor* actorCauser, FRealmDamage realmDamage, AGameCharacter* targetCharacter);
 };

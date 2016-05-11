@@ -10,11 +10,14 @@ AStatsManager::AStatsManager(const FObjectInitializer& objectInitializer)
 {
 	bReplicates = true;
 	bAlwaysRelevant = true;
+
+	for (int32 i = 0; i < (int32)EStat::ES_Max; i++)
+		bonusStats[i] = 0.f;
 }
 
 void AStatsManager::SetMaxHealth()
 {
-	health = GetCurrentValueForStat(EStat::ES_HP);
+	health = GetCurrentValueForStat(EStat::ES_HP) + bonusStats[(uint16)EStat::ES_HP];
 }
 
 void AStatsManager::SetMaxFlare()

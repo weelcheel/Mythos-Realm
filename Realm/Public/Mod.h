@@ -96,6 +96,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = Damage)
 	void CharacterDamaged(int32 dmgAmount, TSubclassOf<UDamageType> damageType, AGameCharacter* dmgCauser, AActor* actorCauser, FRealmDamage realmDamage);
 
+	/* called whenever the character that owns this mod hurts another character */
+	UFUNCTION(BlueprintImplementableEvent, Category = Damage)
+	void CharacterDealtDamage(int32 dmgAmount, TSubclassOf<UDamageType> damageType, AActor* actorCauser, FRealmDamage realmDamage, AGameCharacter* targetCharacter);
+
 	/* called to set the character owner */
 	void SetCharacterOwner(AGameCharacter* newOwner)
 	{

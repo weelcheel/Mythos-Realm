@@ -207,9 +207,9 @@ void ASpectatorCharacter::CalculateDirectedMove()
 
 	if (pc && pc->SelectUnitUnderMouse(ECC_Visibility, true, hit))
 	{
-		if (IsValid(hit.GetActor()) && hit.GetActor()->IsA(AGameCharacter::StaticClass()))
+		AGameCharacter* gc = Cast<AGameCharacter>(hit.GetActor());
+		if (IsValid(gc) && gc->IsAlive())
 		{
-			AGameCharacter* gc = Cast<AGameCharacter>(hit.GetActor());
 			int32 team1 = gc->GetTeamIndex();
 			int32 team2 = pc->GetPlayerCharacter()->GetTeamIndex();
 

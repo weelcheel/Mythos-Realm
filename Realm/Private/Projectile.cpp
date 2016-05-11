@@ -75,7 +75,7 @@ void AProjectile::OnHit(class AActor* OtherActor, class UPrimitiveComponent* Oth
 	if (damageType == nullptr)
 		return;
 		
-	if (homingTarget && OtherActor == homingTarget)
+	if (IsValid(homingTarget) && OtherActor == homingTarget && IsValid(projectileSpawner))
 	{
 		homingTarget->PlayCharacterSound(hitSound);
 

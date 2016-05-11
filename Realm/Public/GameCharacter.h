@@ -90,7 +90,7 @@ protected:
 	AModManager* modManager;
 	
 	/* shield manager this character can use */
-	UPROPERTY(replicated)
+	UPROPERTY(replicated, BlueprintReadOnly, Category=Shield)
 	AShieldManager* shieldManager;
 
 	/* array of auto attacks this character can use */
@@ -227,6 +227,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = UI)
 	float overheadHalfHeightMultiplier;
 
+	/* whether or not the current action being performed by this unit prevents combat */
+	bool bActionPreventingCombat = false;
+
+	/* function called on server when the current action has finished */
+	void CharacterActionFinished();
+
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 
@@ -277,6 +283,10 @@ public:
 	FTimerHandle respawnTimer;
 
 	FTimerHandle healthRegen, flareRegen;
+
+	/* how much damage should be mitigated from the next TakeDamage call */
+	UPROPERTY(BlueprintReadWrite, Category = Damage)
+	float nextMitigatedDamage;
 
 	/* check whether or not this character has movement enabled */
 	bool CanMove() const;
@@ -533,7 +543,7 @@ public:
 
 	/* apply an action to this character */
 	UFUNCTION(BlueprintCallable, NetMulticast, reliable, Category = Action)
-	void ApplyCharacterAction(const FString& actionName, float actionDuration, bool bReverseProgressBar = false);
+	void ApplyCharacterAction(const FString& actionName, float actionDuration, bool bReverseProgressBar = false, bool bPreventCombat = false);
 
 	/* initiate the character's stats to the specified level */
 	void InitCharacterStatsForLevel(int32 level);
@@ -610,4 +620,8 @@ public:
 	/* clears the specific damager array */
 	UFUNCTION(BlueprintCallable, Category = Damage)
 	void ClearSpecificDamagers();
+
+	/* function for generating a critical hit for this character which returns whethere or not the hit was critical and how much total damage the hit will do */
+	UFUNCTION(BlueprintCallable, Category = CritChance)
+	bool CalculateCriticalHit(float& totalDamage, float additionalCritChance = 0.f);
 };

@@ -170,4 +170,8 @@ public:
 	/* event called whenever this skill is interrupted for blueprints */
 	UFUNCTION(BlueprintImplementableEvent, Category = Skill)
 	void OnCanInterruptSkill(ESkillInterruptReason interruptReason);
+
+	/* whether or not this skill can upgrade its skill point count. returns false if this skill is too far more upgraded than the rest of the player's skills */
+	UFUNCTION(BlueprintCallable, Category = Skill)
+	bool CanSkillUpgrade() const;
 };

@@ -31,6 +31,8 @@ AGameCharacter::AGameCharacter(const FObjectInitializer& objectInitializer)
 	sightRadius = 1350.f;
 	combatTimeoutDelay = 3.5f;
 	overheadHalfHeightMultiplier = 2.5f;
+
+	nextMitigatedDamage = 0.f;
 }
 
 void AGameCharacter::BeginPlay()
@@ -96,6 +98,12 @@ void AGameCharacter::Destroy(bool bNetForce /* = false */, bool bShouldModifyLev
 	statsManager->Destroy();
 	skillManager->Destroy();
 	modManager->Destroy();
+
+	autoAttackManager = nullptr;
+	statsManager = nullptr;
+	skillManager = nullptr;
+	modManager = nullptr;
+	overheadWidget = nullptr;
 
 	Super::Destroy(bNetForce, bShouldModifyLevel);
 }
@@ -190,17 +198,17 @@ void AGameCharacter::OnRep_LastTakeHitInfo()
 
 bool AGameCharacter::CanMove() const
 {
-	return (currentAilment.newAilment != EAilment::AL_Knockup && currentAilment.newAilment != EAilment::AL_Stun && bAcceptingMoveCommands);
+	return (currentAilment.newAilment != EAilment::AL_Knockup && currentAilment.newAilment != EAilment::AL_Stun && bAcceptingMoveCommands && GetCharacterMovement()->GetGroundMovementMode() == MOVE_Walking);
 }
 
 bool AGameCharacter::CanAutoAttack() const
 {
-	return currentAilment.newAilment == EAilment::AL_None && GetWorldTimerManager().GetTimerRemaining(actionTimer) <= 0.f;
+	return currentAilment.newAilment != EAilment::AL_Stun && GetWorldTimerManager().GetTimerRemaining(actionTimer) <= 0.f && !bActionPreventingCombat;
 }
 
 bool AGameCharacter::CanPerformSkills() const
 {
-	return currentAilment.newAilment == EAilment::AL_None && GetWorldTimerManager().GetTimerRemaining(actionTimer) <= 0.f;
+	return currentAilment.newAilment != EAilment::AL_Stun && GetWorldTimerManager().GetTimerRemaining(actionTimer) <= 0.f && !bActionPreventingCombat;
 }
 
 bool AGameCharacter::UseSkill_Validate(int32 index, FVector mouseHitLoc, AGameCharacter* unitTarget)
@@ -252,6 +260,9 @@ void AGameCharacter::UseMod_Implementation(int32 index, FHitResult const& hit)
 		return;
 
 	if (mods[index]->GetCooldownRemaining() > 0.f)
+		return;
+
+	if (currentAilment.newAilment == EAilment::AL_Stun || GetWorldTimerManager().GetTimerRemaining(actionTimer) > 0.f)
 		return;
 
 	if (Role == ROLE_Authority)
@@ -353,7 +364,6 @@ void AGameCharacter::LaunchAutoAttack()
 
 	//calculate critcal hit
 	float dmg = GetCurrentValueForStat(EStat::ES_Atk);
-	float critPercent = GetCurrentValueForStat(EStat::ES_CritChance);
 
 	if (currentAilment.newAilment == EAilment::AL_Blind)
 		dmg = 0.f;
@@ -364,16 +374,8 @@ void AGameCharacter::LaunchAutoAttack()
 		bGuaranteeCrit = false;
 		rdmg.bCriticalHit = true;
 	}
-	else if (critPercent > 0.f)
-	{
-		float crit = FMath::RandRange(0, 100);
-
-		if (crit <= critPercent)
-		{
-			rdmg.bCriticalHit = true;
-			dmg += dmg * (GetCurrentValueForStat(EStat::ES_CritRatio) / 100.f);
-		}
-	}
+	else if (CalculateCriticalHit(dmg))
+		rdmg.bCriticalHit = true;
 
 	ATurret* tr = Cast<ATurret>(this);
 	if (IsValid(tr))
@@ -417,6 +419,20 @@ void AGameCharacter::LaunchAutoAttack()
 	bAutoAttackOnCooldown = true;
 
 	GetWorldTimerManager().ClearTimer(aaRangeTimer);
+}
+
+bool AGameCharacter::CalculateCriticalHit(float& totalDamage, float additionalCritChance)
+{
+	float crit = FMath::RandRange(0, 100);
+	float critPercent = GetCurrentValueForStat(EStat::ES_CritChance) + additionalCritChance;
+
+	if (crit <= critPercent)
+	{
+		totalDamage += totalDamage * (GetCurrentValueForStat(EStat::ES_CritRatio) / 100.f);
+		return true;
+	}
+	else
+		return false;
 }
 
 void AGameCharacter::CheckAutoAttack()
@@ -629,7 +645,10 @@ float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent cons
 	CharacterDamaged(Damage, DamageEvent.DamageTypeClass, damageCausingGC, DamageCauser);
 	
 	if (IsValid(damageCausingGC))
+	{
 		damageCausingGC->HurtAnother(this, DamageEvent, Damage, realmDamage);
+		damageCausingGC->modManager->CharacterDealtDamage(Damage, DamageEvent.DamageTypeClass, DamageCauser, realmDamage, this);
+	}
 
 	CharacterCombatAction();
 
@@ -671,6 +690,11 @@ float AGameCharacter::TakeDamage(float Damage, struct FDamageEvent const& Damage
 
 	float ActualDamage = Damage;
 
+	if (nextMitigatedDamage >= 0.f)
+	{
+		ActualDamage -= nextMitigatedDamage;
+		nextMitigatedDamage = 0.f;
+	}
 	ActualDamage = FMath::Max(ActualDamage, 0.f);
 
 	if (ActualDamage > 0.f)
@@ -773,7 +797,7 @@ void AGameCharacter::KilledBy(APawn* EventInstigator)
 		}
 
 		FRealmDamage dmg;
-		Die(GetHealth(), FDamageEvent(UDamageType::StaticClass()), Killer->GetPawn(), NULL, dmg);
+		Die(GetHealth(), FDamageEvent(UDamageType::StaticClass()), NULL, NULL, dmg);
 	}
 }
 
@@ -826,7 +850,9 @@ bool AGameCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent, A
 
 	// if this is an environmental death then refer to the previous killer so that they receive credit (knocked into lava pits, etc)
 	UDamageType const* const DamageType = DamageEvent.DamageTypeClass ? DamageEvent.DamageTypeClass->GetDefaultObject<UDamageType>() : GetDefault<UDamageType>();
-	Killer = GetDamageInstigator(Killer->GetController(), *DamageType)->GetPawn();
+
+	if (IsValid(Killer))
+		Killer = GetDamageInstigator(Killer->GetController(), *DamageType)->GetPawn();
 
 	ARealmPlayerController* const KilledPlayer = (Controller != NULL) ? Cast<ARealmPlayerController>(Controller) : Cast<ARealmPlayerController>(GetOwner());
 	//GetWorld()->GetAuthGameMode<AShooterGameMode>()->Killed(Killer, KilledPlayer, this, DamageType);
@@ -851,6 +877,15 @@ void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& Dam
 	//bReplicateMovement = false;
 	bIsDying = true;
 
+	StopAnimMontage();
+	StopAutoAttack();
+
+	GetCharacterMovement()->SetMovementMode(MOVE_None);
+
+	AGameCharacter* gc = Cast<AGameCharacter>(PawnInstigator);
+	if (!IsValid(gc))
+		return;
+
 	if (Role == ROLE_Authority)
 	{
 		ReplicateHit(KillingDamage, DamageEvent, PawnInstigator, DamageCauser, true, realmDamage);
@@ -867,12 +902,13 @@ void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& Dam
 				gcs.AddUnique(gc);
 		}
 
+		if (IsValid(gc))
+			gc->GiveCharacterExperience((baseExpReward + (level * 2.45f)));
+
 		for (APlayerCharacter* gcc : gcs)
 		{
-			if (gcc->level == 1)
+			if (gcc != gc)
 				gcc->GiveCharacterExperience(baseExpReward / gcs.Num());
-			else
-				gcc->GiveCharacterExperience((baseExpReward + (level * 2.45f)) / gcs.Num());
 		}
 
 		OnCharacterDied(KillingDamage, PawnInstigator, DamageCauser, realmDamage);
@@ -880,11 +916,6 @@ void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& Dam
 
 	GetWorldTimerManager().ClearTimer(flareRegen);
 	GetWorldTimerManager().ClearTimer(healthRegen);
-
-	AGameCharacter* gc = Cast<AGameCharacter>(PawnInstigator);
-
-	if (IsValid(gc))
-		gc->GiveCharacterExperience((baseExpReward + (level * 2.45f)));
 
 	if ((IsValid(gc) && gc->playerController == GetWorld()->GetFirstPlayerController()) || playerController == GetWorld()->GetFirstPlayerController())
 	{
@@ -911,10 +942,6 @@ void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& Dam
 	}*/
 
 	//DetachFromControllerPendingDestroy();
-	StopAnimMontage();
-	StopAutoAttack();
-
-	GetCharacterMovement()->SetMovementMode(MOVE_None);
 
 	// disable collisions on capsule
 
@@ -1282,10 +1309,25 @@ void AGameCharacter::SetGuaranteedCrit(bool bNewCrit /* = false */)
 	bGuaranteeCrit = bNewCrit;
 }
 
-void AGameCharacter::ApplyCharacterAction_Implementation(const FString& actionName, float actionDuration, bool bReverseProgressBar /* = false */)
+void AGameCharacter::ApplyCharacterAction_Implementation(const FString& actionName, float actionDuration, bool bReverseProgressBar /* = false */, bool bPreventCombat /* = false */)
 {
 	currentActionName = actionName;
-	GetWorldTimerManager().SetTimer(actionTimer, actionDuration, false);
+
+	if (Role == ROLE_Authority)
+	{
+		GetWorldTimerManager().SetTimer(actionTimer, this, &AGameCharacter::CharacterActionFinished, actionDuration);
+		bActionPreventingCombat = bPreventCombat;
+
+		if (bActionPreventingCombat)
+			StopAutoAttack();
+	}
+	else
+		GetWorldTimerManager().SetTimer(actionTimer, actionDuration, false);
+}
+
+void AGameCharacter::CharacterActionFinished()
+{
+	bActionPreventingCombat = false;
 }
 
 void AGameCharacter::HurtAnother(AGameCharacter* hurtCharacter, struct FDamageEvent const& DamageEvent, float damageAmount /* = 0.f */, FRealmDamage const& realmDamage)

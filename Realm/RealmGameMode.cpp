@@ -18,6 +18,8 @@
 #include "RealmForestMinionCamp.h"
 #include "RealmTurret.h"
 #include "RealmMoveController.h"
+#include "RealmRaider.h"
+#include "RealmRaiderAI.h"
 
 ARealmGameMode::ARealmGameMode(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
@@ -71,8 +73,11 @@ void ARealmGameMode::StartMatch()
 	FTimerHandle h;
 	GetWorldTimerManager().SetTimer(h, this, &ARealmGameMode::StartCreditIncome, 5.f, false);
 
-	FTimerHandle j;
+	FTimerHandle j, warningTimer;
 	GetWorldTimerManager().SetTimer(j, this, &ARealmGameMode::AmbientGameLevelUp, ambientLevelUpTime, true);
+
+	GetWorldTimerManager().SetTimer(warningTimer, this, &ARealmGameMode::CalculateNextRaiderSpawn, raiderSpawnDelay / 10.f, false);
+	GetWorldTimerManager().SetTimer(raiderSpawnTimer, this, &ARealmGameMode::OnRaiderSpawn, raiderSpawnDelay, false);
 
 	ARealmGameState* gs = GetGameState<ARealmGameState>();
 	if (IsValid(gs))
@@ -260,6 +265,63 @@ void ARealmGameMode::PostLogin(APlayerController* NewPlayer)
 			pc->ClientOpenPregameScreen();
 
 		CheckForCharacterSelect();
+	}
+}
+
+void ARealmGameMode::CalculateNextRaiderSpawn()
+{
+	TArray<ALaneManager*> lanes;
+	for (TActorIterator<ALaneManager> laneitr(GetWorld()); laneitr; ++laneitr)
+		lanes.AddUnique(*laneitr);
+
+	if (lanes.Num() <= 0)
+		return;
+	else if (lanes.Num() == 1)
+		nextRaiderSpawningLane = lanes[0];
+	else
+	{
+		int32 lane = FMath::RandRange(0, lanes.Num() - 1);
+		nextRaiderSpawningLane = lanes[lane];
+	}
+
+	int32 raider = FMath::RandRange(0, raiderTypes.Num()-1);
+	nextRaiderType = raiderTypes[raider];
+
+	OnNextRaiderSpawnCalculated(nextRaiderType, nextRaiderSpawningLane);
+}
+
+void ARealmGameMode::OnRaiderSpawn()
+{
+	FVector spawnLoc = nextRaiderSpawningLane->raiderSpawnLocation->GetActorLocation();
+	ARaiderCharacter* raider = GetWorld()->SpawnActor<ARaiderCharacter>(nextRaiderType, spawnLoc, FRotator::ZeroRotator);
+	if (!IsValid(raider))
+	{
+		GetWorldTimerManager().SetTimer(raiderSpawnTimer, this, &ARealmGameMode::OnRaiderSpawn, 1.f, false);
+		return;
+	}
+
+	ARealmRaiderAI* raiderAI = GetWorld()->SpawnActor<ARealmRaiderAI>(ARealmRaiderAI::StaticClass());
+	if (!IsValid(raiderAI))
+	{
+		GetWorldTimerManager().SetTimer(raiderSpawnTimer, this, &ARealmGameMode::OnRaiderSpawn, 1.f, false);
+		return;
+	}
+
+	raiderAI->laneManager = nextRaiderSpawningLane;
+	raiderAI->Possess(raider);
+	bRaidersFirstDeath = false;
+}
+
+void ARealmGameMode::OnRaiderDeath()
+{
+	if (!bRaidersFirstDeath)
+		bRaidersFirstDeath = true;
+	else
+	{
+		FTimerHandle warningTimer;
+		GetWorldTimerManager().SetTimer(warningTimer, this, &ARealmGameMode::CalculateNextRaiderSpawn, raiderRespawnDelay / 10.f, false);
+		GetWorldTimerManager().SetTimer(raiderSpawnTimer, this, &ARealmGameMode::OnRaiderSpawn, raiderRespawnDelay, false);
+		bRaidersFirstDeath = false;
 	}
 }
 

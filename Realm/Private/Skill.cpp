@@ -106,8 +106,48 @@ void ASkill::AddSkillPoint()
 	if (skillState == ESkillState::NotLearned)
 		skillState = ESkillState::Ready;
 
-	if (skillPoints + 1 <= skillPointsMax)
+	if (skillPoints + 1 <= skillPointsMax && CanSkillUpgrade())
 		skillPoints++;
+}
+
+bool ASkill::CanSkillUpgrade() const
+{
+	if (!IsValid(characterOwner))
+		return false;
+
+	//if its a normal ultimate (3 point ultimate skill), only let the player upgrade after levels 5, 9, and 13
+	if (skillPointsMax == 3)
+	{
+		switch (skillPoints)
+		{
+		case 0:
+			return characterOwner->GetLevel() >= 5;
+		case 1:
+			return characterOwner->GetLevel() >= 9;
+		case 2:
+			return characterOwner->GetLevel() >= 13;
+		default:
+			return false;
+		}
+	}
+
+	//since this is a normal skill, go through the rest of the owners skills and compare the difference in skill point counts. if there is at least a 2 point difference in all of them, this will return false.
+	if (skillPoints <= 0)
+		return true;
+
+	bool bWithinWantedDiff = true;
+	TArray<ASkill*> ownerSkills;
+	characterOwner->GetSkillManager()->GetSkills(ownerSkills);
+
+	for (int32 i = 0; i < ownerSkills.Num(); i++)
+	{
+		if (ownerSkills[i] == this || ownerSkills[i]->skillPointsMax == 3) //we dont care about this skill or the ultimate skill (if its a normal ultimate)
+			continue;
+
+		bWithinWantedDiff = (skillPoints + 1) - ownerSkills[i]->skillPoints < 2;
+	}
+
+	return bWithinWantedDiff;
 }
 
 float ASkill::GetCooldownProgressPercent()

@@ -15,3 +15,11 @@ void AModManager::CharacterDamaged(int32 dmgAmount, TSubclassOf<UDamageType> dam
 	for (int32 i = 0; i < mods.Num(); i++)
 		mods[i]->CharacterDamaged(dmgAmount, damageType, dmgCauser, actorCauser, realmDamage);
 }
+
+void AModManager::CharacterDealtDamage(int32 dmgAmount, TSubclassOf<UDamageType> damageType, AActor* actorCauser, FRealmDamage realmDamage, AGameCharacter* targetCharacter)
+{
+	TArray<AMod*> mods = managedCharacter->GetMods();
+
+	for (int32 i = 0; i < mods.Num(); i++)
+		mods[i]->CharacterDealtDamage(dmgAmount, damageType, actorCauser, realmDamage, targetCharacter);
+}

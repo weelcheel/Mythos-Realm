@@ -27,7 +27,7 @@ protected:
 	FTimerHandle ambientCreditTimer;
 
 	/* amount for ambient credit income per second */
-	int32 ambientCreditAmount;
+	float ambientCreditAmount;
 
 	/* back timer */
 	UPROPERTY(BlueprintReadOnly, Category = BaseTeleport)

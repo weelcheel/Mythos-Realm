@@ -216,8 +216,11 @@ void APlayerCharacter::StartBaseTeleport_Implementation()
 
 void APlayerCharacter::StopBaseTeleport_Implementation()
 {
-	GetWorldTimerManager().ClearTimer(baseTeleportTimer);
-	GetWorldTimerManager().ClearTimer(actionTimer);
+	if (GetWorldTimerManager().GetTimerRemaining(baseTeleportTimer) > 0.f)
+	{
+		GetWorldTimerManager().ClearTimer(baseTeleportTimer);
+		GetWorldTimerManager().ClearTimer(actionTimer);
+	}
 }
 
 void APlayerCharacter::PerformBaseTeleport_Implementation()

@@ -77,7 +77,12 @@ void ARealmPlayerController::Possess(APawn* aPawn)
 				playerCharacter->SetPlayerController(this);
 				playerCharacter->SetOwner(this);
 				playerCharacter->ChangeCredits(GetWorld()->GetAuthGameMode<ARealmGameMode>()->GetStartingCredits());
-				playerCharacter->skillPoints = GetWorld()->GetAuthGameMode<ARealmGameMode>()->startingSkillPoints;
+
+				playerCharacter->skillPoints = 1;
+				for (int32 i = 0; i < GetWorld()->GetAuthGameMode<ARealmGameMode>()->startingSkillPoints-1; i++)
+					playerCharacter->LevelUp();
+
+				playerCharacter->GiveCharacterExperience(FMath::Square(GetWorld()->GetAuthGameMode<ARealmGameMode>()->startingSkillPoints) / FMath::Square(EXP_CONST));
 				playerCharacter->OnCharacterSpawned();
 
 				if (ps)

@@ -12,6 +12,7 @@ class ARealmPlayerState;
 class AGameCharacter;
 class ARealmFogofWarManager;
 class ARealmObjective;
+class ALaneManager;
 
 UENUM()
 enum class EGameStatus : uint8
@@ -86,6 +87,37 @@ protected:
 	/* amount of skill points each player starts with */
 	UPROPERTY(EditDefaultsOnly, Category = Kills)
 	int32 startingSkillPoints;
+
+	/* amount of time before raiders start spawning in the game */
+	UPROPERTY(EditDefaultsOnly, Category = Raiders)
+	float raiderSpawnDelay;
+
+	/* amount of time between the death of the last spawned raider and when the next one spawns */
+	UPROPERTY(EditDefaultsOnly, Category = Raiders)
+	float raiderRespawnDelay;
+
+	/* timer for raider respawn */
+	FTimerHandle raiderSpawnTimer;
+
+	/* called when a raider needs to spawn */
+	void OnRaiderSpawn();
+	/* called to calculate the next raider spawn point and type and announces it to the players */
+	void CalculateNextRaiderSpawn();
+	/* whether or not this was the raider's first death */
+	bool bRaidersFirstDeath = false;
+
+	/* where the raider is spawning next */
+	ALaneManager* nextRaiderSpawningLane;
+	/* what type of raider to spawn next */
+	TSubclassOf<ARaiderCharacter> nextRaiderType;
+
+	/* what types of raiders can spawn in this gametype */
+	UPROPERTY(EditDefaultsOnly, Category = Raiders)
+	TArray<TSubclassOf<ARaiderCharacter> > raiderTypes;
+
+	/* blueprint hook to spawn indicators and announcements for when a new spawn is calculated for a raider */
+	UFUNCTION(BlueprintImplementableEvent, Category = Raiders)
+	void OnNextRaiderSpawnCalculated(TSubclassOf<ARaiderCharacter> raiderType, ALaneManager* lane);
 
 	/* whether or not this game counts towards player's competitive rank */
 	bool bRankedGame = false;
@@ -202,4 +234,7 @@ public:
 	{
 		return startingCreditCount;
 	}
+
+	/* called when a raider dies */
+	void OnRaiderDeath();
 };
