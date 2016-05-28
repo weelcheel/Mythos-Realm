@@ -13,6 +13,24 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& objectInitializer)
 	ambientCreditAmount = 4;
 }
 
+void APlayerCharacter::BeginPlay()
+{
+	skillManager = GetWorld()->SpawnActor<ASkillManager>(GetActorLocation(), GetActorRotation());
+	shieldManager = GetWorld()->SpawnActor<AShieldManager>();
+
+	for (int32 i = 0; i < skillClasses.Num(); i++)
+	{
+		ASkill* newSkill = GetWorld()->SpawnActor<ASkill>(skillClasses[i], GetActorLocation(), GetActorRotation());
+		if (newSkill)
+		{
+			newSkill->InitializeSkill(this);
+			skillManager->AddSkill(newSkill);
+		}
+	}
+
+	Super::BeginPlay();
+}
+
 /*void APlayerCharacter::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, FVector CameraPosition, FVector CameraDir)
 {
 	if (!IsValid(PC) || !IsValid(shieldManager))
@@ -71,10 +89,10 @@ void APlayerCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& D
 				if (IsValid(lifeHits[i].PawnInstigator) && IsValid(lifeHits[i].PawnInstigator->GetPlayerController()))
 					pc = lifeHits[i].PawnInstigator->GetPlayerController();
 			}
-			GetWorld()->GetAuthGameMode<ARealmGameMode>()->PlayerDied(playerController, IsValid(pc) ? pc : gc->GetPlayerController(), gc);
+			GetWorld()->GetAuthGameMode<ARealmGameMode>()->PlayerDied(IsValid(playerController) ? playerController : GetController(), IsValid(pc) ? pc : gc->GetPlayerController(), gc);
 		}
 		else
-			GetWorld()->GetAuthGameMode<ARealmGameMode>()->PlayerDied(playerController, nullptr, nullptr);
+			GetWorld()->GetAuthGameMode<ARealmGameMode>()->PlayerDied(IsValid(playerController) ? playerController : GetController(), nullptr, nullptr);
 
 		GetWorldTimerManager().ClearTimer(liftHitsClearTimer);
 	}
@@ -109,11 +127,11 @@ void APlayerCharacter::Respawn()
 		if (IsValid(playerController))
 			PlayerState = playerController->PlayerState;
 
-		AActor* start = GetWorld()->GetAuthGameMode<ARealmGameMode>()->FindPlayerStart(playerController);
+		AActor* start = GetWorld()->GetAuthGameMode<ARealmGameMode>()->FindPlayerStart(IsValid(playerController) ? playerController : GetController());
 		if (start)
 			SetActorLocation(start->GetActorLocation());
 		else
-			SetActorLocation(playerController->StartSpot->GetActorLocation());
+			SetActorLocation(IsValid(playerController) ? playerController->StartSpot->GetActorLocation() : GetController()->StartSpot->GetActorLocation());
 
 		statsManager->SetMaxFlare();
 		statsManager->SetMaxHealth();
@@ -175,7 +193,7 @@ void APlayerCharacter::ReplicateHit(float damage, struct FDamageEvent const& dam
 {
 	Super::ReplicateHit(damage, damageEvent, instigatingPawn, damageCauser, bKilled, realmDamage);
 
-	if (Role == ROLE_Authority)
+	if (Role == ROLE_Authority && GetPlayerController() != nullptr)
 		GetPlayerController()->ServerStopBaseTeleport();
 
 	lifeHits.Add(lastTakeHitInfo);
@@ -191,7 +209,7 @@ void APlayerCharacter::StartAmbientCreditIncome(int32 amount)
 
 void APlayerCharacter::OnAmbientCreditIncome()
 {
-	ChangeCredits(ambientCreditAmount / 4.f);
+	credits += ambientCreditAmount / 4.f;
 }
 
 void APlayerCharacter::ClearLifeHits()

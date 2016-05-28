@@ -6,6 +6,7 @@
 class ARealmMoveController;
 class APlayerCharacter;
 class ARealmPlayerState;
+class URealmFogofWarManager;
 
 UCLASS()
 class ARealmPlayerController : public APlayerController
@@ -37,6 +38,10 @@ protected:
 	/* reference to the player character this player is using */
 	UPROPERTY(replicated)
 	APlayerCharacter* playerCharacter;
+
+	/* fog of war manager for this player */
+	UPROPERTY(replicated)
+	URealmFogofWarManager* fogOfWar;
 
 	/* whether or not we have the ingame store open */
 	bool bIngameStoreOpen;
@@ -72,7 +77,7 @@ public:
 
 	/* [SERVER] calls the server to send the calculated world position to the move controller */
 	UFUNCTION(reliable, server, WithValidation)
-	void ServerMoveCommand(FVector targetLocation);
+	void ServerMoveCommand(FVector_NetQuantize targetLocation);
 
 	/* [SERVER] start aa cycle */
 	UFUNCTION(reliable, server, WithValidation)
@@ -178,10 +183,6 @@ public:
 	/* get the move controller */
 	ARealmMoveController* GetMoveController() const;
 
-	/* [CLIENT] receive data from the server about what characters we can and cant see */
-	UFUNCTION(reliable, client)
-	void ClientSetVisibleCharacters(const TArray<AGameCharacter*>& characters);
-
 	/* [CLIENT] a player kill happened in the game */
 	void OnDeathMessage(ARealmPlayerState* killer, ARealmPlayerState* killed, APawn* killerPawn);
 
@@ -208,4 +209,6 @@ public:
 
 	/* called when the game ends */
 	void GameEnded();
+
+	virtual bool ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags) override;
 };

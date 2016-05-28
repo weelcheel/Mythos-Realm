@@ -94,11 +94,6 @@ void ASpectatorCharacter::Tick(float deltaSeconds)
 {
 	Super::Tick(deltaSeconds);
 
-	if (bMoveCommand && IsValid(this))
-	{
-		CalculateDirectedMove();
-	}
-
 	FVector2D mousePosition;
 	FVector2D viewportSize;
 
@@ -192,12 +187,12 @@ void ASpectatorCharacter::RemoveHoverTarget()
 
 void ASpectatorCharacter::OnDirectedMoveStart()
 {
-	bMoveCommand = true;
+	ToggleMovementSystem(true);
 }
 
 void ASpectatorCharacter::OnDirectedMoveStop()
 {
-	bMoveCommand = false;
+	ToggleMovementSystem(false);
 }
 
 void ASpectatorCharacter::CalculateDirectedMove()
@@ -273,7 +268,7 @@ void ASpectatorCharacter::ToggleMovementSystem(bool bEnabled)
 		CalculateDirectedMove();
 
 		if (!GetWorldTimerManager().IsTimerActive(movementTimer))
-			GetWorldTimerManager().SetTimer(movementTimer, this, &ASpectatorCharacter::CalculateDirectedMove, 0.1f, true);
+			GetWorldTimerManager().SetTimer(movementTimer, this, &ASpectatorCharacter::CalculateDirectedMove, (1.f / 30.f), true);
 	}
 	else
 	{

@@ -2,7 +2,7 @@
 
 #include "AutoAttackManager.generated.h"
 
-class AStatsManager;
+class UStatsManager;
 class AProjectile;
 
 USTRUCT()
@@ -44,7 +44,7 @@ struct FAutoAttack
 };
 
 UCLASS()
-class AAutoAttackManager : public AActor
+class UAutoAttackManager : public UObject
 {
 	GENERATED_UCLASS_BODY()
 
@@ -59,7 +59,7 @@ protected:
 public:
 
 	/* initialize the attack manager */
-	void InitializeManager(TArray<FAutoAttack>& attacks, AStatsManager* stats);
+	void InitializeManager(TArray<FAutoAttack>& attacks, UStatsManager* stats);
 
 	/* get the range of the current auto attack */
 	UFUNCTION(BlueprintCallable, Category = AutoAttack)
@@ -100,4 +100,7 @@ public:
 	/* gets the auto attack hit sound */
 	UFUNCTION(BlueprintCallable, Category = AutoAttack)
 	USoundCue* GetCurrentAutoAttackHitSound() const;
+
+	/* override this so our manager can replicate with the character owner */
+	virtual bool IsSupportedForNetworking() const override;
 };

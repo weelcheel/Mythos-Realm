@@ -4,7 +4,7 @@
 ARealmForestMinionAI::ARealmForestMinionAI(const FObjectInitializer& objectInitializer)
 : Super(objectInitializer)
 {
-
+	
 }
 
 void ARealmForestMinionAI::Possess(APawn* InPawn)

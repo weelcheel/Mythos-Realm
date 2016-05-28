@@ -50,6 +50,7 @@ protected:
 	ATargetPoint* spawnLocation;
 
 	/* reference to the enabler for this team */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Team)
 	ARealmEnabler* teamEnabler;
 
 	/* level of the team this spawner is for */
@@ -70,7 +71,7 @@ public:
 	ATargetPoint* raiderSpawnLocation;
 
 	/* whhat team this is a spawner for */
-	UPROPERTY(EditAnywhere, Category = Spawner)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Spawner)
 	int32 teamIndex;
 
 	/* called when the game mode starts the match */

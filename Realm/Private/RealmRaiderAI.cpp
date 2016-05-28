@@ -21,7 +21,7 @@ void ARealmRaiderAI::Possess(APawn* InPawn)
 	FTimerHandle t;
 	GetWorldTimerManager().SetTimer(rangeTimer, this, &ARealmRaiderAI::ReevaluateTargets, 0.8f, true);
 	GetWorldTimerManager().SetTimer(t, this, &ARealmRaiderAI::CheckReachedObjective, 0.8f, true);
-	GetWorldTimerManager().SetTimer(spawnIntroTimer, 3.f, false);
+	GetWorldTimerManager().SetTimer(spawnIntroTimer, 7.f, false);
 
 	spawnLocation = mc->GetActorLocation();
 

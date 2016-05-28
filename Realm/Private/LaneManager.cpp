@@ -44,6 +44,7 @@ void ALaneManager::SpawnNextMinion()
 
 		if (minion)
 		{
+			minion->spawningLane = this;
 			minion->InitCharacterStatsForLevel(spawnMinionLevel);
 
 			minion->SetTeamIndex(teamIndex);

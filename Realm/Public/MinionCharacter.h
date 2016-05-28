@@ -3,9 +3,13 @@
 #include "GameCharacter.h"
 #include "MinionCharacter.generated.h"
 
+class ALaneManager;
+
 UCLASS()
 class AMinionCharacter : public AGameCharacter
 {
+	friend class ALaneManager;
+
 	GENERATED_UCLASS_BODY()
 
 protected:
@@ -13,6 +17,10 @@ protected:
 	/* amount of money the destroying player receives for destroying this objective. */
 	UPROPERTY(EditAnywhere, Category = Reward)
 	int32 playerReward;
+
+	/* lane manager that spawned this minion (if its a lane minion) */
+	UPROPERTY(BlueprintReadOnly, Category = Lane)
+	ALaneManager* spawningLane;
 
 	/* override for destruction and rewards */
 	virtual void OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage) override;

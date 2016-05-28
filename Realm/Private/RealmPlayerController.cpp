@@ -10,6 +10,7 @@
 #include "RealmGameMode.h"
 #include "RealmGameInstance.h"
 #include "MinimapActor.h"
+#include "RealmFogOfWarManager.h"
 
 ARealmPlayerController::ARealmPlayerController(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
@@ -89,6 +90,11 @@ void ARealmPlayerController::Possess(APawn* aPawn)
 				{
 					playerCharacter->PlayerState = ps;
 					playerCharacter->SetTeamIndex(ps->GetTeamIndex());
+
+					fogOfWar = NewObject<URealmFogofWarManager>(this);
+					fogOfWar->teamIndex = ps->GetTeamIndex();
+					fogOfWar->playerOwner = this;
+					fogOfWar->StartCalculatingVisibility();
 				}
 			}
 		}
@@ -100,12 +106,12 @@ void ARealmPlayerController::ClientSetRTSCameraViewTarget_Implementation(ASpecta
 	
 }
 
-bool ARealmPlayerController::ServerMoveCommand_Validate(FVector targetLocation)
+bool ARealmPlayerController::ServerMoveCommand_Validate(FVector_NetQuantize targetLocation)
 {
 	return true;
 }
 
-void ARealmPlayerController::ServerMoveCommand_Implementation(FVector targetLocation)
+void ARealmPlayerController::ServerMoveCommand_Implementation(FVector_NetQuantize targetLocation)
 {
 	if (!IsValid(this) || !IsValid(playerCharacter))
 		return;
@@ -114,10 +120,18 @@ void ARealmPlayerController::ServerMoveCommand_Implementation(FVector targetLoca
 		return;
 	
 	ServerClearAttackCommands();
-	ServerStopBaseTeleport();
+
+	if (GetWorldTimerManager().GetTimerRemaining(playerCharacter->baseTeleportTimer) > 0.f)
+		ServerStopBaseTeleport();
 
 	if (IsValid(moveController))
+	{
 		moveController->MoveToLocation(targetLocation);
+		FRotator newDir = (targetLocation - playerCharacter->GetActorLocation()).Rotation();
+		newDir.Pitch = 0.f;
+
+		playerCharacter->SetActorRotation(newDir);
+	}
 }
 
 bool ARealmPlayerController::ServerStartAutoAttack_Validate(AGameCharacter* target)
@@ -461,29 +475,6 @@ bool ARealmPlayerController::SelectUnitUnderMouse(ECollisionChannel TraceChannel
 	return false;
 }
 
-void ARealmPlayerController::ClientSetVisibleCharacters_Implementation(const TArray<AGameCharacter*>& characters)
-{
-	for (TActorIterator<AGameCharacter> gamechr(GetWorld()); gamechr; ++gamechr)
-	{
-		AGameCharacter* gc = *gamechr;
-		if (!IsValid(gc))
-			continue;
-
-		gc->SetActorHiddenInGame(!characters.Contains(gc));
-	}
-
-	for (TActorIterator<AMinimapActor> minimap(GetWorld()); minimap; ++minimap)
-	{
-		AMinimapActor* mapActor = *minimap;
-		APlayerHUD* hud = Cast<APlayerHUD>(GetHUD());
-		if (IsValid(hud))
-		{
-			mapActor->hud = hud;
-			mapActor->ReceiveCharacterVisibilityUpdate(characters);
-		}
-	}
-}
-
 void ARealmPlayerController::OnDeathMessage(ARealmPlayerState* killer, ARealmPlayerState* killed, APawn* killerPawn)
 {
 	APlayerHUD* hud = Cast<APlayerHUD>(GetHUD());
@@ -645,9 +636,20 @@ void ARealmPlayerController::GameEnded()
 	
 }
 
+bool ARealmPlayerController::ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags)
+{
+	bool WroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
+
+	if (fogOfWar)
+		WroteSomething |= Channel->ReplicateSubobject(fogOfWar, *Bunch, *RepFlags);
+
+	return WroteSomething;
+}
+
 void ARealmPlayerController::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ARealmPlayerController, playerCharacter);
+	DOREPLIFETIME(ARealmPlayerController, fogOfWar);
 }

@@ -11,6 +11,8 @@ ATurret::ATurret(const FObjectInitializer& objectInitializer)
 	GetCapsuleComponent()->SetCanEverAffectNavigation(bCanAffectNavigationGeneration);
 
 	AIControllerClass = ARealmTurretAI::StaticClass();
+
+	bReplicateMovement = false;
 }
 
 void ATurret::OnSeePawn(APawn* OtherActor)

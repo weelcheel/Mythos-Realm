@@ -2,13 +2,13 @@
 #include "ModManager.h"
 #include "Mod.h"
 
-AModManager::AModManager(const FObjectInitializer& objectInitializer)
+UModManager::UModManager(const FObjectInitializer& objectInitializer)
 : Super(objectInitializer)
 {
 
 }
 
-void AModManager::CharacterDamaged(int32 dmgAmount, TSubclassOf<UDamageType> damageType, AGameCharacter* dmgCauser, AActor* actorCauser, FRealmDamage realmDamage)
+void UModManager::CharacterDamaged(int32 dmgAmount, TSubclassOf<UDamageType> damageType, AGameCharacter* dmgCauser, AActor* actorCauser, FRealmDamage realmDamage)
 {
 	TArray<AMod*> mods = managedCharacter->GetMods();
 
@@ -16,7 +16,7 @@ void AModManager::CharacterDamaged(int32 dmgAmount, TSubclassOf<UDamageType> dam
 		mods[i]->CharacterDamaged(dmgAmount, damageType, dmgCauser, actorCauser, realmDamage);
 }
 
-void AModManager::CharacterDealtDamage(int32 dmgAmount, TSubclassOf<UDamageType> damageType, AActor* actorCauser, FRealmDamage realmDamage, AGameCharacter* targetCharacter)
+void UModManager::CharacterDealtDamage(int32 dmgAmount, TSubclassOf<UDamageType> damageType, AActor* actorCauser, FRealmDamage realmDamage, AGameCharacter* targetCharacter)
 {
 	TArray<AMod*> mods = managedCharacter->GetMods();
 

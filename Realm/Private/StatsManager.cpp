@@ -5,27 +5,24 @@
 #include "GameCharacter.h"
 #include "Effect.h"
 
-AStatsManager::AStatsManager(const FObjectInitializer& objectInitializer)
+UStatsManager::UStatsManager(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
 {
-	bReplicates = true;
-	bAlwaysRelevant = true;
-
 	for (int32 i = 0; i < (int32)EStat::ES_Max; i++)
 		bonusStats[i] = 0.f;
 }
 
-void AStatsManager::SetMaxHealth()
+void UStatsManager::SetMaxHealth()
 {
 	health = GetCurrentValueForStat(EStat::ES_HP) + bonusStats[(uint16)EStat::ES_HP];
 }
 
-void AStatsManager::SetMaxFlare()
+void UStatsManager::SetMaxFlare()
 {
 	flare = GetCurrentValueForStat(EStat::ES_Flare);
 }
 
-void AStatsManager::InitializeStats(float* initBaseStats, AGameCharacter* ownerChar)
+void UStatsManager::InitializeStats(float* initBaseStats, AGameCharacter* ownerChar)
 {
 	if (bInitialized)
 		return;
@@ -40,7 +37,7 @@ void AStatsManager::InitializeStats(float* initBaseStats, AGameCharacter* ownerC
 	owningCharacter = ownerChar;
 }
 
-float AStatsManager::GetCurrentValueForStat(EStat stat) const
+float UStatsManager::GetCurrentValueForStat(EStat stat) const
 {
 	if (stat == EStat::ES_AARange && bonusStats[(uint8)EStat::ES_AARange] > 0)
 		stat = EStat::ES_AARange;
@@ -48,17 +45,17 @@ float AStatsManager::GetCurrentValueForStat(EStat stat) const
 	return baseStats[(int32)stat] + modStats[(int32)stat] + bonusStats[(int32)stat];
 }
 
-float AStatsManager::GetBaseValueForStat(EStat stat) const
+float UStatsManager::GetBaseValueForStat(EStat stat) const
 {
 	return baseStats[(int32)stat];
 }
 
-float AStatsManager::GetUnaffectedValueForStat(EStat stat) const
+float UStatsManager::GetUnaffectedValueForStat(EStat stat) const
 {
 	return baseStats[(int32)stat] + modStats[(int32)stat];
 }
 
-AEffect* AStatsManager::AddEffect(FText const& effectName, FText const& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration, FString const& keyName, bool bStacking, bool bMultipleInfliction)
+AEffect* UStatsManager::AddEffect(FText const& effectName, FText const& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration, FString const& keyName, bool bStacking, bool bMultipleInfliction)
 {
 	if (!IsValid(owningCharacter) || (IsValid(owningCharacter) && !owningCharacter->IsAlive())) //return if the character isnt valid or dead
 		return nullptr;
@@ -66,7 +63,7 @@ AEffect* AStatsManager::AddEffect(FText const& effectName, FText const& effectDe
 	if (effectsMap.Contains(keyName) && !bMultipleInfliction) //return if this effect is already inflicted and can't be inflicted multiple times
 		return nullptr;
 
-	AEffect* newEffect = GetWorld()->SpawnActor<AEffect>(AEffect::StaticClass());
+	AEffect* newEffect = owningCharacter->GetWorld()->SpawnActor<AEffect>(AEffect::StaticClass());
 
 	newEffect->amounts = amounts;
 	newEffect->stats = stats;
@@ -79,7 +76,7 @@ AEffect* AStatsManager::AddEffect(FText const& effectName, FText const& effectDe
 	newEffect->bCanBeInflictedMultipleTimes = bMultipleInfliction;
 	newEffect->statsManager = this;
 
-	if (Role == ROLE_Authority)
+	if (owningCharacter->HasAuthority())
 	{
 		int32 ind = 0;
 		for (TEnumAsByte<EStat> eStat : stats)
@@ -93,17 +90,17 @@ AEffect* AStatsManager::AddEffect(FText const& effectName, FText const& effectDe
 	effectsList.AddUnique(newEffect);
 
 	if (effectDuration > 0.f)
-		GetWorldTimerManager().SetTimer(newEffect->effectTimer, FTimerDelegate::CreateUObject(this, &AStatsManager::EffectFinished, keyName), effectDuration, false);
+		owningCharacter->GetWorldTimerManager().SetTimer(newEffect->effectTimer, FTimerDelegate::CreateUObject(this, &UStatsManager::EffectFinished, keyName), effectDuration, false);
 
-	if ((GetWorld()->GetNetMode() == NM_Standalone || GetWorld()->GetNetMode() == NM_ListenServer) && IsValid(owningCharacter))
+	if (IsValid(owningCharacter) && (owningCharacter->GetWorld()->GetNetMode() == NM_Standalone || owningCharacter->GetWorld()->GetNetMode() == NM_ListenServer))
 		owningCharacter->EffectsUpdated();
 
 	return newEffect;
 }
 
-void AStatsManager::EffectFinished(FString key)
+void UStatsManager::EffectFinished(FString key)
 {
-	if (!effectsMap.Contains(key))
+	if (!effectsMap.Contains(key) || !IsValid(owningCharacter))
 		return;
 
 	AEffect* effect = (*effectsMap.Find(key));
@@ -111,9 +108,9 @@ void AStatsManager::EffectFinished(FString key)
 	if (!IsValid(effect))
 		return;
 
-	GetWorldTimerManager().ClearTimer(effect->effectTimer);
+	owningCharacter->GetWorldTimerManager().ClearTimer(effect->effectTimer);
 
-	if (Role == ROLE_Authority)
+	if (owningCharacter->HasAuthority())
 	{
 		int32 ind = 0;
 		for (TEnumAsByte<EStat> eStat : effect->stats)
@@ -128,22 +125,25 @@ void AStatsManager::EffectFinished(FString key)
 
 	effect->Destroy(true);
 
-	if ((GetWorld()->GetNetMode() == NM_Standalone || GetWorld()->GetNetMode() == NM_ListenServer) && IsValid(owningCharacter))
+	if (IsValid(owningCharacter) && (owningCharacter->GetWorld()->GetNetMode() == NM_Standalone || owningCharacter->GetWorld()->GetNetMode() == NM_ListenServer))
 		owningCharacter->EffectsUpdated();
 }
 
-void AStatsManager::AddEffectStacks(const FString& effectKey, int32 stackAmount)
+void UStatsManager::AddEffectStacks(const FString& effectKey, int32 stackAmount)
 {
+	if (!IsValid(owningCharacter))
+		return;
+
 	if (effectsMap.Contains(effectKey))
 	{
 		effectsMap[effectKey]->stackAmount += stackAmount;
 
-		if ((GetWorld()->GetNetMode() == NM_Standalone || GetWorld()->GetNetMode() == NM_ListenServer) && IsValid(owningCharacter))
+		if ((owningCharacter->GetWorld()->GetNetMode() == NM_Standalone || owningCharacter->GetWorld()->GetNetMode() == NM_ListenServer))
 			owningCharacter->EffectsUpdated();
 	}
 }
 
-AEffect* AStatsManager::GetEffect(const FString& effectKey)
+AEffect* UStatsManager::GetEffect(const FString& effectKey)
 {
 	if (effectsMap.Contains(effectKey))
 		return effectsMap[effectKey];
@@ -151,27 +151,27 @@ AEffect* AStatsManager::GetEffect(const FString& effectKey)
 		return nullptr;
 }
 
-void AStatsManager::RemoveHealth(float amount)
+void UStatsManager::RemoveHealth(float amount)
 {
 	health -= amount;
 }
 
-void AStatsManager::RemoveFlare(float amount)
+void UStatsManager::RemoveFlare(float amount)
 {
 	flare -= amount;
 }
 
-float AStatsManager::GetHealth() const
+float UStatsManager::GetHealth() const
 {
 	return health;
 }
 
-float AStatsManager::GetFlare() const
+float UStatsManager::GetFlare() const
 {
 	return flare;
 }
 
-void AStatsManager::UpdateModStats(TArray<AMod*>& mods)
+void UStatsManager::UpdateModStats(TArray<AMod*>& mods)
 {
 	//clear the mods array
 	for (int32 i = 0; i < (int32)EStat::ES_Max; i++)
@@ -192,7 +192,7 @@ void AStatsManager::UpdateModStats(TArray<AMod*>& mods)
 	}
 }
 
-void AStatsManager::CharacterLevelUp()
+void UStatsManager::CharacterLevelUp()
 {
 	baseStats[(int32)EStat::ES_HP] += GetCurrentValueForStat(EStat::ES_HPPL);
 	health += GetCurrentValueForStat(EStat::ES_HPPL);
@@ -208,14 +208,22 @@ void AStatsManager::CharacterLevelUp()
 	baseStats[(int32)EStat::ES_AtkSp] += GetCurrentValueForStat(EStat::ES_AtkSpPL);
 }
 
-void AStatsManager::OnRepUpdateEffects()
+void UStatsManager::OnRepUpdateEffects()
 {
 	//check for removed effects
 	for (auto it = effectsMap.CreateIterator(); it; ++it)
 	{
 		bool bEffectFound = false;
 		for (int32 i = 0; i < effectsList.Num(); i++)
+		{
+			if (!IsValid(effectsList[i]))
+				continue;
+
 			bEffectFound = effectsList[i]->GetName() == it.Key();
+
+			if (bEffectFound)
+				break;
+		}
 
 		if (!bEffectFound)
 			effectsMap.Remove(it.Key());
@@ -240,14 +248,14 @@ void AStatsManager::OnRepUpdateEffects()
 		owningCharacter->EffectsUpdated();
 }
 
-void AStatsManager::AddCreatedEffect(AEffect* newEffect)
+void UStatsManager::AddCreatedEffect(AEffect* newEffect)
 {
 	if (IsValid(newEffect))
 	{
 		if (effectsMap.Contains(newEffect->keyName) && !newEffect->bCanBeInflictedMultipleTimes)
 			return;
 
-		if (Role == ROLE_Authority)
+		if (owningCharacter->HasAuthority())
 		{
 			int32 ind = 0;
 			for (TEnumAsByte<EStat> eStat : newEffect->stats)
@@ -261,14 +269,14 @@ void AStatsManager::AddCreatedEffect(AEffect* newEffect)
 		effectsMap.Add(newEffect->keyName, newEffect);
 
 		if (newEffect->duration > 0.f)
-			GetWorldTimerManager().SetTimer(newEffect->effectTimer, FTimerDelegate::CreateUObject(this, &AStatsManager::EffectFinished, newEffect->keyName), newEffect->duration, false);
+			owningCharacter->GetWorldTimerManager().SetTimer(newEffect->effectTimer, FTimerDelegate::CreateUObject(this, &UStatsManager::EffectFinished, newEffect->keyName), newEffect->duration, false);
 
-		if ((GetWorld()->GetNetMode() == NM_Standalone || GetWorld()->GetNetMode() == NM_ListenServer) && IsValid(owningCharacter))
+		if (IsValid(owningCharacter) && (owningCharacter->GetWorld()->GetNetMode() == NM_Standalone || owningCharacter->GetWorld()->GetNetMode() == NM_ListenServer))
 			owningCharacter->EffectsUpdated();
 	}
 }
 
-void AStatsManager::RemoveAllEffects()
+void UStatsManager::RemoveAllEffects()
 {
 	for (int32 i = 0; i < effectsList.Num(); i++)
 	{
@@ -276,22 +284,21 @@ void AStatsManager::RemoveAllEffects()
 			EffectFinished(effectsList[i]->keyName);
 	}
 
-	GetWorldTimerManager().ClearAllTimersForObject(this);
+	if (IsValid(owningCharacter))
+		owningCharacter->GetWorldTimerManager().ClearAllTimersForObject(this);
 
 	effectsList.Empty();
 	effectsMap.Empty(0);
 }
 
-void AStatsManager::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+void UStatsManager::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(AStatsManager, bInitialized);
-	DOREPLIFETIME(AStatsManager, baseStats);
-	DOREPLIFETIME(AStatsManager, modStats);
-	DOREPLIFETIME(AStatsManager, bonusStats);
-	DOREPLIFETIME(AStatsManager, health);
-	DOREPLIFETIME(AStatsManager, flare);
-	DOREPLIFETIME(AStatsManager, effectsList);
-	DOREPLIFETIME(AStatsManager, owningCharacter);
+	DOREPLIFETIME(UStatsManager, bInitialized);
+	DOREPLIFETIME(UStatsManager, baseStats);
+	DOREPLIFETIME(UStatsManager, modStats);
+	DOREPLIFETIME(UStatsManager, bonusStats);
+	DOREPLIFETIME(UStatsManager, health);
+	DOREPLIFETIME(UStatsManager, flare);
+	DOREPLIFETIME(UStatsManager, effectsList);
+	DOREPLIFETIME(UStatsManager, owningCharacter);
 }

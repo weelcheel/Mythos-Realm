@@ -69,7 +69,7 @@ void ARealmEnabler::EnablerEffectFinished(AGameCharacter* gc)
 {
 	if (IsValid(gc))
 	{
-		AStatsManager* sm = gc->GetStatsManager();
+		UStatsManager* sm = gc->GetStatsManager();
 		if (IsValid(sm))
 		{
 			AEffect* effect = sm->GetEffect("enablerprotection");

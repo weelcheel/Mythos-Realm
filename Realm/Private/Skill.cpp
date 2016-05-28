@@ -144,7 +144,7 @@ bool ASkill::CanSkillUpgrade() const
 		if (ownerSkills[i] == this || ownerSkills[i]->skillPointsMax == 3) //we dont care about this skill or the ultimate skill (if its a normal ultimate)
 			continue;
 
-		bWithinWantedDiff = (skillPoints + 1) - ownerSkills[i]->skillPoints < 2;
+		bWithinWantedDiff = (skillPoints + 1) - ownerSkills[i]->skillPoints < 4;
 	}
 
 	return bWithinWantedDiff;

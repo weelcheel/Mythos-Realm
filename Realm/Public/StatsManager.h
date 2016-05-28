@@ -40,9 +40,9 @@ enum class EStat : uint8
 };
 
 UCLASS()
-class AStatsManager : public AActor
+class UStatsManager : public UObject
 {
-	friend class AAutoAttackManager;
+	friend class UAutoAttackManager;
 	friend class AEffect;
 	friend class AGameCharacter;
 	friend class ARaiderCharacter;
@@ -159,4 +159,10 @@ public:
 
 	/* level up stats */
 	void CharacterLevelUp();
+
+	/* networking support for uobject */
+	virtual bool IsSupportedForNetworking() const override
+	{
+		return true;
+	}
 };

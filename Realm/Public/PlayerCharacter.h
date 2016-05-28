@@ -29,10 +29,6 @@ protected:
 	/* amount for ambient credit income per second */
 	float ambientCreditAmount;
 
-	/* back timer */
-	UPROPERTY(BlueprintReadOnly, Category = BaseTeleport)
-	FTimerHandle baseTeleportTimer;
-
 	/* function to clear out all of the hits for this player */
 	void ClearLifeHits();
 
@@ -45,6 +41,8 @@ protected:
 	/* override for respawns */
 	virtual void OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage) override;
 
+	virtual void BeginPlay() override;
+
 	/* on ambient credit income */
 	void OnAmbientCreditIncome();
 
@@ -52,6 +50,10 @@ protected:
 	void Respawn();
 
 public:
+
+	/* back timer */
+	UPROPERTY(BlueprintReadOnly, Category = BaseTeleport)
+	FTimerHandle baseTeleportTimer;
 
 	/* add/spend credits */
 	UFUNCTION(BlueprintCallable, Category=Player)

@@ -3,14 +3,13 @@
 #include "UnrealNetwork.h"
 #include "StatsManager.h"
 
-AAutoAttackManager::AAutoAttackManager(const FObjectInitializer& objectInitializer)
+UAutoAttackManager::UAutoAttackManager(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
 {
-	bReplicates = true;
-	bAlwaysRelevant = true;
+	
 }
 
-void AAutoAttackManager::InitializeManager(TArray<FAutoAttack>& attacks, AStatsManager* stats)
+void UAutoAttackManager::InitializeManager(TArray<FAutoAttack>& attacks, UStatsManager* stats)
 {
 	autoAttacks = attacks;
 	
@@ -18,7 +17,7 @@ void AAutoAttackManager::InitializeManager(TArray<FAutoAttack>& attacks, AStatsM
 		stats->baseStats[(uint8)EStat::ES_AARange] = autoAttacks[0].attackRange;
 }
 
-float AAutoAttackManager::GetCurrentAutoAttackRange() const
+float UAutoAttackManager::GetCurrentAutoAttackRange() const
 {
 	if (currentAttackIndex < autoAttacks.Num())
 		return autoAttacks[currentAttackIndex].attackRange;
@@ -26,7 +25,7 @@ float AAutoAttackManager::GetCurrentAutoAttackRange() const
 		return -1.f;
 }
 
-float AAutoAttackManager::GetCurrentAutoAttackRangeSquared() const
+float UAutoAttackManager::GetCurrentAutoAttackRangeSquared() const
 {
 	if (currentAttackIndex < autoAttacks.Num())
 		return autoAttacks[currentAttackIndex].attackRange * autoAttacks[currentAttackIndex].attackRange;
@@ -34,7 +33,7 @@ float AAutoAttackManager::GetCurrentAutoAttackRangeSquared() const
 		return -1.f;
 }
 
-UAnimMontage* AAutoAttackManager::GetCurrentAttackAnimation() const
+UAnimMontage* UAutoAttackManager::GetCurrentAttackAnimation() const
 {
 	if (currentAttackIndex < autoAttacks.Num())
 		return autoAttacks[currentAttackIndex].attackAnimation;
@@ -42,7 +41,7 @@ UAnimMontage* AAutoAttackManager::GetCurrentAttackAnimation() const
 		return nullptr;
 }
 
-bool AAutoAttackManager::IsCurrentAttackProjectile() const
+bool UAutoAttackManager::IsCurrentAttackProjectile() const
 {
 	if (currentAttackIndex < autoAttacks.Num())
 		return autoAttacks[currentAttackIndex].bProjectile;
@@ -50,7 +49,7 @@ bool AAutoAttackManager::IsCurrentAttackProjectile() const
 		return false;
 }
 
-TSubclassOf<AProjectile> AAutoAttackManager::GetCurrentAutoAttackProjectileClass() const
+TSubclassOf<AProjectile> UAutoAttackManager::GetCurrentAutoAttackProjectileClass() const
 {
 	if (currentAttackIndex < autoAttacks.Num())
 		return autoAttacks[currentAttackIndex].projectileClass;
@@ -58,7 +57,7 @@ TSubclassOf<AProjectile> AAutoAttackManager::GetCurrentAutoAttackProjectileClass
 		return nullptr;
 }
 
-FName AAutoAttackManager::GetCurrentAutoAttackProjectileSocket() const
+FName UAutoAttackManager::GetCurrentAutoAttackProjectileSocket() const
 {
 	if (currentAttackIndex < autoAttacks.Num())
 		return autoAttacks[currentAttackIndex].projectileSocket;
@@ -66,7 +65,7 @@ FName AAutoAttackManager::GetCurrentAutoAttackProjectileSocket() const
 		return TEXT("");
 }
 
-float AAutoAttackManager::GetAutoAttackLaunchTime() const
+float UAutoAttackManager::GetAutoAttackLaunchTime() const
 {
 	if (currentAttackIndex < autoAttacks.Num())
 		return autoAttacks[currentAttackIndex].launchTime;
@@ -74,13 +73,13 @@ float AAutoAttackManager::GetAutoAttackLaunchTime() const
 		return -1.f;
 }
 
-void AAutoAttackManager::SetAutoAttackIndex(int32 newIndex)
+void UAutoAttackManager::SetAutoAttackIndex(int32 newIndex)
 {
 	if (newIndex >= 0 && newIndex < autoAttacks.Num())
 		currentAttackIndex = newIndex;
 }
 
-USoundCue* AAutoAttackManager::GetCurrentAutoAttackLaunchSound() const
+USoundCue* UAutoAttackManager::GetCurrentAutoAttackLaunchSound() const
 {
 	if (currentAttackIndex < autoAttacks.Num())
 		return autoAttacks[currentAttackIndex].attackLaunchSound;
@@ -88,7 +87,7 @@ USoundCue* AAutoAttackManager::GetCurrentAutoAttackLaunchSound() const
 		return nullptr;
 }
 
-USoundCue* AAutoAttackManager::GetCurrentAutoAttackHitSound() const
+USoundCue* UAutoAttackManager::GetCurrentAutoAttackHitSound() const
 {
 	if (currentAttackIndex < autoAttacks.Num())
 		return autoAttacks[currentAttackIndex].attackHitSound;
@@ -96,10 +95,13 @@ USoundCue* AAutoAttackManager::GetCurrentAutoAttackHitSound() const
 		return nullptr;
 }
 
-void AAutoAttackManager::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+bool UAutoAttackManager::IsSupportedForNetworking() const
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	return true;
+}
 
-	DOREPLIFETIME(AAutoAttackManager, autoAttacks);
-	DOREPLIFETIME(AAutoAttackManager, currentAttackIndex);
+void UAutoAttackManager::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+	DOREPLIFETIME(UAutoAttackManager, autoAttacks);
+	DOREPLIFETIME(UAutoAttackManager, currentAttackIndex);
 }

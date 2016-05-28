@@ -5,7 +5,7 @@
 URealmCharacterMovementComponent::URealmCharacterMovementComponent(const FObjectInitializer& objectInitializer)
 : Super(objectInitializer)
 {
-
+	
 }
 
 void URealmCharacterMovementComponent::InitializeComponent()

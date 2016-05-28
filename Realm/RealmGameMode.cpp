@@ -20,6 +20,7 @@
 #include "RealmMoveController.h"
 #include "RealmRaider.h"
 #include "RealmRaiderAI.h"
+#include "RealmBotController.h"
 
 ARealmGameMode::ARealmGameMode(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
@@ -201,35 +202,11 @@ void ARealmGameMode::BeginPlay()
 	}
 	else
 		expectedPlayerCount = 1;
-
-	if (sightManagers.Num() <= 0)
-	{
-		for (FTeam inTeam : teams)
-		{
-			ARealmFogofWarManager* mg = GetWorld()->SpawnActor<ARealmFogofWarManager>(ARealmFogofWarManager::StaticClass());
-			if (IsValid(mg))
-			{
-				mg->teamIndex = sightManagers.AddUnique(mg);
-			}
-		}
-	}
 }
 
 void ARealmGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
-
-	if (sightManagers.Num() <= 0)
-	{
-		for (FTeam inTeam : teams)
-		{
-			ARealmFogofWarManager* mg = GetWorld()->SpawnActor<ARealmFogofWarManager>(ARealmFogofWarManager::StaticClass());
-			if (IsValid(mg))
-			{
-				mg->teamIndex = sightManagers.AddUnique(mg);
-			}
-		}
-	}
 
 	ARealmPlayerController* pc = Cast<ARealmPlayerController>(NewPlayer);
 	if (IsValid(pc))
@@ -257,7 +234,7 @@ void ARealmGameMode::PostLogin(APlayerController* NewPlayer)
 				ps->SetTeamIndex(least);
 				teams[least].players.AddUnique(ps);
 				ps->SetTeamPlayerIndex(teams[least].players.Num() - 1);
-				sightManagers[least]->AddPlayerToManager(pc);
+				//sightManagers[least]->AddPlayerToManager(pc);
 			}
 		}
 
@@ -312,8 +289,18 @@ void ARealmGameMode::OnRaiderSpawn()
 	bRaidersFirstDeath = false;
 }
 
-void ARealmGameMode::OnRaiderDeath()
+void ARealmGameMode::OnRaiderDeath(bool bDespawned /*= false*/)
 {
+	if (bDespawned)
+	{
+		FTimerHandle warningTimer;
+		GetWorldTimerManager().SetTimer(warningTimer, this, &ARealmGameMode::CalculateNextRaiderSpawn, raiderRespawnDelay / 10.f, false);
+		GetWorldTimerManager().SetTimer(raiderSpawnTimer, this, &ARealmGameMode::OnRaiderSpawn, raiderRespawnDelay, false);
+		bRaidersFirstDeath = false;
+
+		return;
+	}
+
 	if (!bRaidersFirstDeath)
 		bRaidersFirstDeath = true;
 	else
@@ -416,39 +403,47 @@ void ARealmGameMode::PlayerDied(AController* killedPlayer, AController* playerKi
 	if (!IsValid(killedPlayer))
 		return;
 
-	ARealmPlayerController* killedPC = Cast<ARealmPlayerController>(killedPlayer);
 	ARealmGameState* gs = GetGameState<ARealmGameState>();
+
+	//handle bots dying
+	ARealmBotController* bot = Cast<ARealmBotController>(killedPlayer);
+	if (IsValid(bot))
+	{
+		//award the killer
+		APlayerCharacter* killerPC = Cast<APlayerCharacter>(killerPawn);
+		APlayerCharacter* killedPC = Cast<APlayerCharacter>(bot->GetCharacter());
+
+		if (IsValid(killerPC)) //award the killer
+			killerPC->ChangeCredits(CalculatePlayerKillValue(killedPlayer, playerKiller), IsValid(killedPC) ? killedPC->GetActorLocation() : FVector::ZeroVector);
+
+		//set the respawn timer for the killed
+		if (IsValid(gs) && IsValid(killedPC))
+		{
+			float respawnTime = 7.5f;
+			respawnTime += FMath::Min((gs->GetMatchTime() / 300.f), 35.f) + (float)killedPC->level * 1.5f;
+			killedPC->StartRespawnTimers(respawnTime);
+		}
+	}
+
+	ARealmPlayerController* killedPC = Cast<ARealmPlayerController>(killedPlayer);
 	if (IsValid(killedPC))
 	{
 		//award the killer
-		ARealmPlayerController* killerPC = Cast<ARealmPlayerController>(playerKiller);
+		/*ARealmPlayerController* killerPC = Cast<ARealmPlayerController>(playerKiller);
 		if (IsValid(killerPC))
 		{
 			//award the killer
 			APlayerCharacter* pc = killerPC->GetPlayerCharacter();
 			if (IsValid(pc))
 				pc->ChangeCredits(CalculatePlayerKillValue(killedPlayer, playerKiller), killedPC->GetPlayerCharacter()->GetActorLocation());
-		}
+		}*/
 
-		//announce the kill to the game
-		ARealmPlayerState* ps = Cast<ARealmPlayerState>(killedPC->PlayerState);
-		ARealmPlayerState* ps2 = nullptr;
-
-		if (IsValid(killerPC))
-			ps2 = Cast<ARealmPlayerState>(killerPC->PlayerState);
-		if (IsValid(ps))
+		if (IsValid(killedPC))
 		{
-			ps->playerDeaths++;
-			ps->BroadcastDeath(ps2, killerPawn);
-		}
-		if (IsValid(ps2))
-		{
-			ps2->playerKills++;
-			if (IsValid(gs))
-			{
-				if (ps2->GetTeamIndex() >= 0 && ps2->GetTeamIndex() < gs->teamScores.Num())
-					gs->teamScores[ps2->GetTeamIndex()]++;
-			}
+			//award the killer
+			APlayerCharacter* killerPC = Cast<APlayerCharacter>(killerPawn);
+			if (IsValid(killerPC)) //award the killer
+				killerPC->ChangeCredits(CalculatePlayerKillValue(killedPlayer, playerKiller), killedPC->GetPlayerCharacter()->GetActorLocation());
 		}
 
 		//award the assistors
@@ -459,6 +454,27 @@ void ARealmGameMode::PlayerDied(AController* killedPlayer, AController* playerKi
 			float respawnTime = 7.5f;
 			respawnTime += FMath::Min((gs->GetMatchTime() / 300.f), 35.f) + (float)killedPC->GetPlayerCharacter()->level * 1.5f;
 			killedPC->GetPlayerCharacter()->StartRespawnTimers(respawnTime);
+		}
+	}
+
+	//announce the kill to the game
+	ARealmPlayerState* ps = Cast<ARealmPlayerState>(killedPlayer->PlayerState);
+	ARealmPlayerState* ps2 = nullptr;
+
+	if (IsValid(playerKiller))
+		ps2 = Cast<ARealmPlayerState>(playerKiller->PlayerState);
+	if (IsValid(ps))
+	{
+		ps->playerDeaths++;
+		ps->BroadcastDeath(ps2, killerPawn);
+	}
+	if (IsValid(ps2))
+	{
+		ps2->playerKills++;
+		if (IsValid(gs))
+		{
+			if (ps2->GetTeamIndex() >= 0 && ps2->GetTeamIndex() < gs->teamScores.Num())
+				gs->teamScores[ps2->GetTeamIndex()]++;
 		}
 	}
 }

@@ -40,7 +40,7 @@ public:
 
 	/* stats owner of this effect */
 	UPROPERTY()
-	AStatsManager* statsManager;
+	UStatsManager* statsManager;
 
 	/* is this effect transfered to a player killer? */
 	UPROPERTY(BlueprintReadWrite, Category=Effect)

@@ -17,7 +17,7 @@ void ARaiderCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& D
 		if (!gc)
 			return;
 
-		GetWorld()->GetAuthGameMode<ARealmGameMode>()->OnRaiderDeath();
+		GetWorld()->GetAuthGameMode<ARealmGameMode>()->OnRaiderDeath(InstigatingPawn == this);
 		if (bFirstDeath)
 		{
 			GetWorldTimerManager().ClearAllTimersForObject(GetController());

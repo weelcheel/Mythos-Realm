@@ -10,7 +10,7 @@ class ARealmEnabler;
 class APlayerCharacter;
 class ARealmPlayerState;
 class AGameCharacter;
-class ARealmFogofWarManager;
+class URealmFogofWarManager;
 class ARealmObjective;
 class ALaneManager;
 
@@ -138,9 +138,6 @@ protected:
 	/* array of teams in the game, usually 2 */
 	TArray<FTeam> teams;
 
-	/* array of sight managers for each of the teams */
-	TArray<ARealmFogofWarManager*> sightManagers;
-
 	/* set the winner of the game */
 	int32 winningTeamIndex;
 
@@ -236,5 +233,5 @@ public:
 	}
 
 	/* called when a raider dies */
-	void OnRaiderDeath();
+	void OnRaiderDeath(bool bDespawned = false);
 };

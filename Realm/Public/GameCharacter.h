@@ -15,7 +15,7 @@
 const static int32 MAX_LEVEL = 15;
 const static float EXP_CONST = 2.f / FMath::Sqrt(128.f);
 
-class ARealmFogofWarManager;
+class URealmFogofWarManager;
 class UOverheadWidget;
 class UUserWidget;
 
@@ -75,11 +75,11 @@ protected:
 
 	/* stat manager for handling stat updates */
 	UPROPERTY(replicated)
-	AStatsManager* statsManager;
+	UStatsManager* statsManager;
 
 	/* auto attack manager this character can use */
 	UPROPERTY(replicated)
-	AAutoAttackManager* autoAttackManager;
+	UAutoAttackManager* autoAttackManager;
 
 	/* skill manager this character can use */
 	UPROPERTY(replicated)
@@ -87,7 +87,7 @@ protected:
 
 	/* mod manager this character can use */
 	UPROPERTY(replicated)
-	AModManager* modManager;
+	UModManager* modManager;
 	
 	/* shield manager this character can use */
 	UPROPERTY(replicated, BlueprintReadOnly, Category=Shield)
@@ -122,7 +122,7 @@ protected:
 	bool bAutoAttackOnCooldown;
 
 	/* if this unit's auto attack is being launched */
-	UPROPERTY(BlueprintReadOnly, Category = AA)
+	UPROPERTY(BlueprintReadOnly, Category = AA, ReplicatedUsing=OnRep_AutoAttackLaunching)
 	bool bAutoAttackLaunching;
 
 	/** Time at which point the last take hit info for the actor times out and won't be replicated; Used to stop join-in-progress effects all over the screen */
@@ -175,6 +175,7 @@ protected:
 	bool bGuaranteeCrit = false;
 
 	/* whether or not this character is in combat */
+	UPROPERTY(BlueprintReadOnly, Category=Combat)
 	bool bInCombat = false;
 
 	/* whether or not this character should negate the next damage event */
@@ -246,6 +247,10 @@ protected:
 	/* notify the client of Ailment */
 	UFUNCTION()
 	virtual void OnRepAilment();
+
+	/* notify of starting to launch auto attack */
+	UFUNCTION()
+	void OnRep_AutoAttackLaunching();
 
 	/* regen functions */
 	void HealthRegen();
@@ -340,11 +345,11 @@ public:
 
 	/* get the stat manager */
 	UFUNCTION(BlueprintCallable, Category = Stats)
-	AStatsManager* GetStatsManager() const;
+	UStatsManager* GetStatsManager() const;
 
 	/* get the auto attack manager */
 	UFUNCTION(BlueprintCallable, Category = AA)
-	AAutoAttackManager* GetAutoAttackManager() const;
+	UAutoAttackManager* GetAutoAttackManager() const;
 
 	/* get the skill manager */
 	UFUNCTION(BlueprintCallable, Category = Stats)
@@ -519,7 +524,7 @@ public:
 	static FAilmentInfo MakeAilmentInfo(EAilment ailment, FString ailmentString, float ailmentDuration, FVector ailmentDir);
 
 	/* called by the fog of war manager to get visibility data */
-	virtual void CalculateVisibility(TArray<AGameCharacter*>& seenCharacters);
+	virtual void CalculateVisibility(TArray<AGameCharacter*>& sightList);
 
 	/* whether or not the enemy team can see this character even if its not in their sight range */
 	UFUNCTION(BlueprintCallable, Category = Vision)
@@ -532,6 +537,10 @@ public:
 	/* set whether or not the next auto attack will critically hit */
 	UFUNCTION(BlueprintCallable, Category = Vision)
 	void SetGuaranteedCrit(bool bNewCrit = false);
+
+	/* [LOCAL] plays the current auto attack's animation on the local character */
+	UFUNCTION(BlueprintCallable, Category = AutoAttack)
+	void PlayAutoAttackAnimation(float InPlayRate);
 
 	/* play animation */
 	UFUNCTION(NetMulticast, reliable, WithValidation)
@@ -624,4 +633,7 @@ public:
 	/* function for generating a critical hit for this character which returns whethere or not the hit was critical and how much total damage the hit will do */
 	UFUNCTION(BlueprintCallable, Category = CritChance)
 	bool CalculateCriticalHit(float& totalDamage, float additionalCritChance = 0.f);
+
+	/* to successfully replicate our manager subojects without having to take a performance hit */
+	virtual bool ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags) override;
 };
