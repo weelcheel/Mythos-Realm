@@ -101,13 +101,6 @@ void ARealmLaneMinionAI::ReevaluateTargets()
 	}
 	else
 		NeedsNewCommand();
-
-	if (nextTarget && nextTargetPriority >= currentTargetPriority)
-	{
-		SetNewTarget(nextTarget, nextTargetPriority);
-		nextTarget = nullptr;
-		nextTargetPriority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
-	}
 }
 
 void ARealmLaneMinionAI::SetNewTarget(AGameCharacter* newTarget, ELaneMinionTargetPriority targetPriority)
@@ -131,6 +124,17 @@ void ARealmLaneMinionAI::NeedsNewCommand()
 {
 	if (!IsValid(minionCharacter))
 		return;
+
+	if (nextTarget && nextTargetPriority >= currentTargetPriority)
+	{
+		SetNewTarget(nextTarget, nextTargetPriority);
+		nextTarget = nullptr;
+		nextTargetPriority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
+
+		minionCharacter->StartAutoAttack();
+
+		return;
+	}
 
 	float leastDistance = -1.f;
 	int32 leastInd = -1;
@@ -225,6 +229,7 @@ void ARealmLaneMinionAI::ReceiveCallForHelp(AGameCharacter* distressedUnit, AGam
 	{
 		nextTarget = enemyTarget;
 		nextTargetPriority = thisPriority;
+		NeedsNewCommand();
 	}
 }
 
@@ -233,21 +238,66 @@ void ARealmLaneMinionAI::CharacterInAttackRange()
 	if (!IsValid(minionCharacter))
 		return;
 
+	/*FVector newLoc = minionCharacter->GetActorLocation();
+	TArray<FHitResult> hits;
+	FVector end = newLoc;
+	end.Z += 5.f;
+
+	bool bShouldReposition = false;
+	GetWorld()->SweepMultiByChannel(hits, newLoc, end, minionCharacter->GetActorRotation().Quaternion(), ECC_Pawn, FCollisionShape::MakeSphere(75.f));
+	for (FHitResult hit : hits)
+	{
+		AGameCharacter* gc = Cast<AGameCharacter>(hit.GetActor());
+		if (IsValid(gc) && gc->IsA(AMinionCharacter::StaticClass()) && gc != minionCharacter && gc->IsAlive() && gc->GetTeamIndex() == minionCharacter->GetTeamIndex())
+			bShouldReposition = true;
+	}
+	
+	if (bShouldReposition)
+	{
+		FTimerHandle handle;
+		GetWorldTimerManager().SetTimer(handle, this, &ARealmLaneMinionAI::CharacterInAttackRange, 0.15f);
+		bRepositioned = true;
+
+		for (int32 i = 1; i < 360; i++) //rotate around the target location by degree until we find an open spot to go
+		{
+			bool bDirection = FMath::RandBool();
+			newLoc = minionCharacter->GetActorLocation().RotateAngleAxis(bDirection ? i : i * -1, FVector(0.f, 0.f, 1.f));
+
+			GetWorld()->SweepMultiByChannel(hits, newLoc, end, minionCharacter->GetActorRotation().Quaternion(), ECC_Pawn, FCollisionShape::MakeSphere(75.f));
+
+			bool bFoundCharacter = false;
+			for (FHitResult hit : hits)
+			{
+				AGameCharacter* gc = Cast<AGameCharacter>(hit.GetActor());
+				if (IsValid(gc) && gc->IsA(AMinionCharacter::StaticClass()) && gc != minionCharacter && gc->IsAlive() && gc->GetTeamIndex() == minionCharacter->GetTeamIndex())
+					bFoundCharacter = true;
+			}
+
+			if (!bFoundCharacter)
+				break;
+		}
+
+		minionCharacter->StopAutoAttack();
+		MoveToLocation(newLoc);
+
+		return;
+	}*/
+
 	//see if there are any friendlies in range
 	for (TActorIterator<AMinionCharacter> minion(GetWorld()); minion; ++minion)
 	{
 		AMinionCharacter* mc = *minion;
 		FVector targetVector = mc->GetActorLocation() - minionCharacter->GetActorLocation();
 		float distance = targetVector.Size();
-		if (IsValid(mc) && mc->IsAlive() && mc != minionCharacter && mc->GetTeamIndex() == minionCharacter->GetTeamIndex() && distance <= 85.f)
+		if (IsValid(mc) && mc->IsAlive() && mc != minionCharacter && mc->GetTeamIndex() == minionCharacter->GetTeamIndex() && distance <= 90.f)
 		{
 			FTimerHandle handle;
 			GetWorldTimerManager().SetTimer(handle, this, &ARealmLaneMinionAI::CharacterInAttackRange, 0.15f);
 			bRepositioned = true;
 
-			FVector newLoc = targetVector.RotateAngleAxis(FMath::RandRange(90, 180), FVector(0.f, 0.f, 1.f));
-			minionCharacter->StopAutoAttack();
+			FVector newLoc = targetVector.RotateAngleAxis(90.f, FVector(0.f, 0.f, 1.f));
 
+			minionCharacter->StopAutoAttack();
 			MoveToLocation(minionCharacter->GetActorLocation() + (newLoc.Rotation().Vector() * 50.f));
 
 			return;
@@ -260,6 +310,9 @@ void ARealmLaneMinionAI::CharacterInAttackRange()
 		ReevaluateTargets();
 		minionCharacter->StartAutoAttack();
 	}
+
+	//ReevaluateTargets();
+	//minionCharacter->StartAutoAttack();
 }
 
 void ARealmLaneMinionAI::Destroy(bool bNetForce, bool bShouldModifyLevel)

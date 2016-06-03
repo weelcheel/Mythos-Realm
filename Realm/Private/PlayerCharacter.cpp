@@ -16,7 +16,9 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& objectInitializer)
 void APlayerCharacter::BeginPlay()
 {
 	skillManager = GetWorld()->SpawnActor<ASkillManager>(GetActorLocation(), GetActorRotation());
+	skillManager->SetOwner(this);
 	shieldManager = GetWorld()->SpawnActor<AShieldManager>();
+	shieldManager->SetOwner(this);
 
 	for (int32 i = 0; i < skillClasses.Num(); i++)
 	{
@@ -194,7 +196,24 @@ void APlayerCharacter::ReplicateHit(float damage, struct FDamageEvent const& dam
 	Super::ReplicateHit(damage, damageEvent, instigatingPawn, damageCauser, bKilled, realmDamage);
 
 	if (Role == ROLE_Authority && GetPlayerController() != nullptr)
+	{
 		GetPlayerController()->ServerStopBaseTeleport();
+
+		TArray<FHitResult> hits;
+		FVector start = GetActorLocation();
+		FVector end = start;
+		end.Z += 5.f;
+
+		GetWorld()->SweepMultiByChannel(hits, start, end, GetActorRotation().Quaternion(), ECC_Pawn, FCollisionShape::MakeSphere(420.f));
+
+		for (FHitResult hit : hits)
+		{
+			AGameCharacter* gc = Cast<AGameCharacter>(hit.GetActor());
+			AGameCharacter* enemy = Cast<AGameCharacter>(instigatingPawn);
+			if (IsValid(gc) && gc->IsAlive() && gc->GetTeamIndex() == GetTeamIndex() && IsValid(enemy))
+				gc->ReceiveCallForHelp(this, enemy);
+		}
+	}
 
 	lifeHits.Add(lastTakeHitInfo);
 	GetWorldTimerManager().SetTimer(liftHitsClearTimer, this, &APlayerCharacter::ClearLifeHits, 3.5f, false);

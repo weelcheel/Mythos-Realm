@@ -26,11 +26,18 @@ protected:
 
 	/* notify the game mode this turret has been destroyed */
 	virtual void OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage) override;
+
 public:
+
+	/* whether or not this turret should priortize Mythos above all else */
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = Priority)
+	bool bPrioritizeMythos;
 
 	/* called when a component overlaps, sets the first enemy that enters this radius as the current target */
 	UFUNCTION()
 	void OnSeePawn(APawn* OtherActor);
+
+	virtual void OnFinishAATimer() override;
 
 	virtual void ReceiveCallForHelp(AGameCharacter* distressedUnit, AGameCharacter* enemyTarget) override;
 };

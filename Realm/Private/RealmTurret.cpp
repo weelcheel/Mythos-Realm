@@ -13,6 +13,8 @@ ATurret::ATurret(const FObjectInitializer& objectInitializer)
 	AIControllerClass = ARealmTurretAI::StaticClass();
 
 	bReplicateMovement = false;
+
+	NetUpdateFrequency = 10.f;
 }
 
 void ATurret::OnSeePawn(APawn* OtherActor)
@@ -33,35 +35,37 @@ void ATurret::CheckAutoAttack()
 {
 	if (!IsValid(currentTarget) || !IsValid(GetController()) || !currentTarget->IsAlive())
 	{
-		AllStopAnimMontage(autoAttackManager->GetCurrentAttackAnimation());
-
-		SetCurrentTarget(nullptr);
-		GetWorldTimerManager().ClearTimer(aaLaunchTimer);
-		bAutoAttackLaunching = false;
-
+		StopAutoAttack();
 		TargetOutofRange();
-
 		return;
 	}
 
 	float distance = (GetActorLocation() - currentTarget->GetActorLocation()).Size2D();
 	if (distance > statsManager->GetCurrentValueForStat(EStat::ES_AARange))
 	{
-		AllStopAnimMontage(autoAttackManager->GetCurrentAttackAnimation());
-		GetWorldTimerManager().ClearTimer(aaLaunchTimer);
-		bAutoAttackLaunching = false;
-
+		StopAutoAttack();
 		TargetOutofRange();
 	}
 	else if (!bAutoAttackLaunching && !bAutoAttackOnCooldown)
 	{
 		float scale = statsManager->GetCurrentValueForStat(EStat::ES_AtkSp) / statsManager->GetBaseValueForStat(EStat::ES_AtkSp);
-		AllPlayAnimMontage(autoAttackManager->GetCurrentAttackAnimation(), scale);
+		//AllPlayAnimMontage(autoAttackManager->GetCurrentAttackAnimation(), scale);
 
 		GetWorldTimerManager().SetTimer(aaLaunchTimer, this, &AGameCharacter::LaunchAutoAttack, autoAttackManager->GetAutoAttackLaunchTime() / scale);
 
 		bAutoAttackLaunching = true;
 	}
+}
+
+void ATurret::OnFinishAATimer()
+{
+	bAutoAttackOnCooldown = false;
+	bAutoAttackLaunching = false;
+
+	if (IsValid(GetCurrentTarget()) && GetCurrentTarget()->IsAlive() && !GetCurrentTarget()->bHidden)
+		StartAutoAttack();
+	else
+		TargetOutofRange();
 }
 
 void ATurret::TargetOutofRange()
@@ -84,14 +88,54 @@ void ATurret::TargetOutofRange()
 		}
 	}
 
+	//if we should priortize Mythos
+	AGameCharacter* otherTarget = nullptr;
 	for (int32 i = 0; i < inRangeTargets.Num(); i++)
 	{
-		if (!IsValid(inRangeTargets[i]))
+		if (inRangeTargets[i]->IsA(AMinionCharacter::StaticClass()))
+			continue;
+
+		float distanceSq = (inRangeTargets[i]->GetActorLocation() - GetActorLocation()).SizeSquared2D();
+		if (!inRangeTargets[i]->IsAlive() || distanceSq > FMath::Square(710.f))
 		{
 			inRangeTargets.RemoveAt(i);
 			continue;
 		}
 
+		if (leastDistance == -1.f)
+		{
+			leastDistance = distanceSq;
+			leastInd = i;
+			continue;
+		}
+
+		if (distanceSq < leastDistance)
+		{
+			leastDistance = distanceSq;
+			leastInd = i;
+		}
+	}
+
+	if (bPrioritizeMythos)
+	{
+		if (leastInd >= 0)
+		{
+			currentTarget = inRangeTargets[leastInd];
+			StartAutoAttack();
+			return;
+		}
+	}
+	else
+	{
+		if (leastInd >= 0)
+			otherTarget = inRangeTargets[leastInd];
+	}
+
+	leastDistance = -1.f;
+	leastInd = -1;
+
+	for (int32 i = 0; i < inRangeTargets.Num(); i++)
+	{
 		if (!inRangeTargets[i]->IsA(AMinionCharacter::StaticClass()))
 			continue;
 
@@ -119,44 +163,13 @@ void ATurret::TargetOutofRange()
 	if (leastInd >= 0)
 	{
 		currentTarget = inRangeTargets[leastInd];
+		StartAutoAttack();
 		return;
 	}
 
-	for (int32 i = 0; i < inRangeTargets.Num(); i++)
+	if (otherTarget)
 	{
-		if (!IsValid(inRangeTargets[i]))
-		{
-			inRangeTargets.RemoveAt(i);
-			continue;
-		}
-
-		if (inRangeTargets[i]->IsA(AMinionCharacter::StaticClass()))
-			continue;
-
-		float distanceSq = (inRangeTargets[i]->GetActorLocation() - GetActorLocation()).SizeSquared2D();
-		if (!inRangeTargets[i]->IsAlive() || distanceSq > FMath::Square(710.f))
-		{
-			inRangeTargets.RemoveAt(i);
-			continue;
-		}
-
-		if (leastDistance == -1.f)
-		{
-			leastDistance = distanceSq;
-			leastInd = i;
-			continue;
-		}
-
-		if (distanceSq < leastDistance)
-		{
-			leastDistance = distanceSq;
-			leastInd = i;
-		}
-	}
-
-	if (leastInd >= 0)
-	{
-		currentTarget = inRangeTargets[leastInd];
+		currentTarget = otherTarget;
 		StartAutoAttack();
 	}
 	else
@@ -193,7 +206,7 @@ void ATurret::ReceiveCallForHelp(AGameCharacter* distressedUnit, AGameCharacter*
 	if (distressedUnit->IsA(APlayerCharacter::StaticClass()) && enemyTarget->IsA(APlayerCharacter::StaticClass()) && currentTarget != enemyTarget)
 	{
 		currentTarget = enemyTarget;
-		ResetAutoAttack();
+		//ResetAutoAttack();
 	}
 }
 

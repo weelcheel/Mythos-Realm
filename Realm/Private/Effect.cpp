@@ -7,6 +7,8 @@ AEffect::AEffect(const FObjectInitializer& objectInitializer)
 {
 	bReplicates = true;
 	bAlwaysRelevant = true;
+
+	NetUpdateFrequency = 15.f;
 }
 
 void AEffect::OnRepDuration()

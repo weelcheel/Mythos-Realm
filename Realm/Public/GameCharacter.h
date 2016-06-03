@@ -231,6 +231,10 @@ protected:
 	/* whether or not the current action being performed by this unit prevents combat */
 	bool bActionPreventingCombat = false;
 
+	/* whether or not this character is being controlled by another */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Player)
+	AGameCharacter* controllingCharacter;
+
 	/* function called on server when the current action has finished */
 	void CharacterActionFinished();
 
@@ -274,6 +278,9 @@ protected:
 
 	/* called when this character has been in no combat for a period of time */
 	void CharacterCombatFinished();
+
+	/* don't replicate when this unit is not visible for a player */
+	virtual bool IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const override;
 
 public:
 
@@ -333,7 +340,7 @@ public:
 	void ResetAutoAttack();
 
 	/* stop auto attack cooldown */
-	void OnFinishAATimer();
+	virtual void OnFinishAATimer();
 
 	/* get the current target for this character */
 	UFUNCTION(BlueprintCallable, Category = Target)
@@ -636,4 +643,12 @@ public:
 
 	/* to successfully replicate our manager subojects without having to take a performance hit */
 	virtual bool ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags) override;
+
+	/* static function to easily acquire the point on the ground directly beneath a game character */
+	UFUNCTION(BlueprintCallable, Category = Ground)
+	static FVector FindGroundBeneathCharacter(AGameCharacter* testCharacter);
+
+	/* whether or not this character has vision on the specified test character */
+	UFUNCTION(BlueprintCallable, Category = Vision)
+	bool CanSeeOtherCharacter(AGameCharacter* testCharacter);
 };

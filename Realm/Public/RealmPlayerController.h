@@ -11,6 +11,8 @@ class URealmFogofWarManager;
 UCLASS()
 class ARealmPlayerController : public APlayerController
 {
+	friend class AGameCharacter;
+
 	GENERATED_UCLASS_BODY()
 
 protected:

@@ -401,7 +401,8 @@ bool ARealmPlayerController::GetUnitsUnderMouse(ECollisionChannel TraceChannel, 
 			if (UGameplayStatics::DeprojectScreenToWorld(this, MousePosition, WorldOrigin, WorldDirection) == true)
 			{
 				//return GetWorld()->LineTraceSingleByChannel(HitResult, WorldOrigin, WorldOrigin + WorldDirection * HitResultTraceDistance, TraceChannel, CollisionQueryParams);
-				return GetWorld()->LineTraceMultiByChannel(hits, WorldOrigin, WorldOrigin + WorldDirection * HitResultTraceDistance, TraceChannel);
+				//return a sweep so we don't have to be so precise with the mouse pointer
+				return GetWorld()->SweepMultiByChannel(hits, WorldOrigin, WorldOrigin + WorldDirection * HitResultTraceDistance, IsValid(playerCharacter) ? playerCharacter->GetActorRotation().Quaternion() : FRotator::ZeroRotator.Quaternion(), TraceChannel, FCollisionShape::MakeSphere(12.5f));
 			}
 		}
 	}

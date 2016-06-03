@@ -163,7 +163,7 @@ void AGameCharacter::ReplicateHit(float damage, struct FDamageEvent const& damag
 {
 	const float timeoutTime = GetWorld()->GetTimeSeconds() + 0.5f;
 
-	FDamageEvent lastDamageEvent = lastTakeHitInfo.GetDamageEvent();
+	/*FDamageEvent lastDamageEvent = lastTakeHitInfo.GetDamageEvent();
 	if ((instigatingPawn == lastTakeHitInfo.PawnInstigator) && (lastDamageEvent.DamageTypeClass == lastTakeHitInfo.DamageTypeClass) && (lastTakeHitTimeTimeout == timeoutTime))
 	{
 		// same frame damage
@@ -175,7 +175,7 @@ void AGameCharacter::ReplicateHit(float damage, struct FDamageEvent const& damag
 
 		// otherwise, accumulate damage done this frame
 		damage += lastTakeHitInfo.ActualDamage;
-	}
+	}*/
 
 	lastTakeHitInfo.ActualDamage = damage;
 	lastTakeHitInfo.realmDamage = realmDamage;
@@ -228,6 +228,12 @@ void AGameCharacter::UseSkill_Implementation(int32 index, FVector mouseHitLoc, A
 	if (!IsAlive())
 		return;
 
+	if (Role < ROLE_Authority || (GetNetMode() == NM_ListenServer || GetNetMode() == NM_Standalone))
+	{
+		skillManager->ClientPerformSkill(index, mouseHitLoc, unitTarget);
+		return;
+	}
+
 	ESkillState skillState = skillManager->GetSkill(index)->GetSkillState();
 	if (skillState == ESkillState::Disabled || skillState == ESkillState::OnCooldown || skillState == ESkillState::Performing || skillState == ESkillState::NotLearned)
 		return;
@@ -245,9 +251,6 @@ void AGameCharacter::UseSkill_Implementation(int32 index, FVector mouseHitLoc, A
 		skillManager->ServerPerformSkill(index, mouseHitLoc, unitTarget);
 		CharacterCombatAction();
 	}
-
-	if (Role < ROLE_Authority || (GetNetMode() == NM_ListenServer || GetNetMode() == NM_Standalone))
-		skillManager->ClientPerformSkill(index, mouseHitLoc, unitTarget);
 }
 
 bool AGameCharacter::UseMod_Validate(int32 index, FHitResult const& hit)
@@ -364,6 +367,9 @@ void AGameCharacter::LaunchAutoAttack()
 
 	FRealmDamage rdmg;
 
+	//set the controlling character as the damager if there is one
+	rdmg.controllingCharacter = controllingCharacter;
+
 	//calculate critcal hit
 	float dmg = GetCurrentValueForStat(EStat::ES_Atk);
 
@@ -457,13 +463,33 @@ void AGameCharacter::CheckAutoAttack()
 			return;
 	}
 
-	float distance = (GetActorLocation() - GetCurrentTarget()->GetActorLocation()).Size2D();
-	if (distance > statsManager->GetCurrentValueForStat(EStat::ES_AARange))
+	//make sure that we account for collision so we don't get stuck trying to attack
+	FVector start = GetActorLocation();
+	FVector end = GetCurrentTarget()->GetActorLocation();
+	TArray<FHitResult> hits;
+
+	GetWorld()->LineTraceMultiByChannel(hits, start, end, ECC_Pawn);
+	for (FHitResult hit : hits)
+	{
+		if (hit.GetActor() == GetCurrentTarget())
+			end = hit.ImpactPoint;
+	}
+
+	float distance = (end - start).Size2D();
+	if (!CanSeeOtherCharacter(currentTarget))
+	{
+		//stop auto attacking and moving if we lose sight of our target
+		StopAutoAttack();
+		
+		AAIController* aic = Cast<AAIController>(GetController());
+		if (IsValid(aic))
+			aic->StopMovement();
+	}
+	else if (distance > statsManager->GetCurrentValueForStat(EStat::ES_AARange) && !bAutoAttackLaunching)
 	{
 		GetWorldTimerManager().ClearTimer(aaLaunchTimer);
 		bAutoAttackLaunching = false;
 
-		//@todo: check to see if the unit is still visible
 		AAIController* aic = Cast<AAIController>(GetController());
 		if (IsValid(aic))
 			aic->MoveToActor(GetCurrentTarget(), statsManager->GetCurrentValueForStat(EStat::ES_AARange));
@@ -495,8 +521,10 @@ void AGameCharacter::OnFinishAATimer()
 	bAutoAttackOnCooldown = false;
 	bAutoAttackLaunching = false;
 
-	if (IsValid(GetCurrentTarget()))
+	if (IsValid(GetCurrentTarget()) && GetCurrentTarget()->IsAlive() && !GetCurrentTarget()->bHidden)
 		StartAutoAttack();
+	else
+		StopAutoAttack();
 }
 
 void AGameCharacter::StopAutoAttack()
@@ -659,6 +687,9 @@ float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent cons
 		damageCausingGC = pc->GetPlayerCharacter();
 		pc->GetMoveController()->CharacterDamaged(this);
 	}
+
+	if (IsValid(realmDamage.controllingCharacter))
+		damageCausingGC = realmDamage.controllingCharacter;
 
 	if (bOnlySpecificCharactersCanDamage && !specificDamagingCharacters.Contains(damageCausingGC))
 		return 0.f;
@@ -883,9 +914,6 @@ bool AGameCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent, A
 
 	ARealmPlayerController* const KilledPlayer = (Controller != NULL) ? Cast<ARealmPlayerController>(Controller) : Cast<ARealmPlayerController>(GetOwner());
 	//GetWorld()->GetAuthGameMode<AShooterGameMode>()->Killed(Killer, KilledPlayer, this, DamageType);
-
-	NetUpdateFrequency = GetDefault<AGameCharacter>()->NetUpdateFrequency;
-	GetCharacterMovement()->ForceReplicationUpdate();
 
 	StopAutoAttack();
 	bAutoAttackOnCooldown = false;
@@ -1463,6 +1491,62 @@ void AGameCharacter::SetOnlySpecificDamage(bool bNewSpecificDamage)
 void AGameCharacter::ClearSpecificDamagers()
 {
 	specificDamagingCharacters.Empty();
+}
+
+FVector AGameCharacter::FindGroundBeneathCharacter(AGameCharacter* testCharacter)
+{
+	if (!IsValid(testCharacter))
+		return FVector::ZeroVector;
+
+	FVector start = testCharacter->GetActorLocation();
+	FVector end = start;
+	end.Z -= 10000.f;
+
+	FHitResult hit;
+	if (testCharacter->GetWorld()->LineTraceSingleByChannel(hit, start, end, ECC_WorldStatic))
+		return hit.ImpactPoint;
+	else
+		return testCharacter->GetActorLocation();
+}
+
+bool AGameCharacter::CanSeeOtherCharacter(AGameCharacter* testCharacter)
+{
+	if (!IsValid(testCharacter))
+		return false;
+
+	//test to see if the test character is in our vision range and we have line of sight to them
+	if (testCharacter->CanEnemyAbsolutelySeeThisUnit() || testCharacter->GetTeamIndex() == teamIndex)
+		return true;
+
+	FVector start = GetActorLocation();
+	FVector end = testCharacter->GetActorLocation();
+
+	float dist = (start - end).Size2D();
+	if (dist > sightRadius)
+		return false;
+
+	TArray<FHitResult> tHits;
+	GetWorld()->LineTraceMultiByChannel(tHits, start, end, ECC_Visibility);
+
+	for (FHitResult hit : tHits)
+	{
+		if (hit.GetActor() == testCharacter)
+			return true;
+	}
+
+	return false;
+}
+
+//----------------------------------------------------------REPLICATION FUNCTIONS----------------------------------------------------------
+
+bool AGameCharacter::IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const
+{
+	/*const ARealmPlayerController* player = Cast<ARealmPlayerController>(RealViewer);
+
+	if (IsValid(player) && IsValid(player->fogOfWar) && player->fogOfWar->enemySightList.Num() > 0)
+		return player->fogOfWar->enemySightList.Contains(this); //only be relevant to players who see this unit*/
+
+	return Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation);
 }
 
 void AGameCharacter::PreReplication(IRepChangedPropertyTracker & ChangedPropertyTracker)

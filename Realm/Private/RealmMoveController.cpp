@@ -1,10 +1,10 @@
 #include "Realm.h"
 #include "RealmMoveController.h"
 #include "GameCharacter.h"
-#include "Navigation/CrowdFollowingComponent.h"
+#include "RealmCrowdComponent.h"
 
 ARealmMoveController::ARealmMoveController(const FObjectInitializer& objectInitializer)
-: Super(objectInitializer.SetDefaultSubobjectClass<UCrowdFollowingComponent>(TEXT("PathFollowingComponent")))
+: Super(objectInitializer.SetDefaultSubobjectClass<URealmCrowdComponent>(TEXT("PathFollowingComponent")))
 {
 	targetRadius = objectInitializer.CreateDefaultSubobject<UPawnSensingComponent>(this, TEXT("pawnSensor"));
 	targetRadius->OnSeePawn.AddDynamic(this, &ARealmMoveController::OnTargetEnterRadius);
@@ -12,6 +12,20 @@ ARealmMoveController::ARealmMoveController(const FObjectInitializer& objectIniti
 	targetRadius->bOnlySensePlayers = false;
 	targetRadius->SensingInterval = 0.25f;
 	targetRadius->SetPeripheralVisionAngle(180.f);
+}
+
+void ARealmMoveController::Possess(APawn* inPawn)
+{
+	Super::Possess(inPawn);
+
+	AGameCharacter* gc = Cast<AGameCharacter>(inPawn);
+	URealmCrowdComponent* cc = Cast<URealmCrowdComponent>(GetPathFollowingComponent());
+	if (IsValid(gc) && IsValid(cc))
+	{
+		cc->AvoidanceGroup.SetFlagsDirectly(gc->GetTeamIndex());
+		cc->GroupsToAvoid.SetFlagsDirectly(gc->GetTeamIndex());
+		cc->UpdateCrowdAgentParams();
+	}
 }
 
 void ARealmMoveController::OnTargetEnterRadius(class APawn* pawn)

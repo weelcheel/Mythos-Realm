@@ -30,10 +30,10 @@ void URealmFogofWarManager::CalculateTeamVisibility()
 	{
 		AGameCharacter* gc = *chr;
 		if (IsValid(gc) && gc->GetTeamIndex() == teamIndex && gc->IsAlive())
-		{
 			teamCharacters.AddUnique(gc);
+
+		if (IsValid(gc) && gc->GetTeamIndex() == teamIndex)
 			enemySightList.AddUnique(gc);
-		}
 	}
 	/*for (TActorIterator<APlayerCharacter> chr(GetWorld()); chr; ++chr)
 	{

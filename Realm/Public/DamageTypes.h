@@ -25,6 +25,10 @@ struct FRealmDamage
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
 	bool bCriticalHit;
 
+	/* the damaging character was controlled by a player when they incurred the damage ALAWAYS CHECK THIS FOR VALIDITY */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+	AGameCharacter* controllingCharacter;
+
 	FRealmDamage()
 	{
 		damageSource = ERealmDamageSource::ERDS_AutoAttack;

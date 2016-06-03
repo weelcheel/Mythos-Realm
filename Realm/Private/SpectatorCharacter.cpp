@@ -18,9 +18,9 @@ ASpectatorCharacter::ASpectatorCharacter(const FObjectInitializer& objectInitial
 	springArm->AttachParent = RootComponent;
 
 	springArm->TargetArmLength = 0.f;
-	springArm->TargetOffset.X = -1000 * FMath::Cos(45.f);
-	springArm->TargetOffset.Y = 1000 * FMath::Cos(45.f);
-	springArm->TargetOffset.Z = 1420 * FMath::Cos(45.f);
+	springArm->TargetOffset.X = -897.8873239f * FMath::Cos(45.f);
+	springArm->TargetOffset.Y = 897.8873239f  * FMath::Cos(45.f);
+	springArm->TargetOffset.Z = 1275 * FMath::Cos(45.f);
 	springArm->bInheritPitch = false;
 	springArm->bInheritRoll = false;
 	springArm->bInheritYaw = false;

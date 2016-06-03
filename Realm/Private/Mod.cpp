@@ -8,6 +8,7 @@ AMod::AMod(const FObjectInitializer& objectInitializer)
 	statsDesc = FText::GetEmpty();
 
 	bReplicates = true;
+	NetUpdateFrequency = 15.f;
 }
 
 int32 AMod::GetCost(bool bNeededCost /* = false */, APlayerCharacter* buyer /* = nullptr */)

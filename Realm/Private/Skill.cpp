@@ -92,7 +92,8 @@ void ASkill::InitializeSkill(AGameCharacter* owner)
 	if (Role < ROLE_Authority)
 		return;
 
-	SetOwner(owner->GetController());
+	SetOwner(owner);
+	AttachRootComponentToActor(owner);
 
 	characterOwner = owner;
 	skillState = ESkillState::NotLearned;

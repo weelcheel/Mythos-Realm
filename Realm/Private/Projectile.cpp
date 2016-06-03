@@ -2,6 +2,7 @@
 #include "Projectile.h"
 #include "GameCharacter.h"
 #include "UnrealNetwork.h"
+#include "RealmPlayerController.h"
 
 AProjectile::AProjectile(const FObjectInitializer& objectInitializer)
 : Super(objectInitializer)
@@ -44,6 +45,20 @@ void AProjectile::BeginPlay()
 void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (movementComponent->bIsHomingProjectile && !IsValid(homingTarget))
+		Destroy();
+
+	if (!HasAuthority())
+	{
+		//if its a homing projectile, hide if the owner is hidden unless the target is the local player
+		if (IsValid(homingTarget) && IsValid(projectileSpawner) && projectileSpawner->bHidden)
+			SetActorHiddenInGame(true);
+
+		ARealmPlayerController* localPC = Cast<ARealmPlayerController>(GetWorld()->GetFirstPlayerController());
+		if (bHidden && IsValid(localPC) && IsValid(localPC->GetPlayerCharacter()))
+			SetActorHiddenInGame(!(localPC->GetPlayerCharacter() == homingTarget));
+	}
 }
 
 void AProjectile::InitializeProjectile(const FVector& AimDir, float inDamage, TSubclassOf<UDamageType> projDamage, AGameCharacter* projSpawner /* = nullptr */, AGameCharacter* projTarget /* = nullptr */, FRealmDamage const& rdmg)

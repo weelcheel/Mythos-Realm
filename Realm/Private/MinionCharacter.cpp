@@ -13,6 +13,8 @@ AMinionCharacter::AMinionCharacter(const FObjectInitializer& objectInitializer)
 	playerReward = FMath::RandRange(28.f, 34.f);
 	AIControllerClass = nullptr;
 	bReplicateMovement = true;
+
+	NetUpdateFrequency = 15.f;
 }
 
 void AMinionCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage)
