@@ -32,8 +32,12 @@ void URealmFogofWarManager::CalculateTeamVisibility()
 		if (IsValid(gc) && gc->GetTeamIndex() == teamIndex && gc->IsAlive())
 			teamCharacters.AddUnique(gc);
 
-		if (IsValid(gc) && gc->GetTeamIndex() == teamIndex)
+		if (IsValid(gc) && gc->GetTeamIndex() == teamIndex) //always have sight of friendly units and the last unit to do recent damage to them
+		{
 			enemySightList.AddUnique(gc);
+			if (IsValid(gc->lastDamagingCharacter))
+				enemySightList.AddUnique(gc->lastDamagingCharacter);
+		}
 	}
 	/*for (TActorIterator<APlayerCharacter> chr(GetWorld()); chr; ++chr)
 	{

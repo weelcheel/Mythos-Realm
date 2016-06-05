@@ -30,6 +30,8 @@ AProjectile::AProjectile(const FObjectInitializer& objectInitializer)
 	bReplicateMovement = true;
 	bAlwaysRelevant = true;
 	PrimaryActorTick.bCanEverTick = true;
+
+	NetUpdateFrequency = 30.f;
 }
 
 void AProjectile::BeginPlay()
@@ -46,10 +48,15 @@ void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (movementComponent->bIsHomingProjectile && !IsValid(homingTarget))
-		Destroy();
+	if (HasAuthority())
+	{
+		if (movementComponent->bIsHomingProjectile && !IsValid(homingTarget))
+			Destroy();
 
-	if (!HasAuthority())
+		if (!IsValid(projectileSpawner) && GetWorldTimerManager().GetTimerRemaining(TimerHandle_LifeSpanExpired) <= 0.f)
+			SetLifeSpan(5.f);
+	}
+	else
 	{
 		//if its a homing projectile, hide if the owner is hidden unless the target is the local player
 		if (IsValid(homingTarget) && IsValid(projectileSpawner) && projectileSpawner->bHidden)

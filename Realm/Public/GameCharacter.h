@@ -54,12 +54,44 @@ struct FAilmentInfo
 	FVector ailmentDir;
 };
 
+/* struct for holding damage over time info */
+USTRUCT()
+struct FDamageOverTime
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DoT)
+	float tickDamageTotal;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DoT)
+	float tickDamage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DoT)
+	float incurredTickDamage = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DoT)
+	struct FDamageEvent DamageEvent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DoT)
+	class AController* EventInstigator;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DoT)
+	class AActor* DamageCauser;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DoT)
+	FRealmDamage realmDamage; 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DoT)
+	FTimerHandle dotTimer;
+};
+
 UCLASS(ABSTRACT, Blueprintable)
 class AGameCharacter : public ARealmCharacter
 {
 	friend class ARealmGameMode;
 	friend class ARealmPlayerController;
 	friend class URealmCharacterMovementComponent;
+	friend class URealmFogofWarManager;
 
 	GENERATED_UCLASS_BODY()
 
@@ -282,6 +314,18 @@ protected:
 	/* don't replicate when this unit is not visible for a player */
 	virtual bool IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const override;
 
+	/* damage over time tick */
+	void DamageOverTimeTick(FString dotKey);
+
+	/* array of dots currently effecting this character */
+	TMap<FString, FDamageOverTime> dotEvents;
+
+	FTimerHandle clearLastHitTimer;
+	AGameCharacter* lastDamagingCharacter;
+
+	/* clear the last take hit */
+	void ClearLastTakeHit();
+
 public:
 
 	/* timers for auto attacks */
@@ -383,6 +427,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = Stat)
 	void EndEffect(const FString& effectKey);
+
+	/* damages this character over time */
+	UFUNCTION(BlueprintCallable, Category = Damage)
+	virtual void CharacterTakeDamageOverTime(float Damage, float damageTime, int32 tickCount, UPARAM(ref) FString& dotKey, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser, UPARAM(ref) FRealmDamage& realmDamage);
 
 	/* call other things and track extra damage data */
 	UFUNCTION(BlueprintCallable, Category = Damage)

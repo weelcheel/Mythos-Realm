@@ -17,6 +17,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category=Character)
 	AGameCharacter* parentCharacter;
 
+	/* destroy widgets that have no parents */
+	virtual void Tick(FGeometry MyGeometry, float InDeltaTime);
+
 public:
 
 	/* sets the parent character */

@@ -18,20 +18,20 @@ ASpectatorCharacter::ASpectatorCharacter(const FObjectInitializer& objectInitial
 	springArm->AttachParent = RootComponent;
 
 	springArm->TargetArmLength = 0.f;
-	springArm->TargetOffset.X = -897.8873239f * FMath::Cos(45.f);
-	springArm->TargetOffset.Y = 897.8873239f  * FMath::Cos(45.f);
-	springArm->TargetOffset.Z = 1275 * FMath::Cos(45.f);
+	springArm->TargetOffset.X = -425;
+	springArm->TargetOffset.Y = 425;
+	springArm->TargetOffset.Z = 850;
 	springArm->bInheritPitch = false;
 	springArm->bInheritRoll = false;
 	springArm->bInheritYaw = false;
 
 	rtsCamera->AttachTo(springArm, TEXT(""), EAttachLocation::SnapToTarget);
-	rtsCamera->SetWorldRotation(FRotator(-45.f, -45.f, 0.f));
+	rtsCamera->SetWorldRotation(FRotator(-60.f, -45.f, 0.f));
 	rtsCamera->PostProcessSettings.bOverride_ColorSaturation = true;
 
 	hoverLight->SetAttenuationRadius(100.f);
 	hoverLight->SetSourceRadius(80.f);
-	hoverLight->Intensity = 4500.f;
+	hoverLight->Intensity = 500.f;
 	hoverLight->SetVisibility(false);
 
 	//GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
