@@ -37,6 +37,9 @@ void URealmFogofWarManager::CalculateTeamVisibility()
 			enemySightList.AddUnique(gc);
 			if (IsValid(gc->lastDamagingCharacter))
 				enemySightList.AddUnique(gc->lastDamagingCharacter);
+
+			for (auto& elem : gc->damagedSightCharacters)
+				enemySightList.AddUnique(elem.Value);
 		}
 	}
 	/*for (TActorIterator<APlayerCharacter> chr(GetWorld()); chr; ++chr)

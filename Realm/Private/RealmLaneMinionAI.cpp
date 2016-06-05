@@ -225,7 +225,7 @@ void ARealmLaneMinionAI::ReceiveCallForHelp(AGameCharacter* distressedUnit, AGam
 	else if (distressedUnit->IsA(AMinionCharacter::StaticClass()) && enemyTarget->IsA(APlayerCharacter::StaticClass()))
 		thisPriority = ELaneMinionTargetPriority::LMTP_DCMythosMinion;
 
-	if (thisPriority >= nextTargetPriority)
+	if (thisPriority > nextTargetPriority)
 	{
 		nextTarget = enemyTarget;
 		nextTargetPriority = thisPriority;

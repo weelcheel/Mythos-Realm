@@ -38,6 +38,7 @@ AGameCharacter::AGameCharacter(const FObjectInitializer& objectInitializer)
 	NetUpdateFrequency = 30.f;
 
 	lastTakeHitTimeTimeout = 2.f;
+	damagedSightTimeout = 2.f;
 }
 
 void AGameCharacter::BeginPlay()
@@ -191,6 +192,16 @@ void AGameCharacter::ReplicateHit(float damage, struct FDamageEvent const& damag
 
 	lastDamagingCharacter = Cast<AGameCharacter>(instigatingPawn);
 	GetWorldTimerManager().SetTimer(clearLastHitTimer, this, &AGameCharacter::ClearLastTakeHit, 2.f, false);
+
+	FTimerHandle h;
+	GetWorldTimerManager().SetTimer(h, FTimerDelegate::CreateUObject(this, &AGameCharacter::RemoveDamagedSightCharacter, instigatingPawn->GetFName()), damagedSightTimeout, false);
+	damagedSightCharacters.Add(instigatingPawn->GetFName(), Cast<AGameCharacter>(instigatingPawn));
+}
+
+void AGameCharacter::RemoveDamagedSightCharacter(FName charName)
+{
+	if (damagedSightCharacters.Contains(charName))
+		damagedSightCharacters.Remove(charName);
 }
 
 void AGameCharacter::ClearLastTakeHit()
@@ -665,6 +676,13 @@ void AGameCharacter::CharacterTakeDamageOverTime(float Damage, float damageTime,
 	if (!IsValid(statsManager) || !IsAlive())
 		return;
 
+	if (dotEvents.Contains(dotKey))
+	{
+		//reset dots if they already exist
+		dotEvents[dotKey].incurredTickDamage = 0.f;
+		return;
+	}
+
 	if (damageTime > 0.f && Damage > 0.f)
 	{
 		ARealmPlayerController* pc = Cast<ARealmPlayerController>(EventInstigator);
@@ -689,8 +707,10 @@ void AGameCharacter::CharacterTakeDamageOverTime(float Damage, float damageTime,
 		dot.dotTimer = dotTimer;
 		dot.EventInstigator = EventInstigator;
 		dot.realmDamage = realmDamage;
-		dot.tickDamage = Damage / damageTime;
+		dot.tickDamage = Damage / (float)tickCount;
 		dot.tickDamageTotal = Damage;
+		dot.tickInterval = damageTime / (float)tickCount;
+		dot.dotDuration = damageTime;
 
 		dotEvents.Add(dotKey, dot);
 		DamageOverTimeTick(dotKey);
@@ -745,8 +765,8 @@ void AGameCharacter::DamageOverTimeTick(FString dotKey)
 
 	TakeDamage(dotEvents[dotKey].tickDamage, dotEvents[dotKey].DamageEvent, dotEvents[dotKey].EventInstigator, dotEvents[dotKey].DamageCauser);
 
-	dotEvents[dotKey].incurredTickDamage += dotEvents[dotKey].tickDamage;
-	if (dotEvents[dotKey].incurredTickDamage >= dotEvents[dotKey].tickDamageTotal)
+	dotEvents[dotKey].incurredTickDamage += dotEvents[dotKey].tickInterval;
+	if (dotEvents[dotKey].incurredTickDamage >= dotEvents[dotKey].dotDuration)
 	{
 		GetWorldTimerManager().ClearTimer(dotEvents[dotKey].dotTimer);
 		dotEvents.Remove(dotKey);

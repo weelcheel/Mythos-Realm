@@ -59,6 +59,7 @@ void ARealmGameMode::StartMatch()
 	for (TActorIterator<ALaneManager> laneitr(GetWorld()); laneitr; ++laneitr)
 	{
 		(*laneitr)->MatchStarted();
+		(*laneitr)->SetMinionLevel(1);
 	}
 
 	for (TActorIterator<AForestCamp> foritr(GetWorld()); foritr; ++foritr)
@@ -600,7 +601,7 @@ void ARealmGameMode::ReceiveEndgameStats(const FString& userid, int32 teamIndex)
 
 void ARealmGameMode::PlayerLeveledUp()
 {
-	for (int32 i = 0; i < teams.Num(); i++)
+	/*for (int32 i = 0; i < teams.Num(); i++)
 	{
 		int32 levels = 0;
 		int32 count = 0;
@@ -625,7 +626,7 @@ void ARealmGameMode::PlayerLeveledUp()
 			if (IsValid(lm) && lm->teamIndex == i)
 				lm->SetMinionLevel(avg);
 		}
-	}
+	}*/
 }
 
 void ARealmGameMode::AmbientGameLevelUp()

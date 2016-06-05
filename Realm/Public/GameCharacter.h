@@ -67,6 +67,12 @@ struct FDamageOverTime
 	float tickDamage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DoT)
+	float tickInterval;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DoT)
+	float dotDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DoT)
 	float incurredTickDamage = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DoT)
@@ -325,6 +331,11 @@ protected:
 
 	/* clear the last take hit */
 	void ClearLastTakeHit();
+
+	/* array of chraracters that we have recently damage that we can have brief sight of */
+	TMap<FName, AGameCharacter*> damagedSightCharacters;
+	float damagedSightTimeout;
+	void RemoveDamagedSightCharacter(FName charName);
 
 public:
 
