@@ -52,6 +52,15 @@ protected:
 	UPROPERTY()
 	float camSpeed;
 
+	/* max distance away from 1 the current zoom factor can be */
+	float maxZoomFactorDelta;
+
+	/* current zoom factor */
+	float zoomFactor;
+
+	/* default offset the camera is from the spectator character */
+	FVector cameraOffset;
+
 	virtual void BeginPlay() override;
 
 	/* override input setup */

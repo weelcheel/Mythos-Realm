@@ -11,6 +11,8 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& objectInitializer)
 {
 	credits = 0;
 	ambientCreditAmount = 4;
+
+	GetCapsuleComponent()->SetCapsuleRadius(15.f);
 }
 
 void APlayerCharacter::BeginPlay()

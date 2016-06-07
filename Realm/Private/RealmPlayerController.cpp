@@ -130,7 +130,8 @@ void ARealmPlayerController::ServerMoveCommand_Implementation(FVector_NetQuantiz
 		FRotator newDir = (targetLocation - playerCharacter->GetActorLocation()).Rotation();
 		newDir.Pitch = 0.f;
 
-		playerCharacter->SetActorRotation(newDir);
+		playerCharacter->SetActorRotation(FMath::RInterpTo(playerCharacter->GetActorRotation(), newDir, GetWorld()->DeltaTimeSeconds, 5.f));
+		//playerCharacter->SetActorRotation(newDir);
 	}
 }
 

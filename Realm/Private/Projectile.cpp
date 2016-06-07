@@ -8,7 +8,7 @@ AProjectile::AProjectile(const FObjectInitializer& objectInitializer)
 : Super(objectInitializer)
 {
 	collisionComp = objectInitializer.CreateDefaultSubobject<USphereComponent>(this, TEXT("SphereComp"));
-	collisionComp->InitSphereRadius(5.0f);
+	collisionComp->InitSphereRadius(15.0f);
 	collisionComp->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnHit);
 	collisionComp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
 	collisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
@@ -38,7 +38,7 @@ void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetLifeSpan(100.f);
+	SetLifeSpan(25.f);
 
 	if (IsValid(homingTarget) && !homingTarget->IsAlive())
 		Destroy();

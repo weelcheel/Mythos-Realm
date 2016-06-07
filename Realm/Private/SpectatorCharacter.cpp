@@ -18,9 +18,12 @@ ASpectatorCharacter::ASpectatorCharacter(const FObjectInitializer& objectInitial
 	springArm->AttachParent = RootComponent;
 
 	springArm->TargetArmLength = 0.f;
-	springArm->TargetOffset.X = -425;
-	springArm->TargetOffset.Y = 425;
-	springArm->TargetOffset.Z = 850;
+
+	//springArm->TargetOffset.X = -500.f;
+	//springArm->TargetOffset.Y = 500.f;
+	//springArm->TargetOffset.Z = 1000.f;
+	cameraOffset = FVector(-500.f, 500.f, 1000.f);
+
 	springArm->bInheritPitch = false;
 	springArm->bInheritRoll = false;
 	springArm->bInheritYaw = false;
@@ -28,10 +31,16 @@ ASpectatorCharacter::ASpectatorCharacter(const FObjectInitializer& objectInitial
 	rtsCamera->AttachTo(springArm, TEXT(""), EAttachLocation::SnapToTarget);
 	rtsCamera->SetWorldRotation(FRotator(-60.f, -45.f, 0.f));
 	rtsCamera->PostProcessSettings.bOverride_ColorSaturation = true;
+	/*rtsCamera->ProjectionMode = ECameraProjectionMode::Orthographic;
+	rtsCamera->OrthoWidth = 2150.f;
+	rtsCamera->OrthoFarClipPlane = 5000.f;
+	rtsCamera->OrthoNearClipPlane = 0.f;*/
+	zoomFactor = 1.f;
+	maxZoomFactorDelta = 0.33f;
 
-	hoverLight->SetAttenuationRadius(100.f);
-	hoverLight->SetSourceRadius(80.f);
-	hoverLight->Intensity = 500.f;
+	hoverLight->SetAttenuationRadius(50.f);
+	hoverLight->SetSourceRadius(50.f);
+	hoverLight->Intensity = 3.f;
 	hoverLight->SetVisibility(false);
 
 	//GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
@@ -88,6 +97,10 @@ void ASpectatorCharacter::SetupPlayerInputComponent(class UInputComponent* Input
 
 	//chat
 	InputComponent->BindAction("PlayerToggleChat", IE_Pressed, this, &ASpectatorCharacter::OnToggleChat);
+
+	//camera
+	InputComponent->BindAction("CameraZoomIn", IE_Pressed, this, &ASpectatorCharacter::OnCameraZoomIn);
+	InputComponent->BindAction("CameraZoomOut", IE_Pressed, this, &ASpectatorCharacter::OnCameraZoomOut);
 }
 
 void ASpectatorCharacter::Tick(float deltaSeconds)
@@ -148,6 +161,8 @@ void ASpectatorCharacter::Tick(float deltaSeconds)
 		//else
 			//MoveCamera(GetCharacterMovement()->Velocity.IsNearlyZero(40.f) ? FVector::ZeroVector : GetCharacterMovement()->Velocity * -1);
 	}
+
+	springArm->TargetOffset = FMath::VInterpTo(springArm->TargetOffset, cameraOffset * zoomFactor, deltaSeconds, 4.f);
 }
 
 void ASpectatorCharacter::SetHoverTarget(AGameCharacter* newTarget)
@@ -345,4 +360,20 @@ void ASpectatorCharacter::OnToggleChat()
 	ARealmPlayerController* pc = Cast<ARealmPlayerController>(GetController());
 	if (IsValid(pc))
 		pc->ClientToggleChat();
+}
+
+void ASpectatorCharacter::OnCameraZoomIn()
+{
+	if (zoomFactor - 0.05f <= maxZoomFactorDelta)
+		zoomFactor = maxZoomFactorDelta;
+	else
+		zoomFactor -= 0.05f;
+}
+
+void ASpectatorCharacter::OnCameraZoomOut()
+{
+	if (zoomFactor + 0.05f >= 1.f)
+		zoomFactor = 1.f;
+	else
+		zoomFactor += 0.05f;
 }

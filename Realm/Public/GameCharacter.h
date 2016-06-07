@@ -205,6 +205,10 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = Action)
 	FString currentActionName;
 
+	/* whether or not this action has a reversed progress bar */
+	UPROPERTY(BlueprintReadOnly, Category = Action)
+	bool bReverseActionBar;
+
 	/* whether or not this character is seen by the enemy */
 	UPROPERTY(BlueprintReadOnly, Category = Sight)
 	bool bCanEnemySee = false;
@@ -261,6 +265,10 @@ protected:
 	/* UI widget to display for this character on the minimap. Should probably make this base class in C++ eventually */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI)
 	TSubclassOf<UUserWidget> minimapIconClass;
+
+	/* particle system to play when this character receives damage from an auto attack */
+	UPROPERTY(EditDefaultsOnly, Category = Particles)
+	UParticleSystem* aaDamagedParticleSystem;
 
 	/* how many times the character's half height to place the overhead widget over head */
 	UPROPERTY(EditDefaultsOnly, Category = UI)

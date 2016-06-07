@@ -21,6 +21,10 @@ AGameCharacter::AGameCharacter(const FObjectInitializer& objectInitializer)
 	if (soundAttObj.Succeeded())
 		soundAttenuation = soundAttObj.Object;
 
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> aaPs(TEXT("/Game/Realm/GlobalParticles/AutoAttackImpact"));
+	if (aaPs.Succeeded())
+		aaDamagedParticleSystem = aaPs.Object;
+
 	AIControllerClass = AAIController::StaticClass();
 	bAlwaysRelevant = true;
 
@@ -155,7 +159,8 @@ void AGameCharacter::Tick(float DeltaSeconds)
 		FRotator dir = (GetCurrentTarget()->GetActorLocation() - GetActorLocation()).Rotation();
 		newRot.Yaw = dir.Yaw;
 
-		SetActorRotation(newRot);
+		SetActorRotation(FMath::RInterpTo(GetActorRotation(), newRot, GetWorld()->DeltaTimeSeconds, 5.f));
+		//SetActorRotation(newRot);
 	}
 
 	if (!IsValid(GetWorld()->GetFirstPlayerController()))
@@ -325,6 +330,11 @@ void AGameCharacter::PlayHit(float DamageTaken, struct FDamageEvent const& Damag
 			if (IsValid(InstigatorHUD))
 				InstigatorHUD->NewDamageEvent(lastTakeHitInfo, GetActorLocation(), realmDamage);
 		}
+	}
+
+	if (realmDamage.damageSource == ERealmDamageSource::ERDS_AutoAttack)
+	{
+		UGameplayStatics::SpawnEmitterAttached(aaDamagedParticleSystem, GetRootComponent());
 	}
 
 	/*AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(Controller);
@@ -1511,6 +1521,7 @@ void AGameCharacter::SetGuaranteedCrit(bool bNewCrit /* = false */)
 void AGameCharacter::ApplyCharacterAction_Implementation(const FString& actionName, float actionDuration, bool bReverseProgressBar /* = false */, bool bPreventCombat /* = false */)
 {
 	currentActionName = actionName;
+	bReverseActionBar = bReverseProgressBar;
 
 	if (Role == ROLE_Authority)
 	{
