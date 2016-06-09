@@ -291,6 +291,21 @@ void UStatsManager::RemoveAllEffects()
 	effectsMap.Empty(0);
 }
 
+void UStatsManager::RemoveNegativeEffects()
+{
+	for (int32 i = 0; i < effectsList.Num(); i++)
+	{
+		if (IsValid(effectsList[i]))
+		{
+			for (float amt : effectsList[i]->amounts)
+			{
+				if (amt < 0.f)
+					EffectFinished(effectsList[i]->keyName);
+			}
+		}
+	}
+}
+
 void UStatsManager::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	DOREPLIFETIME(UStatsManager, bInitialized);

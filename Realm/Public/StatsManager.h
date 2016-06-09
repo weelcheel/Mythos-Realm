@@ -165,4 +165,8 @@ public:
 	{
 		return true;
 	}
+
+	/* remove all negative effects from this stats manager */
+	UFUNCTION(BlueprintCallable, Category = Effects)
+	void RemoveNegativeEffects();
 };
