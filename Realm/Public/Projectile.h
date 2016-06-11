@@ -52,7 +52,7 @@ protected:
 
 	/*[SERVER] called when the projectile collides for unique effects */
 	UFUNCTION(BlueprintImplementableEvent, Category=Projectile)
-	void ServerProjectileCollision();
+	void ServerProjectileCollision(AGameCharacter* firstHitUnit);
 
 	/*[CLIENT] called when the projectile collides for unique effects */
 	UFUNCTION(BlueprintImplementableEvent, Category = Projectile)

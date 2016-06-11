@@ -92,7 +92,7 @@ void AProjectile::OnHit(class AActor* OtherActor, class UPrimitiveComponent* Oth
 		return;
 	}
 
-	ServerProjectileCollision();
+	ServerProjectileCollision(Cast<AGameCharacter>(OtherActor));
 
 	if (damageType == nullptr)
 		return;

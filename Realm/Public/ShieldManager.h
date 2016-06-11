@@ -31,6 +31,10 @@ struct FCharacterShield
 	/* keyname for this shield */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Shield)
 	FString key;
+
+	/* game character that created (originated) this shield */
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Shield)
+	AGameCharacter* originatingCharacter;
 };
 
 UCLASS()
@@ -74,4 +78,8 @@ public:
 	/* called when a shield should finish */
 	UFUNCTION(BlueprintCallable, Category = Effect)
 	void ShieldFinished(FCharacterShield finishingShield);
+
+	/* goes through the shields and determines whether or not the specified character has applied any shield to this character. not a fast function since we have to iterate over the entire hash map */
+	UFUNCTION(BlueprintCallable, Category = Shield)
+	bool DoesContainCharactersShield(AGameCharacter* originatingUnit);
 };

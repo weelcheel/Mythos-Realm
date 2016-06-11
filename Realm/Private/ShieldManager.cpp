@@ -8,6 +8,8 @@ AShieldManager::AShieldManager(const FObjectInitializer& objectInitializer)
 {
 	bReplicates = true;
 	bAlwaysRelevant = true;
+
+	NetUpdateFrequency = 15.f;
 }
 
 void AShieldManager::UpdateTotalShieldAmount()
@@ -81,6 +83,17 @@ void AShieldManager::ShieldFinished(FCharacterShield finishingShield)
 	shields.Remove(finishingShield.key);
 
 	UpdateTotalShieldAmount();
+}
+
+bool AShieldManager::DoesContainCharactersShield(AGameCharacter* originatingUnit)
+{
+	for (auto& shield : shields)
+	{
+		if (shield.Value.originatingCharacter == originatingUnit)
+			return true;
+	}
+
+	return false;
 }
 
 void AShieldManager::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
