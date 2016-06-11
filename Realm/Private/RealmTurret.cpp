@@ -33,7 +33,7 @@ void ATurret::OnSeePawn(APawn* OtherActor)
 
 void ATurret::CheckAutoAttack()
 {
-	if (!IsValid(currentTarget) || !IsValid(GetController()) || !currentTarget->IsAlive())
+	if (!IsValid(currentTarget) || !IsValid(GetController()) || !currentTarget->IsAlive() || !currentTarget->IsTargetable())
 	{
 		StopAutoAttack();
 		TargetOutofRange();

@@ -228,7 +228,7 @@ void AGameCharacter::OnRep_LastTakeHitInfo()
 
 bool AGameCharacter::CanMove() const
 {
-	return (currentAilment.newAilment != EAilment::AL_Knockup && currentAilment.newAilment != EAilment::AL_Stun && bAcceptingMoveCommands && GetCharacterMovement()->GetGroundMovementMode() == MOVE_Walking);
+	return (currentAilment.newAilment != EAilment::AL_Knockup && currentAilment.newAilment != EAilment::AL_Stun && bAcceptingMoveCommands && GetCharacterMovement()->MovementMode == MOVE_Walking);
 }
 
 bool AGameCharacter::CanAutoAttack() const
@@ -1668,6 +1668,12 @@ bool AGameCharacter::CanSeeOtherCharacter(AGameCharacter* testCharacter)
 	}
 
 	return false;
+}
+
+void AGameCharacter::SetGloabalAnimRate(float newAnimRate)
+{
+	if (IsValid(GetMesh()))
+		GetMesh()->GlobalAnimRateScale = newAnimRate;
 }
 
 //----------------------------------------------------------REPLICATION FUNCTIONS----------------------------------------------------------

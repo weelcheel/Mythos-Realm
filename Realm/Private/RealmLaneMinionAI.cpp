@@ -94,7 +94,7 @@ void ARealmLaneMinionAI::ReevaluateTargets()
 	if (IsValid(minionCharacter->GetCurrentTarget()))
 	{
 		float distsq = (minionCharacter->GetCurrentTarget()->GetActorLocation() - GetCharacter()->GetActorLocation()).SizeSquared2D();
-		if (!minionCharacter->GetCurrentTarget()->IsAlive() || distsq > FMath::Square(minionCharacter->GetCurrentValueForStat(EStat::ES_AARange)))
+		if (!minionCharacter->GetCurrentTarget()->IsAlive() || distsq > FMath::Square(minionCharacter->GetCurrentValueForStat(EStat::ES_AARange)) || !minionCharacter->GetCurrentTarget()->IsTargetable())
 			NeedsNewCommand();
 		else
 			minionCharacter->StartAutoAttack();

@@ -50,11 +50,17 @@ void AProjectile::Tick(float DeltaTime)
 
 	if (HasAuthority())
 	{
-		if (movementComponent->bIsHomingProjectile && !IsValid(homingTarget))
+		if ((movementComponent->bIsHomingProjectile && !IsValid(homingTarget)) || (movementComponent->bIsHomingProjectile && IsValid(homingTarget) && !homingTarget->IsTargetable()))
+		{
 			Destroy();
+			return;
+		}
 
-		if (!IsValid(projectileSpawner) && GetWorldTimerManager().GetTimerRemaining(TimerHandle_LifeSpanExpired) <= 0.f)
+		if ((!IsValid(projectileSpawner) || (movementComponent->bIsHomingProjectile && IsValid(homingTarget) && !homingTarget->IsAlive())) && GetWorldTimerManager().GetTimerRemaining(TimerHandle_LifeSpanExpired) <= 0.f)
+		{
 			SetLifeSpan(5.f);
+			return;
+		}
 	}
 	else
 	{

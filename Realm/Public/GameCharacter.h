@@ -718,4 +718,8 @@ public:
 	/* whether or not this character has vision on the specified test character */
 	UFUNCTION(BlueprintCallable, Category = Vision)
 	bool CanSeeOtherCharacter(AGameCharacter* testCharacter);
+
+	/* set the mesh's animation rate (useful for things like pausing the character's animation) */
+	UFUNCTION(BlueprintCallable, Category = Animation)
+	void SetGloabalAnimRate(float newAnimRate);
 };
