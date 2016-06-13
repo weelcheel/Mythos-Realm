@@ -55,7 +55,7 @@ float UStatsManager::GetUnaffectedValueForStat(EStat stat) const
 	return baseStats[(int32)stat] + modStats[(int32)stat];
 }
 
-AEffect* UStatsManager::AddEffect(FText const& effectName, FText const& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration, FString const& keyName, bool bStacking, bool bMultipleInfliction)
+AEffect* UStatsManager::AddEffect(FText const& effectName, FText const& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration, FString const& keyName, bool bStacking, bool bMultipleInfliction, bool bPersistThroughDeath)
 {
 	if (!IsValid(owningCharacter) || (IsValid(owningCharacter) && !owningCharacter->IsAlive())) //return if the character isnt valid or dead
 		return nullptr;
@@ -75,6 +75,7 @@ AEffect* UStatsManager::AddEffect(FText const& effectName, FText const& effectDe
 	newEffect->keyName = keyName;
 	newEffect->bCanBeInflictedMultipleTimes = bMultipleInfliction;
 	newEffect->statsManager = this;
+	newEffect->bPersistThroughDeath = bPersistThroughDeath;
 
 	if (owningCharacter->HasAuthority())
 	{
@@ -276,19 +277,27 @@ void UStatsManager::AddCreatedEffect(AEffect* newEffect)
 	}
 }
 
-void UStatsManager::RemoveAllEffects()
+void UStatsManager::RemoveAllEffects(bool bFromDeath)
 {
 	for (int32 i = 0; i < effectsList.Num(); i++)
 	{
-		if (IsValid(effectsList[i]))
-			EffectFinished(effectsList[i]->keyName);
+		if (bFromDeath)
+		{
+			if (IsValid(effectsList[i]) && !effectsList[i]->bPersistThroughDeath)
+				EffectFinished(effectsList[i]->keyName);
+		}
+		else
+		{
+			if (IsValid(effectsList[i]))
+				EffectFinished(effectsList[i]->keyName);
+
+			effectsList.Empty();
+			effectsMap.Empty(0);
+		}
 	}
 
 	if (IsValid(owningCharacter))
 		owningCharacter->GetWorldTimerManager().ClearAllTimersForObject(this);
-
-	effectsList.Empty();
-	effectsMap.Empty(0);
 }
 
 void UStatsManager::RemoveNegativeEffects()

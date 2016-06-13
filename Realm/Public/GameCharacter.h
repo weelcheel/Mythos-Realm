@@ -317,7 +317,7 @@ protected:
 
 	/* called whenever this character dies in the game world */
 	UFUNCTION(BlueprintImplementableEvent, Category = Events)
-	void OnCharacterDied(float KillingDamage, APawn* Killer, AActor* DamageCauser, UPARAM(ref) FRealmDamage& realmDamage);
+	void OnCharacterDied(float KillingDamage, APawn* Killer, AActor* DamageCauser, FRealmDamage realmDamage);
 
 	/* called when this character starts combat */
 	void CharacterCombatAction();
@@ -331,7 +331,7 @@ protected:
 	/* damage over time tick */
 	void DamageOverTimeTick(FString dotKey);
 
-	/* array of dots currently effecting this character */
+	/* array of dots currently affecting this character */
 	TMap<FString, FDamageOverTime> dotEvents;
 
 	FTimerHandle clearLastHitTimer;
@@ -439,7 +439,7 @@ public:
 
 	/* add buff/debuff to the player's stats */
 	UFUNCTION(BlueprintCallable, Category = Stat)
-	AEffect* AddEffect(const FText& effectName, const FText& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration = 0.f, FString const& keyName = "", bool bStacking = false, bool bMultipleInfliction = false);
+	AEffect* AddEffect(const FText& effectName, const FText& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration = 0.f, FString const& keyName = "", bool bStacking = false, bool bMultipleInfliction = false, bool bPersistThroughDeath = false);
 
 	UFUNCTION(BlueprintCallable, Category = Stat)
 	void AddEffectStacks( const FString& effectKey,  int32 stackAmount);
@@ -722,4 +722,8 @@ public:
 	/* set the mesh's animation rate (useful for things like pausing the character's animation) */
 	UFUNCTION(BlueprintCallable, Category = Animation)
 	void SetGloabalAnimRate(float newAnimRate);
+
+	/* blueprint hook to call whenever this character has killed a unit */
+	UFUNCTION(BlueprintImplementableEvent, Category = Damage)
+	void KilledOtherCharacter(float KillingDamage, AGameCharacter* victim, AActor* DamageCauser, FRealmDamage realmDamage);
 };

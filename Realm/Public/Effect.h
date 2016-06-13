@@ -42,6 +42,10 @@ public:
 	UPROPERTY()
 	UStatsManager* statsManager;
 
+	/* does this effect persist through death? */
+	UPROPERTY(BlueprintReadWrite, Category = Effect)
+	bool bPersistThroughDeath = false;
+
 	/* is this effect transfered to a player killer? */
 	UPROPERTY(BlueprintReadWrite, Category=Effect)
 	bool bIsTransferredToPlayerKiller = false;

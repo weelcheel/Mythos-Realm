@@ -74,13 +74,15 @@ void AProjectile::Tick(float DeltaTime)
 	}
 }
 
-void AProjectile::InitializeProjectile(const FVector& AimDir, float inDamage, TSubclassOf<UDamageType> projDamage, AGameCharacter* projSpawner /* = nullptr */, AGameCharacter* projTarget /* = nullptr */, FRealmDamage const& rdmg)
+void AProjectile::InitializeProjectile(const FVector& AimDir, float inDamage, TSubclassOf<UDamageType> projDamage, AGameCharacter* projSpawner /* = nullptr */, AGameCharacter* projTarget /* = nullptr */, FRealmDamage const& rdmg, float spdScale)
 {
 	movementComponent->Velocity = AimDir * movementComponent->InitialSpeed;
 	damage = inDamage;
 	damageType = projDamage;
 	projectileSpawner = projSpawner;
 	realmDamage = rdmg;
+	movementComponent->InitialSpeed *= spdScale;
+	movementComponent->MaxSpeed *= spdScale;
 
 	if (IsValid(projTarget))
 	{

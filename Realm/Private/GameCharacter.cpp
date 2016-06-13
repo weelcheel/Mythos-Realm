@@ -33,7 +33,7 @@ AGameCharacter::AGameCharacter(const FObjectInitializer& objectInitializer)
 	skillPoints = 0;
 	baseExpReward = 21;
 	experienceRewardRange = 1500.f;
-	sightRadius = 710.f;
+	sightRadius = 1000.f;
 	combatTimeoutDelay = 3.5f;
 	overheadHalfHeightMultiplier = 2.5f;
 
@@ -254,15 +254,15 @@ void AGameCharacter::UseSkill_Implementation(int32 index, FVector mouseHitLoc, A
 	if (!IsAlive())
 		return;
 
-	if (Role < ROLE_Authority || (GetNetMode() == NM_ListenServer || GetNetMode() == NM_Standalone))
+	ESkillState skillState = skillManager->GetSkill(index)->GetSkillState();
+	if (skillState == ESkillState::Disabled || skillState == ESkillState::OnCooldown || skillState == ESkillState::NotLearned)
+		return;
+
+	if (skillState == ESkillState::Performing)
 	{
-		skillManager->ClientPerformSkill(index, mouseHitLoc, unitTarget);
+		skillManager->GetSkill(index)->InterruptSkill(ESkillInterruptReason::SIR_UserCancelled, mouseHitLoc);
 		return;
 	}
-
-	ESkillState skillState = skillManager->GetSkill(index)->GetSkillState();
-	if (skillState == ESkillState::Disabled || skillState == ESkillState::OnCooldown || skillState == ESkillState::Performing || skillState == ESkillState::NotLearned)
-		return;
 
 	float curr = statsManager->GetFlare();
 	float diff = curr - skillManager->GetSkill(index)->GetCost();
@@ -276,6 +276,11 @@ void AGameCharacter::UseSkill_Implementation(int32 index, FVector mouseHitLoc, A
 	{
 		skillManager->ServerPerformSkill(index, mouseHitLoc, unitTarget);
 		CharacterCombatAction();
+	}
+	else if (Role < ROLE_Authority || (GetNetMode() == NM_ListenServer || GetNetMode() == NM_Standalone))
+	{
+		skillManager->ClientPerformSkill(index, mouseHitLoc, unitTarget);
+		return;
 	}
 }
 
@@ -426,6 +431,11 @@ void AGameCharacter::LaunchAutoAttack()
 
 	if (autoAttackManager->IsCurrentAttackProjectile())
 	{
+		//calculate the new scale to apply to the projectile's movement speed
+		float baseAaTime = 1.f / statsManager->GetBaseValueForStat(EStat::ES_AtkSp);
+		float aaTime = 1.f / statsManager->GetCurrentValueForStat(EStat::ES_AtkSp);
+		float scale = aaTime / baseAaTime;
+
 		//launch a projectile
 		FVector spawnPos = GetMesh()->GetSocketLocation(autoAttackManager->GetCurrentAutoAttackProjectileSocket());
 		FRotator dir = (GetCurrentTarget()->GetActorLocation() - GetActorLocation()).Rotation();
@@ -435,7 +445,7 @@ void AGameCharacter::LaunchAutoAttack()
 		{
 			attackProjectile->bAutoAttackProjectile = true;
 			attackProjectile->hitSound = autoAttackManager->GetCurrentAutoAttackHitSound();
-			attackProjectile->InitializeProjectile(dir.Vector(), dmg, UPhysicalDamage::StaticClass(), this, GetCurrentTarget(), rdmg);
+			attackProjectile->InitializeProjectile(dir.Vector(), dmg, UPhysicalDamage::StaticClass(), this, GetCurrentTarget(), rdmg, scale);
 		}
 	}
 	else
@@ -657,10 +667,10 @@ float AGameCharacter::GetUnaffectedValueForStat(EStat stat) const
 		return -1.f;
 }
 
-AEffect* AGameCharacter::AddEffect(const FText& effectName, const FText& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration, FString const& keyName, bool bStacking, bool bMultipleInfliction)
+AEffect* AGameCharacter::AddEffect(const FText& effectName, const FText& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration, FString const& keyName, bool bStacking, bool bMultipleInfliction, bool bPersistThroughDeath)
 {
 	if (Role == ROLE_Authority && statsManager)
-		return statsManager->AddEffect(effectName, effectDescription, stats, amounts, effectDuration, keyName, bStacking, bMultipleInfliction);
+		return statsManager->AddEffect(effectName, effectDescription, stats, amounts, effectDuration, keyName, bStacking, bMultipleInfliction, bPersistThroughDeath);
 	else
 		return nullptr;
 }
@@ -765,7 +775,10 @@ void AGameCharacter::DamageOverTimeTick(FString dotKey)
 		TArray<ASkill*> skills;
 		skillManager->GetSkills(skills);
 		for (int32 i = 0; i < skills.Num(); i++)
-			skills[i]->InterruptSkill(ESkillInterruptReason::SIR_Damaged);
+		{
+			if (skills[i]->GetSkillState() == ESkillState::Performing)
+				skills[i]->InterruptSkill(ESkillInterruptReason::SIR_Damaged);
+		}
 	}
 
 	if (GetHealth() - dotEvents[dotKey].tickDamage > 0)
@@ -840,7 +853,10 @@ float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent cons
 		TArray<ASkill*> skills;
 		skillManager->GetSkills(skills);
 		for (int32 i = 0; i < skills.Num(); i++)
-			skills[i]->InterruptSkill(ESkillInterruptReason::SIR_Damaged);
+		{
+			if (skills[i]->GetSkillState() == ESkillState::Performing)
+				skills[i]->InterruptSkill(ESkillInterruptReason::SIR_Damaged);
+		}
 	}
 	
 	if (bNegateNextDmgEvent)
@@ -1025,16 +1041,23 @@ bool AGameCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent, A
 				}
 			}
 		}
-
-		statsManager->RemoveAllEffects();
 		
 		if (IsValid(skillManager))
 		{
 			TArray<ASkill*> skills;
 			skillManager->GetSkills(skills);
 			for (int32 i = 0; i < skills.Num(); i++)
-				skills[i]->InterruptSkill(ESkillInterruptReason::SIR_Died);
+			{
+				if (skills[i]->GetSkillState() == ESkillState::Performing)
+					skills[i]->InterruptSkill(ESkillInterruptReason::SIR_Died);
+			}
 		}
+
+		statsManager->RemoveAllEffects(true);
+
+		AGameCharacter* unitKiller = Cast<AGameCharacter>(Killer);
+		if (IsValid(unitKiller))
+			unitKiller->KilledOtherCharacter(KillingDamage, this, DamageCauser, realmDamage);
 	}
 
 	// if this is an environmental death then refer to the previous killer so that they receive credit (knocked into lava pits, etc)
@@ -1235,6 +1258,8 @@ void AGameCharacter::PostRenderFor(class APlayerController* PC, class UCanvas* C
 
 	if (IsAlive())
 	{
+		const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+
 		overheadWidget->SetVisibility(ESlateVisibility::Visible);
 
 		if (bHidden)
@@ -1246,9 +1271,12 @@ void AGameCharacter::PostRenderFor(class APlayerController* PC, class UCanvas* C
 		hudPos.Z += GetSimpleCollisionHalfHeight() * overheadHalfHeightMultiplier;
 
 		FVector screenPos = Canvas->Project(hudPos);
-		screenPos.X -= overheadWidget->GetDesiredSize().X / 2.f;
+		screenPos.X -= overheadWidget->GetDesiredSize().X / 4.f;
 
-		overheadWidget->SetPositionInViewport(FVector2D(screenPos.X, screenPos.Y));
+		float xRatio = Canvas->SizeX / ViewportSize.X;
+		float yRatio = Canvas->SizeY / ViewportSize.Y;
+
+		overheadWidget->SetPositionInViewport(FVector2D(xRatio * screenPos.X, yRatio * screenPos.Y));
 	}
 	else
 		overheadWidget->SetVisibility(ESlateVisibility::Hidden);

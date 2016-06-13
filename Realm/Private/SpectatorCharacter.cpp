@@ -22,7 +22,7 @@ ASpectatorCharacter::ASpectatorCharacter(const FObjectInitializer& objectInitial
 	//springArm->TargetOffset.X = -500.f;
 	//springArm->TargetOffset.Y = 500.f;
 	//springArm->TargetOffset.Z = 1000.f;
-	cameraOffset = FVector(-500.f, 500.f, 1000.f);
+	cameraOffset = FVector(-475.f, 475.f, 950);
 
 	springArm->bInheritPitch = false;
 	springArm->bInheritRoll = false;
@@ -40,12 +40,12 @@ ASpectatorCharacter::ASpectatorCharacter(const FObjectInitializer& objectInitial
 
 	hoverLight->SetAttenuationRadius(50.f);
 	hoverLight->SetSourceRadius(50.f);
-	hoverLight->Intensity = 3.f;
+	hoverLight->Intensity = 5.2f;
 	hoverLight->SetVisibility(false);
 
 	//GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
 
-	camSpeed = 35.f;
+	camSpeed = 50.f;
 
 	bReplicates = true;
 }

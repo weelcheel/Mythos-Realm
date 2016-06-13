@@ -87,6 +87,11 @@ void URealmFogofWarManager::OnRep_EnemySightList()
 			continue;
 
 		gc->SetActorHiddenInGame(!enemySightList.Contains(gc));
+		TArray<AActor*> attached;
+		gc->GetAttachedActors(attached);
+
+		for (AActor* attachee : attached)
+			attachee->SetActorHiddenInGame(!enemySightList.Contains(gc));
 	}
 }
 

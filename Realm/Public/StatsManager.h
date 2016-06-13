@@ -114,7 +114,7 @@ public:
 	void UpdateModStats(TArray<AMod*>& mods);
 
 	/* add buff/debuff to the player's stats */
-	AEffect* AddEffect(FText const& effectName, FText const& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration = 0.f, FString const& keyName = "", bool bStacking = false, bool bMultipleInfliction = false);
+	AEffect* AddEffect(FText const& effectName, FText const& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration = 0.f, FString const& keyName = "", bool bStacking = false, bool bMultipleInfliction = false, bool bPersistThroughDeath = false);
 
 	/* add an already created effect */
 	UFUNCTION(BlueprintCallable, Category = Stat)
@@ -141,8 +141,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Effects)
 	AEffect* GetEffect(const FString& effectKey);
 
-	/* clear all effects */
-	void RemoveAllEffects();
+	/* clear all effects, keeping those that persist across death if needed */
+	void RemoveAllEffects(bool bFromDeath = true);
 
 	/* take damage and update health accordingly */
 	UFUNCTION(BlueprintCallable, Category = Healing)

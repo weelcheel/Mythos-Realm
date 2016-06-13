@@ -73,7 +73,7 @@ public:
 	USoundCue* hitSound;
 
 	/* initialize and launch the projectile */
-	void InitializeProjectile(const FVector& AimDir, float damage, TSubclassOf<UDamageType> projDamage, AGameCharacter* projSpawner, AGameCharacter* projTarget, FRealmDamage const& realmDamage);
+	void InitializeProjectile(const FVector& AimDir, float damage, TSubclassOf<UDamageType> projDamage, AGameCharacter* projSpawner, AGameCharacter* projTarget, FRealmDamage const& realmDamage, float spdScale = 1.f);
 
 	/* get the projectile owner */
 	AGameCharacter* GetProjectileSpawner() const

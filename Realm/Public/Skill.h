@@ -165,11 +165,11 @@ public:
 
 	/* called whenever this skill should be interrupted (if its being performed) */
 	UFUNCTION(BlueprintCallable, Category = Skill)
-	void InterruptSkill(ESkillInterruptReason interruptReason);
+	void InterruptSkill(ESkillInterruptReason interruptReason, FVector mousePos = FVector::ZeroVector, AGameCharacter* targetUnit = nullptr);
 
 	/* event called whenever this skill is interrupted for blueprints */
 	UFUNCTION(BlueprintImplementableEvent, Category = Skill)
-	void OnCanInterruptSkill(ESkillInterruptReason interruptReason);
+	void OnCanInterruptSkill(ESkillInterruptReason interruptReason, FVector mousePos = FVector::ZeroVector, AGameCharacter* targetUnit = nullptr);
 
 	/* whether or not this skill can upgrade its skill point count. returns false if this skill is too far more upgraded than the rest of the player's skills */
 	UFUNCTION(BlueprintCallable, Category = Skill)
