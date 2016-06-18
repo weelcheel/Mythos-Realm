@@ -51,9 +51,12 @@ void AGameCharacter::BeginPlay()
 
 	if (HasAuthority())
 	{
-		statsManager = NewObject<UStatsManager>(this);
-		autoAttackManager = NewObject<UAutoAttackManager>(this);
-		modManager = NewObject<UModManager>(this);
+		FString statsname = GetFName().ToString() + ".statsManager";
+		statsManager = NewObject<UStatsManager>(this, FName(*statsname));
+		FString autoname = GetFName().ToString() + ".autoManager";
+		autoAttackManager = NewObject<UAutoAttackManager>(this, FName(*autoname));
+		FString modsname = GetFName().ToString() + ".modManager";
+		modManager = NewObject<UModManager>(this, FName(*modsname));
 
 		//initialize stats
 		statsManager->InitializeStats(characterData->GetDefaultObject<UGameCharacterData>()->GetCharacterBaseStats(), this);
@@ -391,8 +394,7 @@ void AGameCharacter::LaunchAutoAttack()
 
 	if (!IsValid(GetCurrentTarget()) || !IsValid(this) || !IsValid(GetController()) || !GetCurrentTarget()->IsAlive())
 	{
-		SetCurrentTarget(nullptr);
-		bAutoAttackLaunching = false;
+		StopAutoAttack();;
 
 		ARealmLaneMinionAI* aic = Cast<ARealmLaneMinionAI>(GetController());
 		if (IsValid(aic))
@@ -400,6 +402,8 @@ void AGameCharacter::LaunchAutoAttack()
 
 		return;
 	}
+
+	OnLaunchAutoAttack();
 
 	FRealmDamage rdmg;
 
@@ -1320,7 +1324,7 @@ AController* AGameCharacter::GetRealmController() const
 		return GetController();
 }
 
-void AGameCharacter::CharacterDash(FVector dashEndLocation)
+void AGameCharacter::CharacterDash(FVector dashEndLocation, float spdScale)
 {
 	//UE_LOG(LogCharacter, Verbose, TEXT("ACharacter::LaunchCharacter '%s' (%f,%f,%f)"), *GetName(), LaunchVelocity.X, LaunchVelocity.Y, LaunchVelocity.Z);
 
@@ -1337,7 +1341,7 @@ void AGameCharacter::CharacterDash(FVector dashEndLocation)
 		}
 
 		//perform dash
-		rmc->DashLaunch(dashEndLocation);
+		rmc->DashLaunch(dashEndLocation, spdScale);
 		CharacterDashStarted();
 
 		bAcceptingMoveCommands = false;

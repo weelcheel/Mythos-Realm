@@ -187,7 +187,9 @@ void ASkill::StartCooldown(float manualCooldown)
 
 void ASkill::CooldownFinished()
 {
-	skillState = ESkillState::Ready;
+	if (skillState != ESkillState::Disabled)
+		skillState = ESkillState::Ready;
+
 	cooldownTime = 0.f;
 }
 
@@ -229,6 +231,16 @@ void ASkill::InterruptSkill(ESkillInterruptReason interruptReason, FVector mouse
 	//StartCooldown();
 
 	OnCanInterruptSkill(interruptReason, mousePos, targetUnit);
+}
+
+void ASkill::ReenableSkill()
+{
+	if (GetCooldownRemaining() > 0.f) //put it back on cooldown if it's still cooling down
+		SetSkillState(ESkillState::OnCooldown);
+	else if (skillPoints <= 0) //put it back to not learned if not learned
+		SetSkillState(ESkillState::NotLearned);
+	else //ready it 
+		SetSkillState(ESkillState::Ready);
 }
 
 void ASkill::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const

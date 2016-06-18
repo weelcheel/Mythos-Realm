@@ -19,7 +19,7 @@ void URealmFogofWarManager::StartCalculatingVisibility()
 
 void URealmFogofWarManager::CalculateTeamVisibility()
 {
-	if (!IsValid(playerOwner))
+	if (!IsValid(playerOwner) || !IsValid(this) || !IsValidLowLevelFast())
 		return;
 
 	teamCharacters.Empty();
@@ -77,7 +77,7 @@ void URealmFogofWarManager::AddPlayerToManager(ARealmPlayerController* newPlayer
 
 void URealmFogofWarManager::OnRep_EnemySightList()
 {
-	if (!IsValid(playerOwner))
+	if (!IsValid(playerOwner) || !IsValid(this) || !IsValidLowLevelFast())
 		return;
 
 	for (TActorIterator<AGameCharacter> chr(playerOwner->GetWorld()); chr; ++chr)

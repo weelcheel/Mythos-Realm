@@ -143,6 +143,7 @@ public:
 	void SkillFinished(float manualCooldown = -1.f);
 
 	/* gets the current skill state */
+	UFUNCTION(BlueprintCallable, Category = SkillState)
 	ESkillState GetSkillState() const;
 
 	/* sets the current skill state */
@@ -174,4 +175,8 @@ public:
 	/* whether or not this skill can upgrade its skill point count. returns false if this skill is too far more upgraded than the rest of the player's skills */
 	UFUNCTION(BlueprintCallable, Category = Skill)
 	bool CanSkillUpgrade() const;
+
+	/* logic to reenable the skill after it has been disabled. tests to make sure this skill can actually be reenabled and determines what skill state to go to */
+	UFUNCTION(BlueprintCallable, Category = Skill)
+	void ReenableSkill();
 };

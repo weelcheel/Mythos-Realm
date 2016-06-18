@@ -21,10 +21,13 @@ protected:
 	/* timer for keeping track of how long this character cannot move for */
 	FTimerHandle ignoreMovementTimer;
 
+	/* current fly speed scale for dashes */
+	float flySpeedScale = 1.f;
+
 public:
 
 	/* override launch for our use */
-	void DashLaunch(FVector const& endLocation);
+	void DashLaunch(FVector const& endLocation, float spdScale = 1.f);
 	virtual bool HandlePendingLaunch() override;
 
 	UFUNCTION(BlueprintCallable, Category = Dash)

@@ -91,7 +91,8 @@ void ARealmPlayerController::Possess(APawn* aPawn)
 					playerCharacter->PlayerState = ps;
 					playerCharacter->SetTeamIndex(ps->GetTeamIndex());
 
-					fogOfWar = NewObject<URealmFogofWarManager>(this);
+					FString fogName = GetFName().ToString() + ".fogManager";
+					fogOfWar = NewObject<URealmFogofWarManager>(this, FName(*fogName));
 					fogOfWar->teamIndex = ps->GetTeamIndex();
 					fogOfWar->playerOwner = this;
 					fogOfWar->StartCalculatingVisibility();

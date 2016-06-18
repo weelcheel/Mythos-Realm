@@ -536,7 +536,7 @@ public:
 
 	/* tries to perform a character dash in a given velocity */
 	UFUNCTION(BlueprintCallable, Category = Dash)
-	void CharacterDash(FVector dashVelocity);
+	void CharacterDash(FVector dashVelocity, float spdScale = 1.f);
 
 	/* tries to end a character dash */
 	UFUNCTION(BlueprintCallable, Category = Dash)
@@ -557,6 +557,10 @@ public:
 	/* blueprint hook for when this character damages another */
 	UFUNCTION(BlueprintImplementableEvent, Category = Damage)
 	void DamagedOtherCharacter(AGameCharacter* hurtCharacter, struct FDamageEvent const& DamageEvent, float damageAmount = 0.f, FRealmDamage const& realmDamage = FRealmDamage());
+
+	/* blueprint hook to do game logic whenever this character is about to launch an auto attack */
+	UFUNCTION(BlueprintImplementableEvent, Category = AutoAttack)
+	void OnLaunchAutoAttack();
 
 	/* get the amount of experience needed for the next level */
 	UFUNCTION(BlueprintCallable, Category = Exp)

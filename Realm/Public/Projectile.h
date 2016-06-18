@@ -66,14 +66,16 @@ protected:
 public:
 
 	/* whether or not this projectile is used for an auto attack */
+	UPROPERTY(BlueprintReadWrite, Category = Projectile)
 	bool bAutoAttackProjectile = false;
 
 	/* sound we play on hit */
-	UPROPERTY(replicated)
+	UPROPERTY(BlueprintReadWrite, Category=Projectile, replicated)
 	USoundCue* hitSound;
 
 	/* initialize and launch the projectile */
-	void InitializeProjectile(const FVector& AimDir, float damage, TSubclassOf<UDamageType> projDamage, AGameCharacter* projSpawner, AGameCharacter* projTarget, FRealmDamage const& realmDamage, float spdScale = 1.f);
+	UFUNCTION(BlueprintCallable, Category=Projectile)
+	void InitializeProjectile(const FVector& AimDir, float dmg, TSubclassOf<UDamageType> projDamage, AGameCharacter* projSpawner, AGameCharacter* projTarget, FRealmDamage const& realmDamage, float spdScale = 1.f);
 
 	/* get the projectile owner */
 	AGameCharacter* GetProjectileSpawner() const

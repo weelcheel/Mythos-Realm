@@ -22,16 +22,17 @@ void URealmCharacterMovementComponent::TickComponent(float DeltaTime, enum ELeve
 		if ((GetCharacterOwner()->GetActorLocation() - targetDashLocation).IsNearlyZero(15.f))
 			EndDash();
 		else
-			GetCharacterOwner()->SetActorLocation(FMath::VInterpConstantTo(GetCharacterOwner()->GetActorLocation(), targetDashLocation, DeltaTime, MaxFlySpeed*2.f));
+			GetCharacterOwner()->SetActorLocation(FMath::VInterpTo(GetCharacterOwner()->GetActorLocation(), targetDashLocation, DeltaTime, 10.f*flySpeedScale));
 	}
 }
 
-void URealmCharacterMovementComponent::DashLaunch(FVector const& endLocation)
+void URealmCharacterMovementComponent::DashLaunch(FVector const& endLocation, float spdScale)
 {
 	bCharacterWantsDash = true;
 	PendingLaunchVelocity = endLocation;
 	targetDashLocation = endLocation;
 	targetDashLocation.Z = GetCharacterOwner()->GetActorLocation().Z;
+	flySpeedScale = spdScale;
 }
 
 void URealmCharacterMovementComponent::EndDash()
