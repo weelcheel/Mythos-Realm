@@ -95,10 +95,7 @@ void ARealmLaneMinionAI::ReevaluateTargets()
 	{
 		float distsq = (minionCharacter->GetCurrentTarget()->GetActorLocation() - minionCharacter->GetActorLocation()).SizeSquared2D();
 		if (!minionCharacter->GetCurrentTarget()->IsAlive() || distsq > minionCharacter->sightRadius || !minionCharacter->GetCurrentTarget()->IsTargetable() || !minionCharacter->CanSeeOtherCharacter(minionCharacter->GetCurrentTarget()))
-		{
-			StopMovement();
 			NeedsNewCommand();
-		}
 		else
 			minionCharacter->StartAutoAttack();
 	}
@@ -146,8 +143,6 @@ void ARealmLaneMinionAI::NeedsNewCommand()
 	for (TActorIterator<AGameCharacter> chritr(GetWorld()); chritr; ++chritr)
 	{
 		AGameCharacter* gc = *chritr;
-		if (gc->IsA(ARealmObjective::StaticClass()))
-			continue;
 
 		if (IsValid(gc) && gc->IsAlive() && gc != minionCharacter && gc->GetTeamIndex() != minionCharacter->GetTeamIndex())
 		{
@@ -202,11 +197,47 @@ void ARealmLaneMinionAI::NeedsNewCommand()
 	}
 	else
 	{
-		ARealmObjective* oc = laneManager->GetEnemyLaneManager()->GetCurrentLaneObjective();
-		MoveToActor(objectiveTarget);
-		currentTargetPriority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
+		leastDistance = -1.f;
+		leastInd = -1;
 
-		minionCharacter->StopAutoAttack();
+		for (int32 i = 0; i < inRangeTargets.Num(); i++)
+		{
+			float distanceSq = (inRangeTargets[i]->GetActorLocation() - minionCharacter->GetActorLocation()).SizeSquared2D();
+
+			if (leastDistance == -1.f)
+			{
+				leastDistance = distanceSq;
+				leastInd = i;
+				continue;
+			}
+
+			if (distanceSq < leastDistance)
+			{
+				leastDistance = distanceSq;
+				leastInd = i;
+			}
+		}
+
+
+		if (leastInd >= 0)
+		{
+			ELaneMinionTargetPriority priority;
+			inRangeTargets[leastInd]->IsA(APlayerCharacter::StaticClass()) ? priority = ELaneMinionTargetPriority::LMTP_ClosestMythos : priority = ELaneMinionTargetPriority::LMTP_ClosestMinion;
+			if (inRangeTargets[leastInd]->IsA(ATurret::StaticClass()))
+				priority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
+
+			SetNewTarget(inRangeTargets[leastInd], priority);
+
+			minionCharacter->StartAutoAttack();
+		}
+		else
+		{
+			ARealmObjective* oc = laneManager->GetEnemyLaneManager()->GetCurrentLaneObjective();
+			MoveToActor(objectiveTarget);
+			currentTargetPriority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
+
+			minionCharacter->StopAutoAttack();
+		}
 	}
 }
 

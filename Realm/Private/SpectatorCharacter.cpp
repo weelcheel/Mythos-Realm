@@ -218,7 +218,7 @@ void ASpectatorCharacter::CalculateDirectedMove()
 	if (pc && pc->SelectUnitUnderMouse(ECC_Visibility, true, hit))
 	{
 		AGameCharacter* gc = Cast<AGameCharacter>(hit.GetActor());
-		if (IsValid(gc) && gc->IsAlive())
+		if (IsValid(gc) && gc->IsAlive() && gc != pc->GetPlayerCharacter())
 		{
 			int32 team1 = gc->GetTeamIndex();
 			int32 team2 = pc->GetPlayerCharacter()->GetTeamIndex();
@@ -226,10 +226,12 @@ void ASpectatorCharacter::CalculateDirectedMove()
 			if (gc && team1 != team2)// && !playerController->IsCharacterOnTeam(mc->GetTeam()))
 				pc->ServerStartAutoAttack(gc);
 			else
-				pc->ServerMoveCommand(hit.Location);
+				pc->ServerMoveCommand(hit.ImpactPoint);
 		}
+		else if (gc == pc->GetPlayerCharacter())
+			return;
 		else
-			pc->ServerMoveCommand(hit.Location);
+			pc->ServerMoveCommand(hit.ImpactPoint);
 	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("Unable to get mouse coordiantes."));

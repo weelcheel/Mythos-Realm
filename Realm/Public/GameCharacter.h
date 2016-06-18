@@ -205,6 +205,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = Action)
 	bool bReverseActionBar;
 
+	/* whether or not the current action is preventing this unit from moving */
+	bool bActionPreventingMovement = false;
+
 	/* whether or not this character is seen by the enemy */
 	UPROPERTY(BlueprintReadOnly, Category = Sight)
 	bool bCanEnemySee = false;
@@ -630,7 +633,7 @@ public:
 
 	/* apply an action to this character */
 	UFUNCTION(BlueprintCallable, NetMulticast, reliable, Category = Action)
-	void ApplyCharacterAction(const FString& actionName, float actionDuration, bool bReverseProgressBar = false, bool bPreventCombat = false);
+	void ApplyCharacterAction(const FString& actionName, float actionDuration, bool bReverseProgressBar = false, bool bPreventCombat = false, bool bPreventMovement = false);
 
 	/* initiate the character's stats to the specified level */
 	void InitCharacterStatsForLevel(int32 level);

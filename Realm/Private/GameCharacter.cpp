@@ -231,7 +231,7 @@ void AGameCharacter::OnRep_LastTakeHitInfo()
 
 bool AGameCharacter::CanMove() const
 {
-	return (currentAilment.newAilment != EAilment::AL_Knockup && currentAilment.newAilment != EAilment::AL_Stun && bAcceptingMoveCommands && GetCharacterMovement()->MovementMode == MOVE_Walking);
+	return (currentAilment.newAilment != EAilment::AL_Knockup && currentAilment.newAilment != EAilment::AL_Stun && bAcceptingMoveCommands && GetCharacterMovement()->MovementMode == MOVE_Walking && !bActionPreventingMovement);
 }
 
 bool AGameCharacter::CanAutoAttack() const
@@ -1556,7 +1556,7 @@ void AGameCharacter::SetGuaranteedCrit(bool bNewCrit /* = false */)
 	bGuaranteeCrit = bNewCrit;
 }
 
-void AGameCharacter::ApplyCharacterAction_Implementation(const FString& actionName, float actionDuration, bool bReverseProgressBar /* = false */, bool bPreventCombat /* = false */)
+void AGameCharacter::ApplyCharacterAction_Implementation(const FString& actionName, float actionDuration, bool bReverseProgressBar /* = false */, bool bPreventCombat /* = false */, bool bPreventMovement)
 {
 	currentActionName = actionName;
 	bReverseActionBar = bReverseProgressBar;
@@ -1565,9 +1565,13 @@ void AGameCharacter::ApplyCharacterAction_Implementation(const FString& actionNa
 	{
 		GetWorldTimerManager().SetTimer(actionTimer, this, &AGameCharacter::CharacterActionFinished, actionDuration);
 		bActionPreventingCombat = bPreventCombat;
+		bActionPreventingMovement = bPreventMovement;
 
 		if (bActionPreventingCombat)
 			StopAutoAttack();
+
+		if (bActionPreventingMovement && IsValid(GetController()))
+			GetController()->StopMovement();
 	}
 	else
 		GetWorldTimerManager().SetTimer(actionTimer, actionDuration, false);
@@ -1576,6 +1580,7 @@ void AGameCharacter::ApplyCharacterAction_Implementation(const FString& actionNa
 void AGameCharacter::CharacterActionFinished()
 {
 	bActionPreventingCombat = false;
+	bActionPreventingMovement = false;
 }
 
 void AGameCharacter::HurtAnother(AGameCharacter* hurtCharacter, struct FDamageEvent const& DamageEvent, float damageAmount /* = 0.f */, FRealmDamage const& realmDamage)
