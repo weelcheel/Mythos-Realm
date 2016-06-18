@@ -505,7 +505,10 @@ void AGameCharacter::CheckAutoAttack()
 	if (bAutoAttackLaunching)
 	{
 		if (GetWorldTimerManager().GetTimerElapsed(aaLaunchTimer) / (GetWorldTimerManager().GetTimerElapsed(aaLaunchTimer) + GetWorldTimerManager().GetTimerRemaining(aaLaunchTimer)) >= 0.75f)
+		{
+			GetWorldTimerManager().ClearTimer(aaRangeTimer);
 			return;
+		}
 	}
 
 	//make sure that we account for collision so we don't get stuck trying to attack
@@ -523,8 +526,10 @@ void AGameCharacter::CheckAutoAttack()
 	float distance = (end - start).Size2D();
 	if (distance > statsManager->GetCurrentValueForStat(EStat::ES_AARange) && !bAutoAttackLaunching)
 	{
-		GetWorldTimerManager().ClearTimer(aaLaunchTimer);
-		bAutoAttackLaunching = false;
+		//GetWorldTimerManager().ClearTimer(aaLaunchTimer);
+		//bAutoAttackLaunching = false;
+
+		StopAutoAttack();
 
 		if (CanSeeOtherCharacter(currentTarget))
 		{
@@ -566,9 +571,10 @@ void AGameCharacter::OnFinishAATimer()
 		StopAutoAttack();
 }
 
-void AGameCharacter::StopAutoAttack()
+void AGameCharacter::StopAutoAttack(bool bClearCurrrentTarget)
 {
-	SetCurrentTarget(nullptr);
+	if (bClearCurrrentTarget)
+		SetCurrentTarget(nullptr);
 
 	if (bAutoAttackLaunching && autoAttackManager)
 		AllStopAnimMontage(autoAttackManager->GetCurrentAttackAnimation());

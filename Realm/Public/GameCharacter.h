@@ -197,10 +197,6 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category=Ailment)
 	FTimerHandle ailmentTimer;
 
-	/* radius this character can see */
-	UPROPERTY(EditDefaultsOnly, Category = Sight)
-	float sightRadius;
-
 	/* name of the action this character is currently performing */
 	UPROPERTY(BlueprintReadOnly, Category = Action)
 	FString currentActionName;
@@ -363,10 +359,14 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = Damage)
 	float nextMitigatedDamage;
 
+	/* radius this character can see */
+	UPROPERTY(EditDefaultsOnly, Category = Sight)
+	float sightRadius;
+
 	/* check whether or not this character has movement enabled */
 	bool CanMove() const;
 
-	/* check whether or not this character is able to perform skills */
+	/* check whether or not tstophis character is able to perform skills */
 	bool CanPerformSkills() const;
 
 	/* check whether or not this character can auto attack */
@@ -393,7 +393,7 @@ public:
 
 	/* try to cancel any auto attacks in progress of being performed and clear current target */
 	UFUNCTION(BlueprintCallable, Category = AA)
-	virtual void StopAutoAttack();
+	virtual void StopAutoAttack(bool bClearCurrrentTarget = true);
 
 	/* this is called every 1/20th of a second while the auto attack is launched to make sure were still in range */
 	virtual void CheckAutoAttack();

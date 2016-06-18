@@ -48,6 +48,9 @@ protected:
 	/* next target */
 	AGameCharacter* nextTarget;
 
+	/* target we attack after repositioning */
+	AGameCharacter* repositionTarget;
+
 	/* objective target */
 	ARealmObjective* objectiveTarget;
 

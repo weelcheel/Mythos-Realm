@@ -39,7 +39,7 @@ void ARealmLaneMinionAI::Possess(APawn* InPawn)
 
 void ARealmLaneMinionAI::OnTargetEnterRadius(class APawn* pawn)
 {
-	AGameCharacter* gc = Cast<AGameCharacter>(pawn);
+	/*AGameCharacter* gc = Cast<AGameCharacter>(pawn);
 	AMinionCharacter* mc = Cast<AMinionCharacter>(GetCharacter());
 
 	if (!IsValid(gc))
@@ -58,7 +58,7 @@ void ARealmLaneMinionAI::OnTargetEnterRadius(class APawn* pawn)
 
 		SetNewTarget(gc, priority);
 		mc->StartAutoAttack();
-	}
+	}*/
 }
 
 void ARealmLaneMinionAI::CheckReachedObjective()
@@ -93,9 +93,12 @@ void ARealmLaneMinionAI::ReevaluateTargets()
 
 	if (IsValid(minionCharacter->GetCurrentTarget()))
 	{
-		float distsq = (minionCharacter->GetCurrentTarget()->GetActorLocation() - GetCharacter()->GetActorLocation()).SizeSquared2D();
-		if (!minionCharacter->GetCurrentTarget()->IsAlive() || distsq > FMath::Square(minionCharacter->GetCurrentValueForStat(EStat::ES_AARange)) || !minionCharacter->GetCurrentTarget()->IsTargetable())
+		float distsq = (minionCharacter->GetCurrentTarget()->GetActorLocation() - minionCharacter->GetActorLocation()).SizeSquared2D();
+		if (!minionCharacter->GetCurrentTarget()->IsAlive() || distsq > minionCharacter->sightRadius || !minionCharacter->GetCurrentTarget()->IsTargetable() || !minionCharacter->CanSeeOtherCharacter(minionCharacter->GetCurrentTarget()))
+		{
+			StopMovement();
 			NeedsNewCommand();
+		}
 		else
 			minionCharacter->StartAutoAttack();
 	}
@@ -212,23 +215,10 @@ void ARealmLaneMinionAI::ReceiveCallForHelp(AGameCharacter* distressedUnit, AGam
 	if (!IsValid(distressedUnit) || !IsValid(enemyTarget))
 		return;
 
-	ELaneMinionTargetPriority thisPriority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
-
 	if (distressedUnit->IsA(APlayerCharacter::StaticClass()) && enemyTarget->IsA(APlayerCharacter::StaticClass()))
-		thisPriority = ELaneMinionTargetPriority::LMTP_DCMythosMythos;
-	else if (distressedUnit->IsA(APlayerCharacter::StaticClass()) && enemyTarget->IsA(AMinionCharacter::StaticClass()))
-		thisPriority = ELaneMinionTargetPriority::LMTP_DCMinionMythos;
-	else if (distressedUnit->IsA(AMinionCharacter::StaticClass()) && enemyTarget->IsA(AMinionCharacter::StaticClass()))
-		thisPriority = ELaneMinionTargetPriority::LMTP_DCMinionMinion;
-	else if (distressedUnit->IsA(AMinionCharacter::StaticClass()) && enemyTarget->IsA(ATurret::StaticClass()))
-		thisPriority = ELaneMinionTargetPriority::LMTP_DCTurretMinion;
-	else if (distressedUnit->IsA(AMinionCharacter::StaticClass()) && enemyTarget->IsA(APlayerCharacter::StaticClass()))
-		thisPriority = ELaneMinionTargetPriority::LMTP_DCMythosMinion;
-
-	if (thisPriority > nextTargetPriority)
 	{
 		nextTarget = enemyTarget;
-		nextTargetPriority = thisPriority;
+		nextTargetPriority = ELaneMinionTargetPriority::LMTP_DCMythosMythos;
 		NeedsNewCommand();
 	}
 }
@@ -295,10 +285,11 @@ void ARealmLaneMinionAI::CharacterInAttackRange()
 			GetWorldTimerManager().SetTimer(handle, this, &ARealmLaneMinionAI::CharacterInAttackRange, 0.15f);
 			bRepositioned = true;
 
-			FVector newLoc = targetVector.RotateAngleAxis(90.f, FVector(0.f, 0.f, 1.f));
+			FVector newLoc = targetVector.RotateAngleAxis(FMath::RandRange(90.f, 180.f), FVector(0.f, 0.f, 1.f));
 
-			minionCharacter->StopAutoAttack();
-			MoveToLocation(minionCharacter->GetActorLocation() + (newLoc.Rotation().Vector() * 50.f));
+			repositionTarget = minionCharacter->GetCurrentTarget();
+			minionCharacter->StopAutoAttack(false);
+			MoveToLocation(minionCharacter->GetActorLocation() + (newLoc.Rotation().Vector() * 25.f));
 
 			return;
 		}
@@ -307,7 +298,7 @@ void ARealmLaneMinionAI::CharacterInAttackRange()
 	if (bRepositioned)
 	{
 		bRepositioned = false;
-		ReevaluateTargets();
+		minionCharacter->SetCurrentTarget(repositionTarget);
 		minionCharacter->StartAutoAttack();
 	}
 

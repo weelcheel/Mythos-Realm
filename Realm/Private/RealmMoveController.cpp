@@ -25,6 +25,8 @@ void ARealmMoveController::Possess(APawn* inPawn)
 		cc->AvoidanceGroup.SetFlagsDirectly(gc->GetTeamIndex());
 		cc->GroupsToAvoid.SetFlagsDirectly(gc->GetTeamIndex());
 		cc->UpdateCrowdAgentParams();
+
+		targetRadius->SightRadius = gc->sightRadius;
 	}
 }
 
