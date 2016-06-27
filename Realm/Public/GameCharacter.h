@@ -32,7 +32,7 @@ enum class EAilment : uint8
 };
 
 /* struct for holding all of the data that an ailment needs */
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FAilmentInfo
 {
 	GENERATED_USTRUCT_BODY()
@@ -89,6 +89,9 @@ struct FDamageOverTime
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DoT)
 	FTimerHandle dotTimer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DoT)
+	FDamageRecap damageDesc;
 };
 
 UCLASS(ABSTRACT, Blueprintable)
@@ -246,7 +249,7 @@ protected:
 	FTimerHandle combatTimeout;
 
 	/* text for the name of this character to show in-game */
-	UPROPERTY(EditDefaultsOnly, Category = CharacterName)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = CharacterName)
 	FText characterName;
 
 	/* sound attenuation to use for character sounds */
@@ -287,11 +290,11 @@ protected:
 	virtual void Tick(float DeltaSeconds) override;
 
 	/** sets up the replication for taking a hit */
-	virtual void ReplicateHit(float damage, struct FDamageEvent const& damageEvent, class APawn* instigatingPawn, class AActor* damageCauser, bool bKilled, FRealmDamage& realmDamage);
+	virtual void ReplicateHit(float damage, struct FDamageEvent const& damageEvent, class APawn* instigatingPawn, class AActor* damageCauser, bool bKilled, FRealmDamage& realmDamage, FDamageRecap& damageDesc);
 
 	/** play hit or death on client */
 	UFUNCTION()
-	void OnRep_LastTakeHitInfo();
+	virtual void OnRep_LastTakeHitInfo();
 
 	/* notify the client of Ailment */
 	UFUNCTION()
@@ -306,7 +309,7 @@ protected:
 	void FlareRegen();
 
 	/** notification when killed, for both the server and client. */
-	virtual void OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage);
+	virtual void OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage, FDamageRecap& damageDesc);
 
 	/* perform level up */
 	void LevelUp();
@@ -384,7 +387,7 @@ public:
 	void UseMod(int32 index, FHitResult const& hit);
 
 	/** play effects on hit */
-	virtual void PlayHit(float DamageTaken, struct FDamageEvent const& DamageEvent, class AGameCharacter* PawnInstigator, class AActor* DamageCauser, FRealmDamage& realmDamage);
+	virtual void PlayHit(float DamageTaken, struct FDamageEvent const& DamageEvent, class AGameCharacter* PawnInstigator, class AActor* DamageCauser, FRealmDamage& realmDamage, FDamageRecap& damageDesc);
 
 	/* [SERVER] launch the charcater's auto attack once in range */
 	UFUNCTION(BlueprintCallable, Category = AA)
@@ -452,11 +455,11 @@ public:
 
 	/* damages this character over time */
 	UFUNCTION(BlueprintCallable, Category = Damage)
-	virtual void CharacterTakeDamageOverTime(float Damage, float damageTime, int32 tickCount, UPARAM(ref) FString& dotKey, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser, UPARAM(ref) FRealmDamage& realmDamage);
+	virtual void CharacterTakeDamageOverTime(float Damage, float damageTime, int32 tickCount, UPARAM(ref) FString& dotKey, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser, UPARAM(ref) FRealmDamage& realmDamage, UPARAM(ref) FDamageRecap& damageDesc);
 
 	/* call other things and track extra damage data */
 	UFUNCTION(BlueprintCallable, Category = Damage)
-	virtual float CharacterTakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser, UPARAM(ref) FRealmDamage& realmDamage);
+	virtual float CharacterTakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser, UPARAM(ref) FRealmDamage& realmDamage, UPARAM(ref) FDamageRecap& damageDesc);
 
 	/** Take damage, handle death */
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser) override;
@@ -510,7 +513,7 @@ public:
 	* @param DamageCauser - the Actor that directly caused the damage (i.e. the Projectile that exploded, the Weapon that fired, etc)
 	* @returns true if allowed
 	*/
-	virtual bool Die(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* Killer, class AActor* DamageCauser, FRealmDamage& realmDamage);
+	virtual bool Die(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* Killer, class AActor* DamageCauser, FRealmDamage& realmDamage, FDamageRecap& damageDesc);
 
 	/** switch to ragdoll */
 	void SetRagdollPhysics();
@@ -724,7 +727,7 @@ public:
 
 	/* whether or not this character has vision on the specified test character */
 	UFUNCTION(BlueprintCallable, Category = Vision)
-	bool CanSeeOtherCharacter(AGameCharacter* testCharacter);
+	bool CanSeeOtherCharacter(AGameCharacter* testCharacter, bool bTestForThisCharacter = true);
 
 	/* set the mesh's animation rate (useful for things like pausing the character's animation) */
 	UFUNCTION(BlueprintCallable, Category = Animation)
@@ -733,4 +736,8 @@ public:
 	/* blueprint hook to call whenever this character has killed a unit */
 	UFUNCTION(BlueprintImplementableEvent, Category = Damage)
 	void KilledOtherCharacter(float KillingDamage, AGameCharacter* victim, AActor* DamageCauser, FRealmDamage realmDamage);
+
+	/* whether or not this character is inflicted with the specified dot */
+	UFUNCTION(BlueprintCallable, Category = Damage)
+	bool HasSpecifiedDoT(FString dotKey);
 };

@@ -70,113 +70,61 @@ void ATurret::OnFinishAATimer()
 
 void ATurret::TargetOutofRange()
 {
-	float leastDistance = -1.f;
-	int32 leastInd = -1;
-
 	if (!IsValid(this))
 		return;
 
-	inRangeTargets.Empty();
-	for (TActorIterator<AGameCharacter> chritr(GetWorld()); chritr; ++chritr)
+	TArray<FHitResult> hits;
+	FVector start = GetActorLocation();
+	FVector end = start;
+	end.Z += 5.f;
+
+	TArray<AGameCharacter*> possibleTargets;
+
+	GetWorld()->SweepMultiByChannel(hits, start, end, GetActorRotation().Quaternion(), ECC_Visibility, FCollisionShape::MakeSphere(GetCurrentValueForStat(EStat::ES_AARange)));
+	for (FHitResult hit : hits)
 	{
-		AGameCharacter* gc = *chritr;
-		if (IsValid(gc) && gc->IsAlive() && gc != this && gc->GetTeamIndex() != GetTeamIndex())
-		{
-			float dist = (gc->GetActorLocation() - GetActorLocation()).Size();
-			if (dist <= GetCurrentValueForStat(EStat::ES_AARange))
-				inRangeTargets.AddUnique(gc);
-		}
+		AGameCharacter* gc = Cast<AGameCharacter>(hit.GetActor());
+		if (IsValid(gc) && gc->IsAlive() && GetTeamIndex() != gc->GetTeamIndex())
+			possibleTargets.AddUnique(gc);
 	}
 
-	//if we should priortize Mythos
-	AGameCharacter* otherTarget = nullptr;
-	for (int32 i = 0; i < inRangeTargets.Num(); i++)
+	//first aggro any minions first
+	for (AGameCharacter* gc : possibleTargets)
 	{
-		if (inRangeTargets[i]->IsA(AMinionCharacter::StaticClass()))
-			continue;
-
-		float distanceSq = (inRangeTargets[i]->GetActorLocation() - GetActorLocation()).SizeSquared2D();
-		if (!inRangeTargets[i]->IsAlive() || distanceSq > FMath::Square(710.f))
+		if (gc->IsA(AMinionCharacter::StaticClass()))
 		{
-			inRangeTargets.RemoveAt(i);
-			continue;
-		}
-
-		if (leastDistance == -1.f)
-		{
-			leastDistance = distanceSq;
-			leastInd = i;
-			continue;
-		}
-
-		if (distanceSq < leastDistance)
-		{
-			leastDistance = distanceSq;
-			leastInd = i;
-		}
-	}
-
-	if (bPrioritizeMythos)
-	{
-		if (leastInd >= 0)
-		{
-			currentTarget = inRangeTargets[leastInd];
+			SetCurrentTarget(gc);
 			StartAutoAttack();
+
 			return;
 		}
 	}
-	else
+
+	//then aggro an objective if we can 
+	for (AGameCharacter* gc : possibleTargets)
 	{
-		if (leastInd >= 0)
-			otherTarget = inRangeTargets[leastInd];
-	}
-
-	leastDistance = -1.f;
-	leastInd = -1;
-
-	for (int32 i = 0; i < inRangeTargets.Num(); i++)
-	{
-		if (!inRangeTargets[i]->IsA(AMinionCharacter::StaticClass()))
-			continue;
-
-		float distanceSq = (inRangeTargets[i]->GetActorLocation() - GetActorLocation()).SizeSquared2D();
-		if (!inRangeTargets[i]->IsAlive() || distanceSq > FMath::Square(710.f))
+		if (gc->IsA(ARealmObjective::StaticClass()))
 		{
-			inRangeTargets.RemoveAt(i);
-			continue;
-		}
+			SetCurrentTarget(gc);
+			StartAutoAttack();
 
-		if (leastDistance == -1.f)
-		{
-			leastDistance = distanceSq;
-			leastInd = i;
-			continue;
-		}
-
-		if (distanceSq < leastDistance)
-		{
-			leastDistance = distanceSq;
-			leastInd = i;
+			return;
 		}
 	}
 
-	if (leastInd >= 0)
+	//lastly aggro any mythos
+	for (AGameCharacter* gc : possibleTargets)
 	{
-		currentTarget = inRangeTargets[leastInd];
-		StartAutoAttack();
-		return;
+		if (gc->IsA(APlayerCharacter::StaticClass()))
+		{
+			SetCurrentTarget(gc);
+			StartAutoAttack();
+
+			return;
+		}
 	}
 
-	if (otherTarget)
-	{
-		currentTarget = otherTarget;
-		StartAutoAttack();
-	}
-	else
-	{
-		currentTarget = nullptr;
-		StopAutoAttack();
-	}
+	StopAutoAttack();
 }
 
 /*void ATurret::PostRenderFor(class APlayerController* PC, class UCanvas* Canvas, FVector CameraPosition, FVector CameraDir)
@@ -210,9 +158,9 @@ void ATurret::ReceiveCallForHelp(AGameCharacter* distressedUnit, AGameCharacter*
 	}
 }
 
-void ATurret::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage)
+void ATurret::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage, FDamageRecap& damageDesc)
 {
-	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser, realmDamage);
+	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser, realmDamage, damageDesc);
 
 	if (Role == ROLE_Authority)
 		GetWorld()->GetAuthGameMode<ARealmGameMode>()->ObjectiveDestroyed(this, InstigatingPawn);

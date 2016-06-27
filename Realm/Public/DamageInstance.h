@@ -4,7 +4,7 @@
 #include "DamageInstance.generated.h"
 
 /** replicated information on a hit we've taken */
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FTakeHitInfo
 {
 	GENERATED_USTRUCT_BODY()
@@ -43,18 +43,18 @@ private:
 	UPROPERTY()
 		FDamageEvent GeneralDamageEvent;
 
-	/** Describes point damage, if that is what was received. */
-	UPROPERTY()
-		FPointDamageEvent PointDamageEvent;
-
-	/** Describes radial damage, if that is what was received. */
-	UPROPERTY()
-		FRadialDamageEvent RadialDamageEvent;
-
 public:
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
 	FRealmDamage realmDamage;
+
+	/* ui name for this damage event */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
+	FText damageName;
+
+	/* class of the game character that created this damage */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
+	UClass* characterClass;
 
 	FTakeHitInfo()
 		: ActualDamage(0)
@@ -68,45 +68,17 @@ public:
 
 	FDamageEvent& GetDamageEvent()
 	{
-		switch (DamageEventClassID)
+		if (GeneralDamageEvent.DamageTypeClass == NULL)
 		{
-		case FPointDamageEvent::ClassID:
-			if (PointDamageEvent.DamageTypeClass == NULL)
-			{
-				PointDamageEvent.DamageTypeClass = DamageTypeClass ? DamageTypeClass : UDamageType::StaticClass();
-			}
-			return PointDamageEvent;
-
-		case FRadialDamageEvent::ClassID:
-			if (RadialDamageEvent.DamageTypeClass == NULL)
-			{
-				RadialDamageEvent.DamageTypeClass = DamageTypeClass ? DamageTypeClass : UDamageType::StaticClass();
-			}
-			return RadialDamageEvent;
-
-		default:
-			if (GeneralDamageEvent.DamageTypeClass == NULL)
-			{
-				GeneralDamageEvent.DamageTypeClass = DamageTypeClass ? DamageTypeClass : UDamageType::StaticClass();
-			}
-			return GeneralDamageEvent;
+			GeneralDamageEvent.DamageTypeClass = DamageTypeClass ? DamageTypeClass : UDamageType::StaticClass();
 		}
+		return GeneralDamageEvent;
 	}
 
 	void SetDamageEvent(const FDamageEvent& DamageEvent)
 	{
 		DamageEventClassID = DamageEvent.GetTypeID();
-		switch (DamageEventClassID)
-		{
-		case FPointDamageEvent::ClassID:
-			PointDamageEvent = *((FPointDamageEvent const*)(&DamageEvent));
-			break;
-		case FRadialDamageEvent::ClassID:
-			RadialDamageEvent = *((FRadialDamageEvent const*)(&DamageEvent));
-			break;
-		default:
-			GeneralDamageEvent = DamageEvent;
-		}
+		GeneralDamageEvent = DamageEvent;
 
 		DamageTypeClass = DamageEvent.DamageTypeClass;
 	}

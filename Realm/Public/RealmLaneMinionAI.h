@@ -40,24 +40,35 @@ protected:
 	ALaneManager* laneManager;
 
 	/* timer for range checking */
+	UPROPERTY()
 	FTimerHandle rangeTimer;
 
 	/* current target priority */
+	UPROPERTY()
 	ELaneMinionTargetPriority currentTargetPriority;
 
 	/* next target */
+	UPROPERTY()
 	AGameCharacter* nextTarget;
 
 	/* target we attack after repositioning */
+	UPROPERTY()
 	AGameCharacter* repositionTarget;
 
 	/* objective target */
+	UPROPERTY()
 	ARealmObjective* objectiveTarget;
 
 	/* next target priority */
+	UPROPERTY()
 	ELaneMinionTargetPriority nextTargetPriority;
 
+	UPROPERTY()
 	bool bRepositioned;
+
+	/* what distance this minion will keep aggro for */
+	UPROPERTY(EditDefaultsOnly, Category = Aggro)
+	float aggroDistance;
 
 	/* queue of objectives we need to visit to keep pathing in lane*/
 	TQueue<ARealmObjective*> objectives;

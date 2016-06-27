@@ -203,6 +203,18 @@ void ARealmGameMode::BeginPlay()
 	}
 	else
 		expectedPlayerCount = 1;
+
+	for (int32 i = 0; i < teams.Num(); i++)
+	{
+		FString fogName = GetFName().ToString() + ".fogManager" + FString::FromInt(i);
+		URealmFogofWarManager* fogOfWar;
+		fogOfWar = NewObject<URealmFogofWarManager>(this, FName(*fogName));
+		fogOfWar->teamIndex = i;
+		fogOfWar->gameOwner = this;
+		fogOfWar->StartCalculatingVisibility();
+
+		teamFoWs.AddUnique(fogOfWar);
+	}
 }
 
 void ARealmGameMode::PostLogin(APlayerController* NewPlayer)

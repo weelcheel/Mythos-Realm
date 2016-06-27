@@ -39,6 +39,10 @@ protected:
 	/* realm damage were doing */
 	FRealmDamage realmDamage;
 
+	/* realm damage desc about this projectile */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Damage)
+	FDamageRecap damageDesc;
+
 	virtual void Tick(float DeltaTime) override;
 	virtual void BeginPlay() override;
 

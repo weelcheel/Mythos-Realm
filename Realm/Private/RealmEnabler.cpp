@@ -79,9 +79,9 @@ void ARealmEnabler::EnablerEffectFinished(AGameCharacter* gc)
 	}
 }
 
-void ARealmEnabler::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage)
+void ARealmEnabler::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage, FDamageRecap& damageDesc)
 {
-	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser, realmDamage);
+	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser, realmDamage, damageDesc);
 
 	if (Role == ROLE_Authority && GetWorld()->GetAuthGameMode<ARealmGameMode>())
 	{

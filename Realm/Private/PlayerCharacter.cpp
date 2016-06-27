@@ -78,9 +78,9 @@ void APlayerCharacter::BeginPlay()
 	}
 }*/
 
-void APlayerCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage)
+void APlayerCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage, FDamageRecap& damageDesc)
 {
-	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser, realmDamage);
+	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser, realmDamage, damageDesc);
 
 	if (Role == ROLE_Authority)
 	{
@@ -88,18 +88,13 @@ void APlayerCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& D
 		AGameCharacter* gc = Cast<AGameCharacter>(InstigatingPawn);
 		if (IsValid(gc))
 		{
-			for (int32 i = 0; i < lifeHits.Num(); i++)
-			{
-				if (IsValid(lifeHits[i].PawnInstigator) && IsValid(lifeHits[i].PawnInstigator->GetPlayerController()))
-					pc = lifeHits[i].PawnInstigator->GetPlayerController();
-			}
 			GetWorld()->GetAuthGameMode<ARealmGameMode>()->PlayerDied(IsValid(playerController) ? playerController : GetController(), IsValid(pc) ? pc : gc->GetPlayerController(), gc);
 		}
 		else
 			GetWorld()->GetAuthGameMode<ARealmGameMode>()->PlayerDied(IsValid(playerController) ? playerController : GetController(), nullptr, nullptr);
-
-		GetWorldTimerManager().ClearTimer(liftHitsClearTimer);
 	}
+
+	GetWorldTimerManager().ClearTimer(liftHitsClearTimer);
 
 	if (IsValid(playerController))
 	{
@@ -193,9 +188,9 @@ void APlayerCharacter::ChangeCredits(int32 deltaAmount, const FVector& worldLoc)
 	}
 }
 
-void APlayerCharacter::ReplicateHit(float damage, struct FDamageEvent const& damageEvent, class APawn* instigatingPawn, class AActor* damageCauser, bool bKilled, FRealmDamage& realmDamage)
+void APlayerCharacter::ReplicateHit(float damage, struct FDamageEvent const& damageEvent, class APawn* instigatingPawn, class AActor* damageCauser, bool bKilled, FRealmDamage& realmDamage, FDamageRecap& damageDesc)
 {
-	Super::ReplicateHit(damage, damageEvent, instigatingPawn, damageCauser, bKilled, realmDamage);
+	Super::ReplicateHit(damage, damageEvent, instigatingPawn, damageCauser, bKilled, realmDamage, damageDesc);
 
 	if (Role == ROLE_Authority && GetPlayerController() != nullptr)
 	{
@@ -218,7 +213,8 @@ void APlayerCharacter::ReplicateHit(float damage, struct FDamageEvent const& dam
 	}
 
 	lifeHits.Add(lastTakeHitInfo);
-	GetWorldTimerManager().SetTimer(liftHitsClearTimer, this, &APlayerCharacter::ClearLifeHits, 3.5f, false);
+
+	GetWorldTimerManager().SetTimer(liftHitsClearTimer, this, &APlayerCharacter::ClearLifeHits, 8.5f, false);
 }
 
 void APlayerCharacter::StartAmbientCreditIncome(int32 amount)

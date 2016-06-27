@@ -4,6 +4,7 @@
 
 class AGameCharacter;
 class ARealmPlayerController;
+class ARealmGameMode;
 
 UCLASS()
 class URealmFogofWarManager : public UObject
@@ -35,6 +36,10 @@ public:
 	/* local player using this fog of war managaer */
 	UPROPERTY(replicated)
 	ARealmPlayerController* playerOwner;
+
+	/* game mode that is using this manager if there is no player owner */
+	UPROPERTY()
+	ARealmGameMode* gameOwner;
 
 	/* array of units that this player can see and is used for updating vision in-game */
 	UPROPERTY(ReplicatedUsing=OnRep_EnemySightList)

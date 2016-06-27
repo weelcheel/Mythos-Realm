@@ -18,7 +18,7 @@ protected:
 	FTimerHandle despawnTimer;
 
 	/* notify the game mode this character died */
-	virtual void OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage) override;
+	virtual void OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage, FDamageRecap& damageDesc) override;
 
 	/* after the revive delay is finished */
 	void OnRaiderRevive();

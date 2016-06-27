@@ -191,6 +191,10 @@ protected:
 
 public:
 
+	/* array of NPC sight managers for AI for each team */
+	UPROPERTY(BlueprintReadOnly, Category = Sight)
+	TArray<URealmFogofWarManager*> teamFoWs;
+
 	/* get the store items for this game */
 	UFUNCTION(BlueprintCallable, Category = Store)
 	void GetStoreMods(TArray<TSubclassOf<AMod> >& modsToSell);

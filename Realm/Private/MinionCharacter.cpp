@@ -17,9 +17,9 @@ AMinionCharacter::AMinionCharacter(const FObjectInitializer& objectInitializer)
 	NetUpdateFrequency = 15.f;
 }
 
-void AMinionCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage)
+void AMinionCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage, FDamageRecap& damageDesc)
 {
-	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser, realmDamage);
+	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser, realmDamage, damageDesc);
 
 	GetWorldTimerManager().ClearAllTimersForObject(this);
 

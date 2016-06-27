@@ -17,7 +17,7 @@ protected:
 	ARealmEnablerShield* shield;
 
 	/* override for respawns */
-	virtual void OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage) override;
+	virtual void OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage, FDamageRecap& damageDesc) override;
 
 	/* respawn the shield generator */
 	void Respawn();

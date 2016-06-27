@@ -9,8 +9,10 @@ ARaiderCharacter::ARaiderCharacter(const FObjectInitializer& objectInitializer)
 	teamIndex = 3;
 }
 
-void ARaiderCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage)
+void ARaiderCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, FRealmDamage& realmDamage, FDamageRecap& damageDesc)
 {
+	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser, realmDamage, damageDesc);
+
 	if (Role == ROLE_Authority)
 	{
 		AGameCharacter* gc = Cast<AGameCharacter>(InstigatingPawn);
@@ -41,8 +43,6 @@ void ARaiderCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& D
 			return;
 		}
 	}
-
-	Super::OnDeath(KillingDamage, DamageEvent, InstigatingPawn, DamageCauser, realmDamage);
 }
 
 void ARaiderCharacter::OnRaiderRevive()
@@ -68,5 +68,6 @@ void ARaiderCharacter::OnDespawn()
 	bFirstDeath = true;
 	FDamageEvent dmg;
 	FRealmDamage rdmg;
-	Die(0, dmg, this, this, rdmg);
+	FDamageRecap dr;
+	Die(0, dmg, this, this, rdmg, dr);
 }

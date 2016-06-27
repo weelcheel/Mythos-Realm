@@ -15,18 +15,22 @@ void URealmFogofWarManager::StartCalculatingVisibility()
 {
 	if (IsValid(playerOwner) && playerOwner->HasAuthority())
 		playerOwner->GetWorldTimerManager().SetTimer(visibilityTimer, this, &URealmFogofWarManager::CalculateTeamVisibility, (0.15f), true);
+	else if (IsValid(gameOwner))
+		gameOwner->GetWorldTimerManager().SetTimer(visibilityTimer, this, &URealmFogofWarManager::CalculateTeamVisibility, (0.15f), true);
 }
 
 void URealmFogofWarManager::CalculateTeamVisibility()
 {
-	if (!IsValid(playerOwner) || !IsValid(this) || !IsValidLowLevelFast())
+	if ((!IsValid(playerOwner) && !IsValid(gameOwner)) || !IsValid(this) || !IsValidLowLevelFast())
 		return;
 
 	teamCharacters.Empty();
 	enemySightList.Empty();
 
+	UWorld* gameWorld = IsValid(playerOwner) ? playerOwner->GetWorld() : gameOwner->GetWorld();
+
 	//get which characters are on our team
-	for (TActorIterator<AGameCharacter> chr(playerOwner->GetWorld()); chr; ++chr)
+	for (TActorIterator<AGameCharacter> chr(gameWorld); chr; ++chr)
 	{
 		AGameCharacter* gc = *chr;
 		if (IsValid(gc) && gc->GetTeamIndex() == teamIndex && gc->IsAlive())

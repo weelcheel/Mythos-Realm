@@ -170,7 +170,7 @@ void AGameCharacter::Tick(float DeltaSeconds)
 		return;
 }
 
-void AGameCharacter::ReplicateHit(float damage, struct FDamageEvent const& damageEvent, class APawn* instigatingPawn, class AActor* damageCauser, bool bKilled, FRealmDamage& realmDamage)
+void AGameCharacter::ReplicateHit(float damage, struct FDamageEvent const& damageEvent, class APawn* instigatingPawn, class AActor* damageCauser, bool bKilled, FRealmDamage& realmDamage, FDamageRecap& damageDesc)
 {
 	const float timeoutTime = GetWorld()->GetTimeSeconds() + 0.5f;
 
@@ -194,6 +194,8 @@ void AGameCharacter::ReplicateHit(float damage, struct FDamageEvent const& damag
 	lastTakeHitInfo.DamageCauser = damageCauser;
 	lastTakeHitInfo.SetDamageEvent(damageEvent);
 	lastTakeHitInfo.bKilled = bKilled;
+	lastTakeHitInfo.damageName = damageDesc.damageName;
+	lastTakeHitInfo.characterClass = damageDesc.characterClass;
 	lastTakeHitInfo.EnsureReplication();
 
 	lastTakeHitTimeTimeout = timeoutTime;
@@ -219,13 +221,17 @@ void AGameCharacter::ClearLastTakeHit()
 
 void AGameCharacter::OnRep_LastTakeHitInfo()
 {
+	FDamageRecap dr;
+	dr.characterClass = lastTakeHitInfo.characterClass;
+	dr.damageName = lastTakeHitInfo.damageName;
+
 	if (lastTakeHitInfo.bKilled)
 	{
-		OnDeath(lastTakeHitInfo.ActualDamage, lastTakeHitInfo.GetDamageEvent(), lastTakeHitInfo.PawnInstigator, lastTakeHitInfo.DamageCauser.Get(), lastTakeHitInfo.realmDamage);
+		OnDeath(lastTakeHitInfo.ActualDamage, lastTakeHitInfo.GetDamageEvent(), lastTakeHitInfo.PawnInstigator, lastTakeHitInfo.DamageCauser.Get(), lastTakeHitInfo.realmDamage, dr);
 	}
 	else if (Role < ROLE_Authority)
 	{
-		PlayHit(lastTakeHitInfo.ActualDamage, lastTakeHitInfo.GetDamageEvent(), lastTakeHitInfo.PawnInstigator, lastTakeHitInfo.DamageCauser.Get(), lastTakeHitInfo.realmDamage);
+		PlayHit(lastTakeHitInfo.ActualDamage, lastTakeHitInfo.GetDamageEvent(), lastTakeHitInfo.PawnInstigator, lastTakeHitInfo.DamageCauser.Get(), lastTakeHitInfo.realmDamage, dr);
 	}
 }
 
@@ -312,14 +318,14 @@ void AGameCharacter::UseMod_Implementation(int32 index, FHitResult const& hit)
 		mods[index]->ClientModUsed(hit);
 }
 
-void AGameCharacter::PlayHit(float DamageTaken, struct FDamageEvent const& DamageEvent, class AGameCharacter* PawnInstigator, class AActor* DamageCauser, FRealmDamage& realmDamage)
+void AGameCharacter::PlayHit(float DamageTaken, struct FDamageEvent const& DamageEvent, class AGameCharacter* PawnInstigator, class AActor* DamageCauser, FRealmDamage& realmDamage, FDamageRecap& damageDesc)
 {
 	if (!IsValid(this))
 		return;
 
 	if (Role == ROLE_Authority)
 	{
-		ReplicateHit(DamageTaken, DamageEvent, PawnInstigator, DamageCauser, false, realmDamage);
+		ReplicateHit(DamageTaken, DamageEvent, PawnInstigator, DamageCauser, false, realmDamage, damageDesc);
 	}
 	
 	if ((IsValid(PawnInstigator) && PawnInstigator->playerController == GetWorld()->GetFirstPlayerController()) || playerController == GetWorld()->GetFirstPlayerController())
@@ -358,17 +364,11 @@ void AGameCharacter::StartAutoAttack()
 	if (!IsValid(GetCurrentTarget()) || !IsValid(autoAttackManager) || !IsValid(statsManager) || !IsAlive())
 		return;
 
-	if (bAutoAttackLaunching) //bAutoAttackOnCooldown || bAutoAttackLaunching
+	if (bAutoAttackLaunching || bAutoAttackOnCooldown) //bAutoAttackOnCooldown || bAutoAttackLaunching
 		return;
 
 	if (GetWorldTimerManager().GetTimerRemaining(aaRangeTimer) <= 0.f)
 		GetWorldTimerManager().SetTimer(aaRangeTimer, this, &AGameCharacter::CheckAutoAttack, 1.f / 20.f, true);
-
-	if (bAutoAttackOnCooldown)
-	{
-		GetWorldTimerManager().ClearTimer(aaRangeTimer);
-		return;
-	}
 
 	float distance = (GetActorLocation() - GetCurrentTarget()->GetActorLocation()).Size2D();
 	if (distance <= statsManager->GetCurrentValueForStat(EStat::ES_AARange))
@@ -460,8 +460,12 @@ void AGameCharacter::LaunchAutoAttack()
 
 		//instant damage
 		FDamageEvent de(UPhysicalDamage::StaticClass());
+		FDamageRecap dr;
 
-		GetCurrentTarget()->CharacterTakeDamage(dmg, de, GetRealmController(), this, rdmg);
+		dr.characterClass = GetClass();
+		dr.damageName = NSLOCTEXT("DamageDescriptions", "characterautoattack", "Auto Attack");
+
+		GetCurrentTarget()->CharacterTakeDamage(dmg, de, GetRealmController(), this, rdmg, dr);
 		//GetCurrentTarget()->TakeDamage(dmg, de, GetRealmController(), this);
 	}
 
@@ -492,11 +496,13 @@ bool AGameCharacter::CalculateCriticalHit(float& totalDamage, float additionalCr
 
 void AGameCharacter::CheckAutoAttack()
 {
-	if (!IsValid(GetCurrentTarget()) || !IsValid(GetController()) || !GetCurrentTarget()->IsAlive() || GetCurrentTarget()->bHidden)
+	if (!IsValid(GetCurrentTarget()) || !IsValid(GetController()) || !GetCurrentTarget()->IsAlive())
 	{
-		SetCurrentTarget(nullptr);
+		/*SetCurrentTarget(nullptr);
 		GetWorldTimerManager().ClearTimer(aaLaunchTimer);
-		bAutoAttackLaunching = false;
+		bAutoAttackLaunching = false;*/
+
+		StopAutoAttack();
 
 		return;
 	}
@@ -506,7 +512,7 @@ void AGameCharacter::CheckAutoAttack()
 	{
 		if (GetWorldTimerManager().GetTimerElapsed(aaLaunchTimer) / (GetWorldTimerManager().GetTimerElapsed(aaLaunchTimer) + GetWorldTimerManager().GetTimerRemaining(aaLaunchTimer)) >= 0.75f)
 		{
-			GetWorldTimerManager().ClearTimer(aaRangeTimer);
+			//GetWorldTimerManager().ClearTimer(aaRangeTimer);
 			return;
 		}
 	}
@@ -529,14 +535,16 @@ void AGameCharacter::CheckAutoAttack()
 		//GetWorldTimerManager().ClearTimer(aaLaunchTimer);
 		//bAutoAttackLaunching = false;
 
-		StopAutoAttack();
-
-		if (CanSeeOtherCharacter(currentTarget))
+		if (CanSeeOtherCharacter(GetCurrentTarget()))
 		{
 			AAIController* aic = Cast<AAIController>(GetController());
 			if (IsValid(aic))
 				aic->MoveToActor(GetCurrentTarget(), statsManager->GetCurrentValueForStat(EStat::ES_AARange));
+
+			StopAutoAttack(false);
 		}
+		else
+			StopAutoAttack();
 	}
 	else if (!bAutoAttackLaunching && !bAutoAttackOnCooldown)
 	{
@@ -544,14 +552,14 @@ void AGameCharacter::CheckAutoAttack()
 		if (IsValid(aic))
 			aic->StopMovement();
 
-		ARealmMoveController* aicc = Cast<ARealmMoveController>(GetController());
-		if (IsValid(aicc))
-			aicc->CharacterInAttackRange();
-
 		float scale = statsManager->GetCurrentValueForStat(EStat::ES_AtkSp) / statsManager->GetBaseValueForStat(EStat::ES_AtkSp);
 		GetWorldTimerManager().SetTimer(aaLaunchTimer, this, &AGameCharacter::LaunchAutoAttack, autoAttackManager->GetAutoAttackLaunchTime() / scale);
 
 		bAutoAttackLaunching = true;
+
+		ARealmMoveController* aicc = Cast<ARealmMoveController>(GetController());
+		if (IsValid(aicc))
+			aicc->CharacterInAttackRange();
 	}
 }
 
@@ -698,7 +706,7 @@ void AGameCharacter::EndEffect(const FString& effectKey)
 }
 
 
-void AGameCharacter::CharacterTakeDamageOverTime(float Damage, float damageTime, int32 tickCount, FString& dotKey, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser, UPARAM(ref) FRealmDamage& realmDamage)
+void AGameCharacter::CharacterTakeDamageOverTime(float Damage, float damageTime, int32 tickCount, FString& dotKey, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser, UPARAM(ref) FRealmDamage& realmDamage, UPARAM(ref) FDamageRecap& damageDesc)
 {
 	if (Role < ROLE_Authority)
 		return;
@@ -741,6 +749,7 @@ void AGameCharacter::CharacterTakeDamageOverTime(float Damage, float damageTime,
 		dot.tickDamageTotal = Damage;
 		dot.tickInterval = damageTime / (float)tickCount;
 		dot.dotDuration = damageTime;
+		dot.damageDesc = damageDesc;
 
 		dotEvents.Add(dotKey, dot);
 		DamageOverTimeTick(dotKey);
@@ -792,9 +801,9 @@ void AGameCharacter::DamageOverTimeTick(FString dotKey)
 	}
 
 	if (GetHealth() - dotEvents[dotKey].tickDamage > 0)
-		PlayHit(dotEvents[dotKey].tickDamage, dotEvents[dotKey].DamageEvent, damageCausingGC, dotEvents[dotKey].DamageCauser, dotEvents[dotKey].realmDamage);
+		PlayHit(dotEvents[dotKey].tickDamage, dotEvents[dotKey].DamageEvent, damageCausingGC, dotEvents[dotKey].DamageCauser, dotEvents[dotKey].realmDamage, dotEvents[dotKey].damageDesc);
 	else
-		Die(dotEvents[dotKey].tickDamage, dotEvents[dotKey].DamageEvent, damageCausingGC, dotEvents[dotKey].DamageCauser, dotEvents[dotKey].realmDamage);
+		Die(dotEvents[dotKey].tickDamage, dotEvents[dotKey].DamageEvent, damageCausingGC, dotEvents[dotKey].DamageCauser, dotEvents[dotKey].realmDamage, dotEvents[dotKey].damageDesc);
 
 	TakeDamage(dotEvents[dotKey].tickDamage, dotEvents[dotKey].DamageEvent, dotEvents[dotKey].EventInstigator, dotEvents[dotKey].DamageCauser);
 
@@ -806,7 +815,7 @@ void AGameCharacter::DamageOverTimeTick(FString dotKey)
 	}
 }
 
-float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser, FRealmDamage& realmDamage)
+float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser, FRealmDamage& realmDamage, FDamageRecap& damageDesc)
 {
 	ARealmPlayerController* pc = Cast<ARealmPlayerController>(EventInstigator);
 	ARealmMoveController* aipc = Cast<ARealmMoveController>(EventInstigator);
@@ -878,9 +887,9 @@ float AGameCharacter::CharacterTakeDamage(float Damage, struct FDamageEvent cons
 	if (Damage > 0.f)
 	{
 		if (GetHealth() - Damage > 0)
-			PlayHit(Damage, DamageEvent, damageCausingGC, DamageCauser, realmDamage);
+			PlayHit(Damage, DamageEvent, damageCausingGC, DamageCauser, realmDamage, damageDesc);
 		else
-			Die(Damage, DamageEvent, damageCausingGC, DamageCauser, realmDamage);
+			Die(Damage, DamageEvent, damageCausingGC, DamageCauser, realmDamage, damageDesc);
 	}
 
 	return TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
@@ -1009,7 +1018,10 @@ void AGameCharacter::KilledBy(APawn* EventInstigator)
 		}
 
 		FRealmDamage dmg;
-		Die(GetHealth(), FDamageEvent(UDamageType::StaticClass()), NULL, NULL, dmg);
+		FDamageRecap dr;
+		dr.characterClass = GetClass();
+
+		Die(GetHealth(), FDamageEvent(UDamageType::StaticClass()), NULL, NULL, dmg, dr);
 	}
 }
 
@@ -1018,7 +1030,7 @@ void AGameCharacter::Suicide()
 	KilledBy(this);
 }
 
-bool AGameCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent, APawn* Killer, AActor* DamageCauser, FRealmDamage& realmDamage)
+bool AGameCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent, APawn* Killer, AActor* DamageCauser, FRealmDamage& realmDamage, FDamageRecap& damageDesc)
 {
 	if (!CanDie(KillingDamage, DamageEvent, Killer, DamageCauser))
 	{
@@ -1081,12 +1093,12 @@ bool AGameCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent, A
 
 	StopAutoAttack();
 	bAutoAttackOnCooldown = false;
-	OnDeath(KillingDamage, DamageEvent, Killer, DamageCauser, realmDamage);
+	OnDeath(KillingDamage, DamageEvent, Killer, DamageCauser, realmDamage, damageDesc);
 
 	return true;
 }
 
-void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* PawnInstigator, class AActor* DamageCauser, FRealmDamage& realmDamage)
+void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* PawnInstigator, class AActor* DamageCauser, FRealmDamage& realmDamage, FDamageRecap& damageDesc)
 {
 	if (bIsDying)
 	{
@@ -1107,7 +1119,7 @@ void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& Dam
 
 	if (Role == ROLE_Authority)
 	{
-		ReplicateHit(KillingDamage, DamageEvent, PawnInstigator, DamageCauser, true, realmDamage);
+		ReplicateHit(KillingDamage, DamageEvent, PawnInstigator, DamageCauser, true, realmDamage, damageDesc);
 
 		TArray<APlayerCharacter*> gcs;
 		for (TActorIterator<APlayerCharacter> gcitr(GetWorld()); gcitr; ++gcitr)
@@ -1685,7 +1697,7 @@ FVector AGameCharacter::FindGroundBeneathCharacter(AGameCharacter* testCharacter
 		return testCharacter->GetActorLocation();
 }
 
-bool AGameCharacter::CanSeeOtherCharacter(AGameCharacter* testCharacter)
+bool AGameCharacter::CanSeeOtherCharacter(AGameCharacter* testCharacter, bool bTestForThisCharacter)
 {
 	if (!IsValid(testCharacter))
 		return false;
@@ -1701,13 +1713,12 @@ bool AGameCharacter::CanSeeOtherCharacter(AGameCharacter* testCharacter)
 	if (dist > sightRadius)
 		return false;
 
-	TArray<FHitResult> tHits;
-	GetWorld()->LineTraceMultiByChannel(tHits, start, end, ECC_Visibility);
-
-	for (FHitResult hit : tHits)
+	//check the first fow manager we find for this team and see if we can see the tested character
+	for (TObjectIterator<URealmFogofWarManager> Itr; Itr; ++Itr)
 	{
-		if (hit.GetActor() == testCharacter)
-			return true;
+		URealmFogofWarManager* fow = (*Itr);
+		if (IsValid(fow) && fow->teamIndex == GetTeamIndex())
+			return fow->enemySightList.Contains(testCharacter);
 	}
 
 	return false;
@@ -1717,6 +1728,11 @@ void AGameCharacter::SetGloabalAnimRate(float newAnimRate)
 {
 	if (IsValid(GetMesh()))
 		GetMesh()->GlobalAnimRateScale = newAnimRate;
+}
+
+bool AGameCharacter::HasSpecifiedDoT(FString dotKey)
+{
+	return dotEvents.Contains(dotKey);
 }
 
 //----------------------------------------------------------REPLICATION FUNCTIONS----------------------------------------------------------

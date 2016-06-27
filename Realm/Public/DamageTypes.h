@@ -12,7 +12,7 @@ enum class ERealmDamageSource: uint8
 	ERDS_Max UMETA(Hidden),
 };
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FRealmDamage
 {
 	GENERATED_USTRUCT_BODY()
@@ -34,6 +34,24 @@ struct FRealmDamage
 		damageSource = ERealmDamageSource::ERDS_AutoAttack;
 		bCriticalHit = false;
 	}
+};
+
+USTRUCT(BlueprintType)
+struct FDamageRecap
+{
+	GENERATED_USTRUCT_BODY()
+
+	/* ui name for this damage event */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
+	FText damageName;
+
+	/* class of the game character that created this damage */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
+	UClass* characterClass;
+
+	/* damage icon to display in ui */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
+	UTexture2D* damageImage;
 };
 
 UCLASS(const)

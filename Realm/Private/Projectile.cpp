@@ -110,7 +110,7 @@ void AProjectile::OnHit(class AActor* OtherActor, class UPrimitiveComponent* Oth
 		homingTarget->PlayCharacterSound(hitSound);
 
 		FDamageEvent damageEvent(damageType);
-		homingTarget->CharacterTakeDamage(damage, damageEvent, projectileSpawner->GetRealmController(), this, realmDamage);
+		homingTarget->CharacterTakeDamage(damage, damageEvent, projectileSpawner->GetRealmController(), this, realmDamage, damageDesc);
 
 		Destroy();
 	}
@@ -128,7 +128,7 @@ void AProjectile::OnHit(class AActor* OtherActor, class UPrimitiveComponent* Oth
 
 		FDamageEvent damageEvent(damageType);
 		//gc->TakeDamage(damage, damageEvent, projectileSpawner->GetRealmController(), this);
-		gc->CharacterTakeDamage(damage, damageEvent, projectileSpawner->GetRealmController(), this, realmDamage);
+		gc->CharacterTakeDamage(damage, damageEvent, projectileSpawner->GetRealmController(), this, realmDamage, damageDesc);
 
 		Destroy();
 	}
