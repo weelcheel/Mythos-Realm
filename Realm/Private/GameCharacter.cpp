@@ -28,6 +28,8 @@ AGameCharacter::AGameCharacter(const FObjectInitializer& objectInitializer)
 	AIControllerClass = AAIController::StaticClass();
 	bAlwaysRelevant = true;
 
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+
 	level = 1;
 	experienceAmount = 0;
 	skillPoints = 0;
@@ -77,6 +79,9 @@ void AGameCharacter::BeginPlay()
 		statsManager->SetMaxFlare();
 
 		modManager->managedCharacter = this;
+
+		//add the unit to the available sight list
+		GetWorld()->GetAuthGameMode<ARealmGameMode>()->availableSightUnits.AddUnique(this);
 	}
 
 	for (TActorIterator<AHUD> objItr(GetWorld()); objItr; ++objItr)
@@ -102,6 +107,9 @@ void AGameCharacter::Destroy(bool bNetForce /* = false */, bool bShouldModifyLev
 	//autoAttackManager->Destroy();
 	//statsManager->Destroy();
 	//modManager->Destroy();
+
+	//remove from the game modes available sight list
+	GetWorld()->GetAuthGameMode<ARealmGameMode>()->availableSightUnits.Remove(this);
 
 	if (IsValid(skillManager))
 		skillManager->Destroy();
@@ -1519,17 +1527,9 @@ FAilmentInfo AGameCharacter::MakeAilmentInfo(EAilment ailment, FString ailmentSt
 	return info;
 }
 
-void AGameCharacter::CalculateVisibility(TArray<AGameCharacter*>& sightList)
+void AGameCharacter::CalculateVisibility(TArray<AGameCharacter*>& sightList, TArray<AGameCharacter*>& availableUnits)
 {
-	ARealmPlayerController* localPC = Cast<ARealmPlayerController>(GetWorld()->GetFirstPlayerController());
-	if (!IsValid(localPC))
-		return;
-
-	ARealmPlayerState* localPS = Cast<ARealmPlayerState>(localPC->PlayerState);
-	if (!IsValid(localPS))
-		return;
-
-	TArray<FHitResult> hits;
+	/*TArray<FHitResult> hits;
 	FVector start = GetActorLocation();
 	FVector end = start;
 	end.Z += 5.f;
@@ -1549,6 +1549,32 @@ void AGameCharacter::CalculateVisibility(TArray<AGameCharacter*>& sightList)
 				if (hit.GetActor() == gc)
 					sightList.AddUnique(gc);
 			}
+		}
+	}*/
+
+	TArray<AActor*> ignoreList;
+	for (AGameCharacter* gc : availableUnits)
+		ignoreList.AddUnique(gc);
+
+	for (AGameCharacter* gc : availableUnits)
+	{
+		FVector start = GetActorLocation();
+		FVector end = gc->GetActorLocation();
+
+		if ((start - end).SizeSquared2D() <= FMath::Square(sightRadius))
+		{
+			FHitResult hit;
+			FCollisionQueryParams collisionParams;
+
+			TArray<AActor*> ignoredActors = ignoreList;
+			ignoredActors.Remove(gc);
+
+			collisionParams.AddIgnoredActors(ignoredActors);
+
+			GetWorld()->LineTraceSingleByChannel(hit, start, end, ECC_Visibility, collisionParams);
+
+			if (hit.GetActor() == gc)
+				sightList.AddUnique(gc);
 		}
 	}
 }

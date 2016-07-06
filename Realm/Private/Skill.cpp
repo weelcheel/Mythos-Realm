@@ -167,9 +167,10 @@ float ASkill::GetCooldownRemaining()
 	return GetWorldTimerManager().GetTimerRemaining(cooldownTimer);
 }
 
-void ASkill::StartCooldown(float manualCooldown)
+void ASkill::StartCooldown(float manualCooldown, ESkillState cdfState)
 {
 	skillState = ESkillState::OnCooldown;
+	afterCooldownState = cdfState;
 
 	cooldownTime = SkillLevelScale(cooldownMin, cooldownMax, false);
 	if (manualCooldown > 0.f)
@@ -187,9 +188,7 @@ void ASkill::StartCooldown(float manualCooldown)
 
 void ASkill::CooldownFinished()
 {
-	if (skillState != ESkillState::Disabled)
-		skillState = ESkillState::Ready;
-
+	skillState = afterCooldownState;
 	cooldownTime = 0.f;
 }
 

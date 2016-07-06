@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/GameMode.h"
+#include "Chat.h"
 #include "RealmGameMode.generated.h"
 
 class AMod;
@@ -13,6 +14,8 @@ class AGameCharacter;
 class URealmFogofWarManager;
 class ARealmObjective;
 class ALaneManager;
+
+struct FRealmChatEntry;
 
 UENUM()
 enum class EGameStatus : uint8
@@ -191,9 +194,13 @@ protected:
 
 public:
 
-	/* array of NPC sight managers for AI for each team */
+	/* array of sight managers for each team */
 	UPROPERTY(BlueprintReadOnly, Category = Sight)
 	TArray<URealmFogofWarManager*> teamFoWs;
+
+	/* pool of characters that are currently available for sight in this game */
+	UPROPERTY(BlueprintReadOnly, Category = Sight)
+	TArray<AGameCharacter*> availableSightUnits;
 
 	/* get the store items for this game */
 	UFUNCTION(BlueprintCallable, Category = Store)

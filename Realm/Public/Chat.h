@@ -21,11 +21,11 @@ struct FRealmChatEntry
 
 	/* sender of the message */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Chat)
-	FText senderName;
+	FString senderName;
 
 	/* data of the message */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Chat)
-	FText chatData;
+	FString chatData;
 
 	/* timestamp of when the server received the chat message */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Chat)
@@ -44,7 +44,7 @@ struct FRealmChatEntry
 
 	}
 
-	FRealmChatEntry(TEnumAsByte<EChatType> ctype, const FText& sender, const FText& data, float time)
+	FRealmChatEntry(TEnumAsByte<EChatType> ctype, const FString& sender, const FString& data, float time)
 	{
 		chatType = ctype;
 		senderName = sender;

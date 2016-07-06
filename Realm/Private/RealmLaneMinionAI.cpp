@@ -10,6 +10,7 @@ ARealmLaneMinionAI::ARealmLaneMinionAI(const FObjectInitializer& objectInitializ
 : Super(objectInitializer)
 {
 	aggroDistance = 420.f;
+	targetRadius->SightRadius = aggroDistance;
 }
 
 void ARealmLaneMinionAI::Possess(APawn* InPawn)
@@ -33,8 +34,8 @@ void ARealmLaneMinionAI::Possess(APawn* InPawn)
 	minionCharacter = mc;
 
 	FTimerHandle t;
-	GetWorldTimerManager().SetTimer(rangeTimer, this, &ARealmLaneMinionAI::ReevaluateTargets, 1.f / 30.f, true);
-	GetWorldTimerManager().SetTimer(t, this, &ARealmLaneMinionAI::CheckReachedObjective, 1.f / 30.f, true);
+	//GetWorldTimerManager().SetTimer(rangeTimer, this, &ARealmLaneMinionAI::ReevaluateTargets, 0.25f, true);
+	//GetWorldTimerManager().SetTimer(t, this, &ARealmLaneMinionAI::CheckReachedObjective, 0.1f, true);
 }
 
 void ARealmLaneMinionAI::OnTargetEnterRadius(class APawn* pawn)
@@ -59,6 +60,42 @@ void ARealmLaneMinionAI::OnTargetEnterRadius(class APawn* pawn)
 		SetNewTarget(gc, priority);
 		mc->StartAutoAttack();
 	}*/
+
+	AGameCharacter* gc = Cast<AGameCharacter>(pawn);
+
+	if (!IsValid(gc) || !IsValid(minionCharacter))
+		return;
+
+	//check for objective reaching
+	if (gc->IsA(ARealmObjective::StaticClass()))
+	{
+		if (IsValid(objectiveTarget) && objectiveTarget == gc)
+		{
+			objectives.Dequeue(objectiveTarget);
+			if (!IsValid(minionCharacter->GetCurrentTarget()) && gc->GetTeamIndex() == minionCharacter->GetTeamIndex())
+			{
+				MoveToActor(objectiveTarget);
+				return;
+			}
+		}
+	}
+
+	if (gc->GetTeamIndex() == minionCharacter->GetTeamIndex() || !gc->IsAlive())
+		return;
+
+	if (!IsValid(minionCharacter->GetCurrentTarget()))
+	{
+		ELaneMinionTargetPriority priority;
+
+		gc->IsA(APlayerCharacter::StaticClass()) ? priority = ELaneMinionTargetPriority::LMTP_ClosestMythos : priority = ELaneMinionTargetPriority::LMTP_ClosestMinion;
+		if (gc->IsA(ARealmObjective::StaticClass()))
+			priority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
+
+		SetNewTarget(gc, priority);
+		minionCharacter->StartAutoAttack();
+
+		GetWorldTimerManager().SetTimer(rangeTimer, this, &ARealmLaneMinionAI::ReevaluateTargets, 0.33f, true);
+	}
 }
 
 void ARealmLaneMinionAI::CheckReachedObjective()
@@ -190,6 +227,8 @@ void ARealmLaneMinionAI::NeedsNewCommand()
 	MoveToActor(objectiveTarget);
 	currentTargetPriority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
 	minionCharacter->StopAutoAttack();
+
+	GetWorldTimerManager().ClearTimer(rangeTimer);
 
 	/*float leastDistance = -1.f;
 	int32 leastInd = -1;

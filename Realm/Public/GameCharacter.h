@@ -608,7 +608,7 @@ public:
 	static FAilmentInfo MakeAilmentInfo(EAilment ailment, FString ailmentString, float ailmentDuration, FVector ailmentDir);
 
 	/* called by the fog of war manager to get visibility data */
-	virtual void CalculateVisibility(TArray<AGameCharacter*>& sightList);
+	virtual void CalculateVisibility(TArray<AGameCharacter*>& sightList, TArray<AGameCharacter*>& availableUnits);
 
 	/* whether or not the enemy team can see this character even if its not in their sight range */
 	UFUNCTION(BlueprintCallable, Category = Vision)

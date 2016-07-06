@@ -25,16 +25,13 @@ protected:
 	/* tell all of the characters to calculate visibility */
 	void CalculateTeamVisibility();
 
-	UFUNCTION()
-	void OnRep_EnemySightList();
-
 public:
 
 	/* team this sight manager is for , -1 for all characters */
 	int32 teamIndex;
 
 	/* local player using this fog of war managaer */
-	UPROPERTY(replicated)
+	UPROPERTY()
 	ARealmPlayerController* playerOwner;
 
 	/* game mode that is using this manager if there is no player owner */
@@ -42,7 +39,7 @@ public:
 	ARealmGameMode* gameOwner;
 
 	/* array of units that this player can see and is used for updating vision in-game */
-	UPROPERTY(ReplicatedUsing=OnRep_EnemySightList)
+	UPROPERTY()
 	TArray<AGameCharacter*> enemySightList;
 
 	/* called whenever we need to add a character to the manager */
@@ -56,9 +53,4 @@ public:
 
 	/* starts the timer for calculating unit visibility */
 	void StartCalculatingVisibility();
-
-	virtual bool IsSupportedForNetworking() const override
-	{
-		return true;
-	}
 };

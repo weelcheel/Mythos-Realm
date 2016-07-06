@@ -55,6 +55,9 @@ protected:
 	/* timer for cooldowns */
 	FTimerHandle cooldownTimer;
 
+	/* next state to go to after cooldown is finished */
+	ESkillState afterCooldownState;
+
 	/* for when the cooldown timer is set */
 	UPROPERTY(ReplicatedUsing = OnCooldownTimerSet)
 	float cooldownTime;
@@ -112,7 +115,7 @@ public:
 
 	/* start cooldown for the skill */
 	UFUNCTION(BlueprintCallable, Category = Skill)
-	void StartCooldown(float manualCooldown = -1.f);
+	void StartCooldown(float manualCooldown = -1.f, ESkillState cdfState = ESkillState::Ready);
 
 	/* [SERVER] add a skill point */
 	UFUNCTION(BlueprintCallable, Category = Skill)

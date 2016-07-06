@@ -91,11 +91,11 @@ void ARealmPlayerController::Possess(APawn* aPawn)
 					playerCharacter->PlayerState = ps;
 					playerCharacter->SetTeamIndex(ps->GetTeamIndex());
 
-					FString fogName = GetFName().ToString() + ".fogManager";
+					/*FString fogName = GetFName().ToString() + ".fogManager";
 					fogOfWar = NewObject<URealmFogofWarManager>(this, FName(*fogName));
 					fogOfWar->teamIndex = ps->GetTeamIndex();
 					fogOfWar->playerOwner = this;
-					fogOfWar->StartCalculatingVisibility();
+					fogOfWar->StartCalculatingVisibility();*/
 				}
 			}
 		}
@@ -418,7 +418,7 @@ bool ARealmPlayerController::SelectUnitUnderMouse(ECollisionChannel TraceChannel
 		return false;
 
 	TArray<FHitResult> hits;
-	if (GetUnitsUnderMouse(ECC_Visibility, true, hits))
+	if (GetUnitsUnderMouse(ECC_Camera, true, hits))
 	{
 		//select order: 1) enemy units 2) friendly units 3)self
 		FHitResult selectedHit;
@@ -639,14 +639,24 @@ void ARealmPlayerController::GameEnded()
 	
 }
 
-bool ARealmPlayerController::ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags)
+void ARealmPlayerController::OnRep_SightList()
 {
-	bool WroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
+	if (!IsValid(this) || !IsValidLowLevelFast())
+		return;
 
-	if (fogOfWar)
-		WroteSomething |= Channel->ReplicateSubobject(fogOfWar, *Bunch, *RepFlags);
+	for (TActorIterator<AGameCharacter> chr(GetWorld()); chr; ++chr)
+	{
+		AGameCharacter* gc = *chr;
+		if (!IsValid(gc))
+			continue;
 
-	return WroteSomething;
+		gc->SetActorHiddenInGame(!sightList.Contains(gc));
+		TArray<AActor*> attached;
+		gc->GetAttachedActors(attached);
+
+		for (AActor* attachee : attached)
+			attachee->SetActorHiddenInGame(!sightList.Contains(gc));
+	}
 }
 
 void ARealmPlayerController::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
@@ -654,5 +664,6 @@ void ARealmPlayerController::GetLifetimeReplicatedProps(TArray< FLifetimePropert
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ARealmPlayerController, playerCharacter);
-	DOREPLIFETIME(ARealmPlayerController, fogOfWar);
+	DOREPLIFETIME(ARealmPlayerController, sightList);
+	//DOREPLIFETIME(ARealmPlayerController, fogOfWar);
 }

@@ -3,7 +3,7 @@
 #include "GameCharacter.h"
 #include "PlayerCharacter.h"
 #include "RealmPlayerController.h"
-#include "UnrealNetwork.h"
+#include "RealmGameMode.h"
 
 URealmFogofWarManager::URealmFogofWarManager(const FObjectInitializer& objectInitializer)
 : Super(objectInitializer)
@@ -30,9 +30,8 @@ void URealmFogofWarManager::CalculateTeamVisibility()
 	UWorld* gameWorld = IsValid(playerOwner) ? playerOwner->GetWorld() : gameOwner->GetWorld();
 
 	//get which characters are on our team
-	for (TActorIterator<AGameCharacter> chr(gameWorld); chr; ++chr)
+	for (AGameCharacter* gc : gameWorld->GetAuthGameMode<ARealmGameMode>()->availableSightUnits)
 	{
-		AGameCharacter* gc = *chr;
 		if (IsValid(gc) && gc->GetTeamIndex() == teamIndex && gc->IsAlive())
 			teamCharacters.AddUnique(gc);
 
@@ -57,7 +56,15 @@ void URealmFogofWarManager::CalculateTeamVisibility()
 	for (int32 i = 0; i < teamCharacters.Num(); i++)
 	{
 		//get their sight data
-		teamCharacters[i]->CalculateVisibility(enemySightList);
+		teamCharacters[i]->CalculateVisibility(enemySightList, gameWorld->GetAuthGameMode<ARealmGameMode>()->availableSightUnits);
+	}
+
+	//update the players on our team with the new sight list
+	for (FConstPlayerControllerIterator Iterator = gameWorld->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	{
+		ARealmPlayerController* pc = Cast<ARealmPlayerController>(*Iterator);
+		if (IsValid(pc) && IsValid(pc->GetPlayerCharacter()) && pc->GetPlayerCharacter()->GetTeamIndex() == teamIndex)
+			pc->sightList = enemySightList;
 	}
 }
 
@@ -77,30 +84,4 @@ void URealmFogofWarManager::AddPlayerToManager(ARealmPlayerController* newPlayer
 {
 	//if (IsValid(newPlayer))
 		//teamPlayers.AddUnique(newPlayer);
-}
-
-void URealmFogofWarManager::OnRep_EnemySightList()
-{
-	if (!IsValid(playerOwner) || !IsValid(this) || !IsValidLowLevelFast())
-		return;
-
-	for (TActorIterator<AGameCharacter> chr(playerOwner->GetWorld()); chr; ++chr)
-	{
-		AGameCharacter* gc = *chr;
-		if (!IsValid(gc))
-			continue;
-
-		gc->SetActorHiddenInGame(!enemySightList.Contains(gc));
-		TArray<AActor*> attached;
-		gc->GetAttachedActors(attached);
-
-		for (AActor* attachee : attached)
-			attachee->SetActorHiddenInGame(!enemySightList.Contains(gc));
-	}
-}
-
-void URealmFogofWarManager::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
-{
-	DOREPLIFETIME(URealmFogofWarManager, enemySightList);
-	DOREPLIFETIME(URealmFogofWarManager, playerOwner);
 }

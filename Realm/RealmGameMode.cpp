@@ -480,6 +480,19 @@ void ARealmGameMode::PlayerDied(AController* killedPlayer, AController* playerKi
 	{
 		ps->playerDeaths++;
 		ps->BroadcastDeath(ps2, killerPawn);
+
+		if (IsValid(ps2))
+		{
+			FRealmChatEntry chat;
+			chat.bAllChat = true;
+			chat.chatData = ps2->PlayerName + " has defeated " + ps->PlayerName + "!";
+			chat.chatType = EChatType::CT_ServerChat;
+			chat.timeStamp = GetWorld()->TimeSeconds;
+
+			ARealmGameState* gs = Cast<ARealmGameState>(GameState);
+			if (IsValid(gs))
+				gs->BroadcastChat(chat);
+		}
 	}
 	if (IsValid(ps2))
 	{

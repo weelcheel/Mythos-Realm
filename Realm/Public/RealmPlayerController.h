@@ -42,8 +42,11 @@ protected:
 	APlayerCharacter* playerCharacter;
 
 	/* fog of war manager for this player */
-	UPROPERTY(replicated)
-	URealmFogofWarManager* fogOfWar;
+	/*UPROPERTY(replicated)
+	URealmFogofWarManager* fogOfWar;*/
+
+	UFUNCTION()
+	void OnRep_SightList();
 
 	/* whether or not we have the ingame store open */
 	bool bIngameStoreOpen;
@@ -76,6 +79,10 @@ public:
 	/* info target information */
 	UPROPERTY(BlueprintReadOnly, Category = Target)
 	AGameCharacter* infoTarget;
+
+	/* array list of units this player can see on the map currently, updated by the server then replicated to the client */
+	UPROPERTY(ReplicatedUsing = OnRep_SightList)
+	TArray<AGameCharacter*> sightList;
 
 	/* [SERVER] calls the server to send the calculated world position to the move controller */
 	UFUNCTION(reliable, server, WithValidation)
@@ -211,6 +218,4 @@ public:
 
 	/* called when the game ends */
 	void GameEnded();
-
-	virtual bool ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags) override;
 };

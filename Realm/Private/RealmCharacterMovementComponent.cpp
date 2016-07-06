@@ -22,7 +22,7 @@ void URealmCharacterMovementComponent::TickComponent(float DeltaTime, enum ELeve
 		if ((GetCharacterOwner()->GetActorLocation() - targetDashLocation).IsNearlyZero(15.f))
 			EndDash();
 		else
-			GetCharacterOwner()->SetActorLocation(FMath::VInterpTo(GetCharacterOwner()->GetActorLocation(), targetDashLocation, DeltaTime, 10.f*flySpeedScale));
+			GetCharacterOwner()->SetActorLocation(FMath::VInterpConstantTo(GetCharacterOwner()->GetActorLocation(), targetDashLocation, DeltaTime, 7100.f*flySpeedScale));
 	}
 }
 
