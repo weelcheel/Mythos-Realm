@@ -147,7 +147,7 @@ void ASpectatorCharacter::Tick(float deltaSeconds)
 		if (IsValid(pc))
 		{
 			FHitResult hit;
-			if (pc->SelectUnitUnderMouse(ECC_Visibility, true, hit) && IsValid(Cast<AGameCharacter>(hit.GetActor())))
+			if (pc->SelectUnitUnderMouse(ECC_Visibility, true, hit) && IsValid(Cast<AGameCharacter>(hit.GetActor())) && !hit.GetActor()->bHidden)
 				SetHoverTarget(Cast<AGameCharacter>(hit.GetActor()));
 			else
 				RemoveHoverTarget();
@@ -218,7 +218,7 @@ void ASpectatorCharacter::CalculateDirectedMove()
 	if (pc && pc->SelectUnitUnderMouse(ECC_Visibility, true, hit))
 	{
 		AGameCharacter* gc = Cast<AGameCharacter>(hit.GetActor());
-		if (IsValid(gc) && gc->IsAlive() && gc != pc->GetPlayerCharacter())
+		if (IsValid(gc) && gc->IsAlive() && gc != pc->GetPlayerCharacter() && !gc->bHidden)
 		{
 			int32 team1 = gc->GetTeamIndex();
 			int32 team2 = pc->GetPlayerCharacter()->GetTeamIndex();

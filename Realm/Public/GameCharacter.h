@@ -18,6 +18,7 @@ const static float EXP_CONST = 2.f / FMath::Sqrt(128.f);
 class URealmFogofWarManager;
 class UOverheadWidget;
 class UUserWidget;
+class AStealthArea;
 
 /* types for hard Crowd Control (Ailments) */
 UENUM(BlueprintType)
@@ -364,6 +365,10 @@ public:
 	/* how much damage should be mitigated from the next TakeDamage call */
 	UPROPERTY(BlueprintReadWrite, Category = Damage)
 	float nextMitigatedDamage;
+
+	/* the stealth area this unit is currently occupying, if any */
+	UPROPERTY(BlueprintReadOnly, Replicated, Category = StealthArea)
+	AStealthArea* currentStealthArea;
 
 	/* radius this character can see */
 	UPROPERTY(EditDefaultsOnly, Category = Sight)

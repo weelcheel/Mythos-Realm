@@ -12,6 +12,7 @@
 #include "RealmFogofWarManager.h"
 #include "OverheadWidget.h"
 #include "Engine/ActorChannel.h"
+#include "StealthArea.h"
 
 AGameCharacter::AGameCharacter(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer.SetDefaultSubobjectClass<URealmCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -116,6 +117,9 @@ void AGameCharacter::Destroy(bool bNetForce /* = false */, bool bShouldModifyLev
 
 	if (IsValid(shieldManager))
 		shieldManager->Destroy();
+
+	if (IsValid(currentStealthArea))
+		currentStealthArea->RemoveOccupyingUnit(this);
 
 	autoAttackManager = nullptr;
 	statsManager = nullptr;
@@ -1151,6 +1155,8 @@ void AGameCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& Dam
 		}
 
 		OnCharacterDied(KillingDamage, PawnInstigator, DamageCauser, realmDamage);
+
+		lastDamagingCharacter = nullptr;
 	}
 
 	GetWorldTimerManager().ClearTimer(flareRegen);
@@ -1483,10 +1489,13 @@ void AGameCharacter::GiveCharacterAilment(FAilmentInfo info)
 	switch (currentAilment.newAilment)
 	{
 	case EAilment::AL_Knockup: //a knockup is a stun that displaces the character a certain distance.
+		StopAutoAttack();
+		mc->IgnoreMovementForDuration(currentAilment.ailmentDuration);
 		mc->AddImpulse(currentAilment.ailmentDir);
 		break;
 
 	case EAilment::AL_Stun:
+		StopAutoAttack();
 		mc->IgnoreMovementForDuration(currentAilment.ailmentDuration);
 		break;
 	}
@@ -1552,6 +1561,14 @@ void AGameCharacter::CalculateVisibility(TArray<AGameCharacter*>& sightList, TAr
 		}
 	}*/
 
+	//let the stealth area handle vision if we're currently occupying it
+	if (IsValid(currentStealthArea))
+	{
+		currentStealthArea->CalculateVisibility(this, sightList, availableUnits);
+		return;
+	}
+
+	//visibility based on the unit
 	TArray<AActor*> ignoreList;
 	for (AGameCharacter* gc : availableUnits)
 		ignoreList.AddUnique(gc);
@@ -1574,7 +1591,10 @@ void AGameCharacter::CalculateVisibility(TArray<AGameCharacter*>& sightList, TAr
 			GetWorld()->LineTraceSingleByChannel(hit, start, end, ECC_Visibility, collisionParams);
 
 			if (hit.GetActor() == gc)
-				sightList.AddUnique(gc);
+			{
+				if (!IsValid(gc->currentStealthArea)) //don't add units that are occupying stealth areas and we're not
+					sightList.AddUnique(gc);
+			}
 		}
 	}
 }
@@ -1732,6 +1752,14 @@ bool AGameCharacter::CanSeeOtherCharacter(AGameCharacter* testCharacter, bool bT
 	if (testCharacter->CanEnemyAbsolutelySeeThisUnit() || testCharacter->GetTeamIndex() == teamIndex)
 		return true;
 
+	//stealth areas
+	if (IsValid(testCharacter->currentStealthArea) && !IsValid(currentStealthArea))
+		return false;
+	if (IsValid(currentStealthArea) && currentStealthArea != testCharacter->currentStealthArea)
+		return false;
+	if (IsValid(currentStealthArea) && currentStealthArea == testCharacter->currentStealthArea)
+		return true;
+
 	FVector start = GetActorLocation();
 	FVector end = testCharacter->GetActorLocation();
 
@@ -1814,5 +1842,6 @@ void AGameCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Ou
 	DOREPLIFETIME(AGameCharacter, mods);
 	DOREPLIFETIME(AGameCharacter, bIsTargetable);
 	DOREPLIFETIME(AGameCharacter, bAutoAttackLaunching);
+	DOREPLIFETIME(AGameCharacter, currentStealthArea);
 	DOREPLIFETIME_CONDITION(AGameCharacter, lastTakeHitInfo, COND_Custom);
 }

@@ -137,6 +137,9 @@ void APlayerCharacter::Respawn()
 
 		bReplicateMovement = true;
 		lifeHits.Empty();
+
+		if (IsValid(currentStealthArea))
+			currentStealthArea->RemoveOccupyingUnit(this);
 	}
 
 	//GetMesh()->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);

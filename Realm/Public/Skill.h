@@ -86,6 +86,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Skill)
 	FText skillDesc;
 
+	/* whether or not to start cooldown immediately as this skill is interrupted */
+	UPROPERTY(EditDefaultsOnly, Category = Skill)
+	bool bAutoCooldownOnInterrupt;
+
 	/* called when cooldown is finished */
 	void CooldownFinished();
 
@@ -182,4 +186,8 @@ public:
 	/* logic to reenable the skill after it has been disabled. tests to make sure this skill can actually be reenabled and determines what skill state to go to */
 	UFUNCTION(BlueprintCallable, Category = Skill)
 	void ReenableSkill();
+
+	/* get the ground location beneath the specified point */
+	UFUNCTION(BlueprintCallable, Category = Skill)
+	FVector GetGroundLocationBeneathPoint(FVector point);
 };

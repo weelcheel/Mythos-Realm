@@ -236,7 +236,7 @@ void ARealmPlayerController::GetPlayerInAutoAttackRange()
 	if (!IsValid(playerCharacter) || !IsValid(playerCharacter->GetCurrentTarget()) || !IsValid(moveController))
 		return;
 
-	if (!playerCharacter->GetCurrentTarget()->IsAlive())
+	if (!playerCharacter->GetCurrentTarget()->IsAlive() || !playerCharacter->CanSeeOtherCharacter(playerCharacter->GetCurrentTarget()))
 	{
 		ServerClearAttackCommands();
 		ServerClearMoveCommands();
@@ -429,7 +429,7 @@ bool ARealmPlayerController::SelectUnitUnderMouse(ECollisionChannel TraceChannel
 			if (!IsValid(gc))
 				continue;
 
-			if (!gc->IsTargetable() || gc->bHidden)
+			if (!gc->IsTargetable())
 				continue;
 
 			if (gc->GetTeamIndex() != GetPlayerCharacter()->GetTeamIndex())

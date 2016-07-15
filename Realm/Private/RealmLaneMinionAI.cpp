@@ -80,7 +80,7 @@ void ARealmLaneMinionAI::OnTargetEnterRadius(class APawn* pawn)
 		}
 	}
 
-	if (gc->GetTeamIndex() == minionCharacter->GetTeamIndex() || !gc->IsAlive())
+	if (gc->GetTeamIndex() == minionCharacter->GetTeamIndex() || !gc->IsAlive() || !minionCharacter->CanSeeOtherCharacter(gc))
 		return;
 
 	if (!IsValid(minionCharacter->GetCurrentTarget()))
@@ -413,7 +413,7 @@ void ARealmLaneMinionAI::CharacterInAttackRange()
 			GetWorldTimerManager().SetTimer(handle, this, &ARealmLaneMinionAI::CharacterInAttackRange, 0.15f);
 			bRepositioned = true;
 
-			FVector newLoc = targetVector.RotateAngleAxis(FMath::RandRange(90.f, 180.f), FVector(0.f, 0.f, 1.f));
+			FVector newLoc = targetVector.RotateAngleAxis(FMath::RandRange(0.f, 180.f), FVector(0.f, 0.f, 1.f));
 
 			repositionTarget = minionCharacter->GetCurrentTarget();
 			minionCharacter->StopAutoAttack();

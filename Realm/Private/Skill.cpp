@@ -2,12 +2,14 @@
 #include "Skill.h"
 #include "GameCharacter.h"
 #include "UnrealNetwork.h"
+#include "Projectile.h"
 
 ASkill::ASkill(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
 {
 	skillState = ESkillState::NoOwner;
 	bAutoPerform = true;
+	bAutoCooldownOnInterrupt = true;
 
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.TickGroup = TG_PrePhysics;
@@ -227,7 +229,8 @@ void ASkill::InterruptSkill(ESkillInterruptReason interruptReason, FVector mouse
 	if (skillState != ESkillState::Performing)
 		return;
 
-	//StartCooldown();
+	if (bAutoCooldownOnInterrupt)
+		StartCooldown();
 
 	OnCanInterruptSkill(interruptReason, mousePos, targetUnit);
 }
@@ -240,6 +243,30 @@ void ASkill::ReenableSkill()
 		SetSkillState(ESkillState::NotLearned);
 	else //ready it 
 		SetSkillState(ESkillState::Ready);
+}
+
+FVector ASkill::GetGroundLocationBeneathPoint(FVector point)
+{
+	FHitResult hit;
+	FVector start = point;
+
+	FVector end = start;
+	end.Z -= 100000.f;
+
+	//get all game characters and projectiles currently in the world so we can ignore them later
+	TArray<AActor*> ignoredActors;
+	for (TActorIterator<AGameCharacter> chr(GetWorld()); chr; ++chr)
+		ignoredActors.AddUnique(*chr);
+	for (TActorIterator<AProjectile> pro(GetWorld()); pro; ++pro)
+		ignoredActors.AddUnique(*pro);
+
+	FCollisionQueryParams collisionParams;
+	collisionParams.AddIgnoredActors(ignoredActors);
+
+	if (GetWorld()->LineTraceSingleByChannel(hit, start, end, ECC_WorldStatic, collisionParams))
+		return hit.ImpactPoint;
+	else
+		return point;
 }
 
 void ASkill::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
