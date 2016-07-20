@@ -204,16 +204,34 @@ void ARealmGameMode::BeginPlay()
 	else
 		expectedPlayerCount = 1;
 
-	for (int32 i = 0; i < teams.Num(); i++)
-	{
-		FString fogName = GetFName().ToString() + ".fogManager" + FString::FromInt(i);
-		URealmFogofWarManager* fogOfWar;
-		fogOfWar = NewObject<URealmFogofWarManager>(this, FName(*fogName));
-		fogOfWar->teamIndex = i;
-		fogOfWar->gameOwner = this;
-		fogOfWar->StartCalculatingVisibility();
+	FString fogName = GetFName().ToString() + ".fogManager";
+	fogOfWar = NewObject<URealmFogofWarManager>(this, FName(*fogName));
+	//fogOfWar->teamIndex = i;
+	fogOfWar->gameOwner = this;
 
-		teamFoWs.AddUnique(fogOfWar);
+	for (int32 i = 0; i < teams.Num(); i++) //team sight lists
+	{
+		FTeamSightList sightList;
+		fogOfWar->enemySightLists.Add(sightList);
+	}
+
+	//npc sight list
+	FTeamSightList sightList;
+	fogOfWar->enemySightLists.Add(sightList);
+
+	fogOfWar->StartCalculatingVisibility();
+}
+
+void ARealmGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	if (IsValid(fogOfWar))
+	{
+		fogOfWar->ConditionalBeginDestroy();
+		fogOfWar = nullptr;
+
+		GetWorld()->ForceGarbageCollection(true);
 	}
 }
 

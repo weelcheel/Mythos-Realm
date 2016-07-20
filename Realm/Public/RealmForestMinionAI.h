@@ -26,6 +26,13 @@ protected:
 	/* whether or not this minion is on his way back home */
 	bool bReturningHome = false;
 
+	/* what distance this minion will keep aggro for */
+	UPROPERTY(EditDefaultsOnly, Category = Aggro)
+	float aggroDistance;
+
+	/* reevaluation timer */
+	FTimerHandle reevalTimer;
+
 	/* target out of aggro range */
 	void ReevaluateTargets();
 

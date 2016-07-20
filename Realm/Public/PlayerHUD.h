@@ -8,6 +8,7 @@
 
 class AGameCharacter;
 class ARealmPlayerState;
+class AMinimapActor;
 
 USTRUCT()
 struct FUIDamage
@@ -44,6 +45,21 @@ protected:
 
 	UPROPERTY()
 	UFont* uiFont;
+
+	/* reference to the minimap actor of the level we're currently in */
+	AMinimapActor* gameMinimap;
+
+	/* dimensions of the minimap at default resolution */
+	float mapDimensions;
+
+	/* position of the minimap */
+	FVector2D mapPosition;
+
+	/* function to actually draw the minimap */
+	void DrawMinimap();
+
+	/* gets the unit's heading */
+	float GetUnitHeading(AGameCharacter* unit) const;
 
 public:
 

@@ -4,7 +4,7 @@
 ARealmForestMinionAI::ARealmForestMinionAI(const FObjectInitializer& objectInitializer)
 : Super(objectInitializer)
 {
-	
+	aggroDistance = 1000.f;
 }
 
 void ARealmForestMinionAI::Possess(APawn* InPawn)
@@ -18,9 +18,6 @@ void ARealmForestMinionAI::Possess(APawn* InPawn)
 	mc->GetStatsManager()->SetMaxHealth();
 
 	minionCharacter = mc;
-
-	FTimerHandle f;
-	GetWorldTimerManager().SetTimer(f, this, &ARealmForestMinionAI::ReevaluateTargets, 0.8f, true);
 }
 
 void ARealmForestMinionAI::CharacterTookDamage(AGameCharacter* damageCauser)
@@ -32,6 +29,8 @@ void ARealmForestMinionAI::CharacterTookDamage(AGameCharacter* damageCauser)
 	{
 		minionCharacter->SetCurrentTarget(damageCauser);
 		minionCharacter->StartAutoAttack();
+
+		GetWorldTimerManager().SetTimer(reevalTimer, this, &ARealmForestMinionAI::ReevaluateTargets, 0.8f, true);
 	}
 }
 
@@ -43,19 +42,28 @@ void ARealmForestMinionAI::ReevaluateTargets()
 	if (bReturningHome)
 	{
 		if (minionCharacter->GetActorLocation().Equals(homePosition, 20.f))
+		{
 			bReturningHome = false;
+			GetWorldTimerManager().ClearTimer(reevalTimer);
+		}
+		else
+			MoveToLocation(homePosition);
 
 		return;
 	}
 
 	if (IsValid(minionCharacter->GetCurrentTarget()))
 	{
-		float distsq = (minionCharacter->GetCurrentTarget()->GetActorLocation() - GetCharacter()->GetActorLocation()).SizeSquared2D();
-		if (!minionCharacter->GetCurrentTarget()->IsAlive() || distsq > FMath::Square(550.f))
+		float distsq = (minionCharacter->GetActorLocation() - minionCharacter->GetCurrentTarget()->GetActorLocation()).SizeSquared2D();
+		if (!minionCharacter->GetCurrentTarget()->IsAlive() || !minionCharacter->CanSeeOtherCharacter(minionCharacter->GetCurrentTarget()) || !minionCharacter->GetCurrentTarget()->IsTargetable() || distsq > FMath::Square(aggroDistance))
 			NeedsNewCommand();
+		else if (distsq > FMath::Square(minionCharacter->GetCurrentValueForStat(EStat::ES_AARange)))
+			MoveToActor(minionCharacter->GetCurrentTarget(), minionCharacter->GetCurrentValueForStat(EStat::ES_AARange));
 		else
 			minionCharacter->StartAutoAttack();
 	}
+	else
+		NeedsNewCommand();
 }
 
 void ARealmForestMinionAI::NeedsNewCommand()

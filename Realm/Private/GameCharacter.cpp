@@ -1570,11 +1570,20 @@ void AGameCharacter::CalculateVisibility(TArray<AGameCharacter*>& sightList, TAr
 
 	//visibility based on the unit
 	TArray<AActor*> ignoreList;
+
 	for (AGameCharacter* gc : availableUnits)
 		ignoreList.AddUnique(gc);
 
 	for (AGameCharacter* gc : availableUnits)
 	{
+		TArray<AActor*> localIgnore = ignoreList;
+
+		if (gc->GetTeamIndex() == GetTeamIndex())
+		{
+			sightList.AddUnique(gc);
+			continue;
+		}
+
 		FVector start = GetActorLocation();
 		FVector end = gc->GetActorLocation();
 
@@ -1584,9 +1593,9 @@ void AGameCharacter::CalculateVisibility(TArray<AGameCharacter*>& sightList, TAr
 			FCollisionQueryParams collisionParams;
 
 			TArray<AActor*> ignoredActors = ignoreList;
-			ignoredActors.Remove(gc);
+			localIgnore.Remove(gc);
 
-			collisionParams.AddIgnoredActors(ignoredActors);
+			collisionParams.AddIgnoredActors(localIgnore);
 
 			GetWorld()->LineTraceSingleByChannel(hit, start, end, ECC_Visibility, collisionParams);
 
@@ -1771,8 +1780,8 @@ bool AGameCharacter::CanSeeOtherCharacter(AGameCharacter* testCharacter, bool bT
 	for (TObjectIterator<URealmFogofWarManager> Itr; Itr; ++Itr)
 	{
 		URealmFogofWarManager* fow = (*Itr);
-		if (IsValid(fow) && fow->teamIndex == GetTeamIndex())
-			return fow->enemySightList.Contains(testCharacter);
+		if (IsValid(fow))
+			return fow->CanUnitSeeOther(this, testCharacter);
 	}
 
 	return false;

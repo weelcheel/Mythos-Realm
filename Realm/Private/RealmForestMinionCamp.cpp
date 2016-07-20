@@ -39,6 +39,7 @@ void AForestCamp::SpawnMinions()
 
 		if (IsValid(mc) && IsValid(ai))
 		{
+			mc->SetTeamIndex(2);
 			ai->Possess(mc);
 			ai->homePosition = spawnPoints[i]->GetActorLocation();
 			ai->campSpawner = this;

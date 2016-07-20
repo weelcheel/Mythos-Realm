@@ -66,10 +66,16 @@ void AStealthArea::CalculateVisibility(AGameCharacter* calculatingUnit, TArray<A
 		if (occupyingUnits.Contains(gc)) //don't account for units in this area yet
 			continue;
 
+		if (gc->GetTeamIndex() == calculatingUnit->GetTeamIndex())
+		{
+			sightList.AddUnique(gc);
+			continue;
+		}
+
 		FVector start = GetActorLocation();
 		FVector end = gc->GetActorLocation();
 
-		if ((start - end).SizeSquared2D() <= FMath::Square(calculatingUnit->sightRadius * 1.5f))
+		if ((start - end).SizeSquared2D() <= FMath::Square(calculatingUnit->sightRadius * 1.15f))
 		{
 			FHitResult hit;
 			FCollisionQueryParams collisionParams;

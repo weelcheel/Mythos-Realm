@@ -47,6 +47,7 @@ class REALM_API ARealmGameMode : public AGameMode
 {
 	friend class URealmGameInstance;
 	friend class ARealmPlayerController;
+	friend class URealmFogofWarManager;
 
 	GENERATED_UCLASS_BODY()
 
@@ -158,6 +159,7 @@ protected:
 	float ambientLevelUpTime;
 
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	/* each time a player logs in, check to see if we can start the game */
 	void CheckForCharacterSelect();
@@ -194,9 +196,9 @@ protected:
 
 public:
 
-	/* array of sight managers for each team */
+	/* sight manager for teams */
 	UPROPERTY(BlueprintReadOnly, Category = Sight)
-	TArray<URealmFogofWarManager*> teamFoWs;
+	URealmFogofWarManager* fogOfWar;
 
 	/* pool of characters that are currently available for sight in this game */
 	UPROPERTY(BlueprintReadOnly, Category = Sight)
