@@ -35,7 +35,7 @@ void URealmFogofWarManager::CalculateTeamVisibility()
 	for (FConstPlayerControllerIterator Iterator = gameWorld->GetPlayerControllerIterator(); Iterator; ++Iterator)
 	{
 		ARealmPlayerController* pc = Cast<ARealmPlayerController>(*Iterator);
-		if (IsValid(pc) && IsValid(pc->GetPlayerCharacter()))
+		if (IsValid(pc) && IsValid(pc->GetPlayerCharacter()) && enemySightLists[pc->GetPlayerCharacter()->GetTeamIndex()].sightList.Num() > 0)
 			pc->sightList = enemySightLists[pc->GetPlayerCharacter()->GetTeamIndex()].sightList;
 	}
 }

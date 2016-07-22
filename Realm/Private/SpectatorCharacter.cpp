@@ -3,6 +3,7 @@
 #include "RealmPlayerController.h"
 #include "PlayerCharacter.h"
 #include "GameCharacter.h"
+#include "PlayerHUD.h"
 
 ASpectatorCharacter::ASpectatorCharacter(const FObjectInitializer& objectInitializer)
 :Super(objectInitializer)
@@ -97,6 +98,10 @@ void ASpectatorCharacter::SetupPlayerInputComponent(class UInputComponent* Input
 
 	//chat
 	InputComponent->BindAction("PlayerToggleChat", IE_Pressed, this, &ASpectatorCharacter::OnToggleChat);
+
+	//scoreboard
+	InputComponent->BindAction("ToggleScoreboard", IE_Pressed, this, &ASpectatorCharacter::OnShowScoreboard);
+	InputComponent->BindAction("ToggleScoreboard", IE_Released, this, &ASpectatorCharacter::OnHideScoreboard);
 
 	//camera
 	InputComponent->BindAction("CameraZoomIn", IE_Pressed, this, &ASpectatorCharacter::OnCameraZoomIn);
@@ -378,4 +383,26 @@ void ASpectatorCharacter::OnCameraZoomOut()
 		zoomFactor = 1.f;
 	else
 		zoomFactor += 0.05f;
+}
+
+void ASpectatorCharacter::OnShowScoreboard()
+{
+	ARealmPlayerController* pc = Cast<ARealmPlayerController>(GetController());
+	if (!IsValid(pc))
+		return;
+
+	APlayerHUD* hud = Cast<APlayerHUD>(pc->GetHUD());
+	if (IsValid(hud))
+		hud->ShowScoreboard();
+}
+
+void ASpectatorCharacter::OnHideScoreboard()
+{
+	ARealmPlayerController* pc = Cast<ARealmPlayerController>(GetController());
+	if (!IsValid(pc))
+		return;
+
+	APlayerHUD* hud = Cast<APlayerHUD>(pc->GetHUD());
+	if (IsValid(hud))
+		hud->HideScoreboard();
 }

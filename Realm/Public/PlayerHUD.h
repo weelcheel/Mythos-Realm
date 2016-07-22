@@ -126,6 +126,14 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = Minimap)
 	void OnMinimapVisibleCharactersUpdate(const TArray<FMinimapEntry>& visibleCharacters);
 
+	/* called to show the scoreboard */
+	UFUNCTION(BlueprintImplementableEvent, Category = Scoreboard)
+	void ShowScoreboard();
+
+	/* called to hide the scoreboard */
+	UFUNCTION(BlueprintImplementableEvent, Category = Scoreboard)
+	void HideScoreboard();
+
 	//Float as FText With Precision!
 	UFUNCTION(BlueprintCallable, Category=FloatPrecision)
 	static FText GetFloatAsTextWithPrecision(float TheFloat, int32 Precision, bool IncludeLeadingZero = true)

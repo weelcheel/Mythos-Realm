@@ -150,6 +150,12 @@ protected:
 	/* toggle chat mode for the player */
 	void OnToggleChat();
 
+	/* shows the scoreboard for the player */
+	void OnShowScoreboard();
+
+	/* hides the scoreboard from the player */
+	void OnHideScoreboard();
+
 	/* server set location, useful for things with the camera */
 	UFUNCTION(reliable, server, WithValidation)
 	void ServerSetLocation(FVector newLocation, AActor* attachActor = nullptr);
