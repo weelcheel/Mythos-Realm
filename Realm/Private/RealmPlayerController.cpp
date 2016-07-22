@@ -634,6 +634,13 @@ void ARealmPlayerController::ServerReceiveChat_Implementation(const FRealmChatEn
 		gs->BroadcastChat(broadcastChat);
 }
 
+void ARealmPlayerController::CharacterChosenForGame_Implementation(ARealmPlayerState* choosingPlayer, TSubclassOf<APlayerCharacter> chosenCharacter)
+{
+	APlayerHUD* hud = Cast<APlayerHUD>(GetHUD());
+	if (IsValid(hud))
+		hud->CharacterSelected(choosingPlayer, chosenCharacter);
+}
+
 void ARealmPlayerController::GameEnded()
 {
 	

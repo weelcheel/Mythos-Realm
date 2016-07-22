@@ -27,9 +27,6 @@ bool FRealmSocketListener::Init()
 
 uint32 FRealmSocketListener::Run()
 {
-	//Initial wait before starting
-	FPlatformProcess::Sleep(0.03);
-
 	while (stopListenerThread.GetValue() == 0)
 	{
 		if (!listenSocket)
@@ -54,6 +51,9 @@ uint32 FRealmSocketListener::Run()
 		}
 
 		dataQueue.Enqueue(ReceivedData);
+
+		//Initial wait before starting
+		FPlatformProcess::Sleep(0.03);
 	}
 
 	return 0;

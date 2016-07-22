@@ -164,6 +164,10 @@ public:
 	UFUNCTION(reliable, server, WithValidation)
 	void ServerStopBaseTeleport();
 
+	/* [CLIENT] game mode has let us know that a character has been chosen so we can update UI */
+	UFUNCTION(reliable, client)
+	void CharacterChosenForGame(ARealmPlayerState* choosingPlayer, TSubclassOf<APlayerCharacter> chosenCharacter);
+
 	/* [ALL] base teleport multicast */
 	void StartBaseTeleport(bool bStarting);
 

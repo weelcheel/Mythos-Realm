@@ -73,7 +73,7 @@ void ARealmGameMode::StartMatch()
 	}
 
 	FTimerHandle h;
-	GetWorldTimerManager().SetTimer(h, this, &ARealmGameMode::StartCreditIncome, 5.f, false);
+	GetWorldTimerManager().SetTimer(h, this, &ARealmGameMode::StartCreditIncome, 15.f, false);
 
 	FTimerHandle j, warningTimer;
 	GetWorldTimerManager().SetTimer(j, this, &ARealmGameMode::AmbientGameLevelUp, ambientLevelUpTime, true);
@@ -400,8 +400,43 @@ void ARealmGameMode::PlayerSelectedCharacter(ARealmPlayerController* player, TSu
 		return;
 
 	ARealmPlayerState* ps = Cast<ARealmPlayerState>(player->PlayerState);
-	if (IsValid(ps))
-		ps->SetChosenCharacterClass(characterClass);
+	if (!IsValid(ps))
+		return;
+
+	int32 teamInd = ps->GetTeamIndex();
+	switch (selectMode)
+	{
+	case ECharacterSelectMode::CSM_OnePerGame: //don't let players choose characters that have already been chosen in the game
+		for (FTeam team : teams)
+		{
+			if (team.chosenCharacters.Contains(characterClass))
+				return;
+		}
+		break;
+	case ECharacterSelectMode::CSM_OnePerTeam: //don't let players choose characters that have already been chosen for their team
+		if (teams[teamInd].chosenCharacters.Contains(characterClass))
+			return;
+		break;
+	case ECharacterSelectMode::CSM_Any: //no character copy limits
+		break;
+	}
+
+	//now add the chosen character class to the right array
+	teams[teamInd].chosenCharacters.AddUnique(characterClass);
+
+	for (FConstPlayerControllerIterator plyrItr = GetWorld()->GetPlayerControllerIterator(); plyrItr; ++plyrItr)
+	{
+		ARealmPlayerController* pc = Cast<ARealmPlayerController>((*plyrItr));
+		ARealmPlayerState* pcs = Cast<ARealmPlayerState>(pc->PlayerState);
+
+		if (!IsValid(pcs))
+			continue;
+
+		if (IsValid(pc) && (selectMode == ECharacterSelectMode::CSM_OnePerGame || (selectMode == ECharacterSelectMode::CSM_OnePerTeam && pcs->GetTeamIndex() == teamInd)))
+			pc->CharacterChosenForGame(ps, characterClass);
+	}
+
+	ps->SetChosenCharacterClass(characterClass);
 
 	CheckForAllCharactersSelected();
 }

@@ -9,6 +9,7 @@
 class AGameCharacter;
 class ARealmPlayerState;
 class AMinimapActor;
+class APlayerCharacter;
 
 USTRUCT()
 struct FUIDamage
@@ -133,6 +134,10 @@ public:
 	/* called to hide the scoreboard */
 	UFUNCTION(BlueprintImplementableEvent, Category = Scoreboard)
 	void HideScoreboard();
+
+	/* called whenever someone chooses a character in character select */
+	UFUNCTION(BlueprintImplementableEvent, Category = CharacterSelect)
+	void CharacterSelected(ARealmPlayerState* choosingPlayer, TSubclassOf<APlayerCharacter> chosenCharacter);
 
 	//Float as FText With Precision!
 	UFUNCTION(BlueprintCallable, Category=FloatPrecision)

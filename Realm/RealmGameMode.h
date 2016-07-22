@@ -27,6 +27,15 @@ enum class EGameStatus : uint8
 	GS_MAX
 };
 
+UENUM(BlueprintType)
+enum class ECharacterSelectMode : uint8
+{
+	CSM_Any UMETA(DisplayName = "No Mythos Limits"),
+	CSM_OnePerTeam UMETA(DisplayName = "One Mythos per Team"),
+	CSM_OnePerGame UMETA(DisplayName = "One Mythos per Match"),
+	CSM_MAX UMETA(Hidden)
+};
+
 USTRUCT()
 struct FTeam
 {
@@ -37,6 +46,9 @@ struct FTeam
 
 	/* avreage level of the players on the team */
 	int32 averageTeamLevel;
+
+	/* what characters have been selected this match for this team */
+	TArray<TSubclassOf<APlayerCharacter> > chosenCharacters;
 };
 
 /**
@@ -99,6 +111,10 @@ protected:
 	/* amount of time between the death of the last spawned raider and when the next one spawns */
 	UPROPERTY(EditDefaultsOnly, Category = Raiders)
 	float raiderRespawnDelay;
+
+	/* what the restrictions for mythos select are for this game mode */
+	UPROPERTY(EditDefaultsOnly, Category = SelectMode)
+	ECharacterSelectMode selectMode;
 
 	/* timer for raider respawn */
 	FTimerHandle raiderSpawnTimer;

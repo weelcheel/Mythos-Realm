@@ -11,11 +11,7 @@ URealmGameInstance::URealmGameInstance(const FObjectInitializer& objectInitializ
 
 URealmGameInstance::~URealmGameInstance()
 {
-	if (loginSocketThread)
-		loginSocketThread->EnsureCompletion();
-
-	if (multiplayerSocketThread)
-	multiplayerSocketThread->EnsureCompletion();
+	
 }
 
 FString URealmGameInstance::StringFromBinaryArray(const TArray<uint8>& BinaryArray)
@@ -259,6 +255,12 @@ void URealmGameInstance::ParseMultiplayerSocketData(const TArray<uint8>& Receive
 		{
 			mm->FoundConfirmedMatch(data[1]);
 			UE_LOG(LogTemp, Warning, TEXT("MM found a confirmed match"));
+
+			if (loginSocketThread)
+				loginSocketThread->EnsureCompletion();
+
+			if (multiplayerSocketThread)
+				multiplayerSocketThread->EnsureCompletion();
 		}
 		if (data[0].Equals("matchConfirmFailed"))
 		{
