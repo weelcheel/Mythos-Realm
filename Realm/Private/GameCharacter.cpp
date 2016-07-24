@@ -249,7 +249,7 @@ void AGameCharacter::OnRep_LastTakeHitInfo()
 
 bool AGameCharacter::CanMove() const
 {
-	return (currentAilment.newAilment != EAilment::AL_Knockup && currentAilment.newAilment != EAilment::AL_Stun && bAcceptingMoveCommands && GetCharacterMovement()->MovementMode == MOVE_Walking && !bActionPreventingMovement);
+	return (currentAilment.newAilment != EAilment::AL_Knockup && currentAilment.newAilment != EAilment::AL_Stun && currentAilment.newAilment != EAilment::AL_Snare && bAcceptingMoveCommands && GetCharacterMovement()->MovementMode == MOVE_Walking && !bActionPreventingMovement);
 }
 
 bool AGameCharacter::CanAutoAttack() const
@@ -273,6 +273,9 @@ void AGameCharacter::UseSkill_Implementation(int32 index, FVector mouseHitLoc, A
 		return;
 
 	if (!IsAlive())
+		return;
+
+	if (currentAilment.newAilment == EAilment::AL_Snare && skillManager->GetSkill(index)->Tags.Contains(TEXT("moving")))
 		return;
 
 	ESkillState skillState = skillManager->GetSkill(index)->GetSkillState();

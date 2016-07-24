@@ -20,7 +20,7 @@ public:
 
 	/* attempts to contact the login server to create a new account with the provided credentials */
 	UFUNCTION(BlueprintCallable, Category = PlayerLogin)
-	bool AttemptCreateLogin(FString username, FString password, FString email, FString ingameAlias);
+	bool AttemptCreateLogin(FString username, FString password, FString email, FString ingameAlias, FString alphaCode);
 
 	/* attempts to join the specified matchmaking queue */
 	UFUNCTION(BlueprintCallable, Category = PlayerLogin)

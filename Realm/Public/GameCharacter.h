@@ -29,6 +29,7 @@ enum class EAilment : uint8
 	AL_Stun UMETA(DisplayName = "Stunned"),
 	AL_Neutral UMETA(DisplayName = "Neutralized"),
 	AL_Blind UMETA(DisplayName = "Blinded"),
+	AL_Snare UMETA(DisplayName = "Snared"),
 	AL_Max UMETA(Hidden)
 };
 

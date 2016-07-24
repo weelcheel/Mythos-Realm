@@ -26,11 +26,11 @@ bool ARealmMainMenu::AttemptLogin(FString username, FString password)
 	return false;
 }
 
-bool ARealmMainMenu::AttemptCreateLogin(FString username, FString password, FString email, FString ingameAlias)
+bool ARealmMainMenu::AttemptCreateLogin(FString username, FString password, FString email, FString ingameAlias, FString alphaCode)
 {
 	URealmGameInstance* gi = Cast<URealmGameInstance>(GetGameInstance());
 	if (gi)
-		return gi->AttemptCreateLogin(username, password, email, ingameAlias);
+		return gi->AttemptCreateLogin(username, password, email, ingameAlias, alphaCode);
 	
 	return false;
 }

@@ -67,7 +67,7 @@ public:
 	bool AttemptLogin(FString username, FString password);
 
 	/* attempts to contact the login server to create a new account with the provided credentials */
-	bool AttemptCreateLogin(FString username, FString password, FString email, FString ingameAlias);
+	bool AttemptCreateLogin(FString& username, FString& password, FString& email, FString& ingameAlias, FString& alphaCode);
 
 	/* attempts to join solo queue */
 	bool AttemptJoinSoloMMQueue(const FString& queue);

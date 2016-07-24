@@ -11,7 +11,11 @@ URealmGameInstance::URealmGameInstance(const FObjectInitializer& objectInitializ
 
 URealmGameInstance::~URealmGameInstance()
 {
-	
+	if (loginSocketThread)
+		loginSocketThread->EnsureCompletion();
+
+	if (multiplayerSocketThread)
+		multiplayerSocketThread->EnsureCompletion();
 }
 
 FString URealmGameInstance::StringFromBinaryArray(const TArray<uint8>& BinaryArray)
@@ -27,7 +31,7 @@ bool URealmGameInstance::ConnectLoginSocket()
 	if (!loginSocketThread || !loginSocket || loginSocket->GetConnectionState() != SCS_Connected)
 	{
 		FSocket* ls = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(NAME_Stream, TEXT("login"), false);
-		auto resolveInfo = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetHostByName("mythosrealm.ddns.net");
+		auto resolveInfo = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetHostByName("realmmythos.ddns.net");
 
 		while (!resolveInfo->IsComplete());
 
@@ -60,6 +64,9 @@ bool URealmGameInstance::ConnectLoginSocket()
 			return false;
 		}
 
+		if (loginSocketThread)
+			loginSocketThread->EnsureCompletion();
+
 		loginSocketThread = FRealmSocketListener::CreateListener(ls, true);
 		loginSocketThread->gameInstance = this;
 		loginSocket = ls;
@@ -81,7 +88,7 @@ bool URealmGameInstance::ConnectMultiplayerSocket()
 	if (!multiplayerSocketThread || !multiplayerSocket || multiplayerSocket->GetConnectionState() != SCS_Connected)
 	{
 		FSocket* ms = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(NAME_Stream, TEXT("multiplayer"), false);
-		auto resolveInfo = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetHostByName("mythosrealm.ddns.net");
+		auto resolveInfo = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetHostByName("realmmythos.ddns.net");
 
 		while (!resolveInfo->IsComplete());
 
@@ -114,6 +121,9 @@ bool URealmGameInstance::ConnectMultiplayerSocket()
 			UE_LOG(LogTemp, Warning, TEXT("failed to connect to the multiplayer server"));
 			return false;
 		}
+
+		if (multiplayerSocketThread)
+			multiplayerSocketThread->EnsureCompletion();
 
 		multiplayerSocketThread = FRealmSocketListener::CreateListener(ms, false);
 		multiplayerSocketThread->gameInstance = this;
@@ -255,12 +265,6 @@ void URealmGameInstance::ParseMultiplayerSocketData(const TArray<uint8>& Receive
 		{
 			mm->FoundConfirmedMatch(data[1]);
 			UE_LOG(LogTemp, Warning, TEXT("MM found a confirmed match"));
-
-			if (loginSocketThread)
-				loginSocketThread->EnsureCompletion();
-
-			if (multiplayerSocketThread)
-				multiplayerSocketThread->EnsureCompletion();
 		}
 		if (data[0].Equals("matchConfirmFailed"))
 		{
@@ -313,7 +317,7 @@ bool URealmGameInstance::AttemptLogin(FString username, FString password)
 	return true;
 }
 
-bool URealmGameInstance::AttemptCreateLogin(FString username, FString password, FString email, FString ingameAlias)
+bool URealmGameInstance::AttemptCreateLogin(FString& username, FString& password, FString& email, FString& ingameAlias, FString& alphaCode)
 {
 	if (!ConnectLoginSocket())
 		return false;
@@ -334,6 +338,7 @@ bool URealmGameInstance::AttemptCreateLogin(FString username, FString password, 
 	sendStr += pwdStr;
 	sendStr += "|email|" + email;
 	sendStr += "|ingame|" + ingameAlias;
+	sendStr += "|alphaCode|" + alphaCode;
 
 	//send the encrypted data to the login server
 	TCHAR *serializedChar = sendStr.GetCharArray().GetData();
