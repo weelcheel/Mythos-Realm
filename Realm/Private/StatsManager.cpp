@@ -55,7 +55,7 @@ float UStatsManager::GetUnaffectedValueForStat(EStat stat) const
 	return baseStats[(int32)stat] + modStats[(int32)stat];
 }
 
-AEffect* UStatsManager::AddEffect(FText const& effectName, FText const& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration, FString const& keyName, bool bStacking, bool bMultipleInfliction, bool bPersistThroughDeath)
+AEffect* UStatsManager::AddEffect(FText const& effectName, FText const& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration, FString const& keyName, bool bStacking, bool bMultipleInfliction, bool bPersistThroughDeath, UParticleSystem* effectParticle)
 {
 	if (!IsValid(owningCharacter) || (IsValid(owningCharacter) && !owningCharacter->IsAlive())) //return if the character isnt valid or dead
 		return nullptr;
@@ -76,6 +76,9 @@ AEffect* UStatsManager::AddEffect(FText const& effectName, FText const& effectDe
 	newEffect->bCanBeInflictedMultipleTimes = bMultipleInfliction;
 	newEffect->statsManager = this;
 	newEffect->bPersistThroughDeath = bPersistThroughDeath;
+	newEffect->effectParticle = effectParticle;
+
+	newEffect->currentEmitter = UGameplayStatics::SpawnEmitterAttached(effectParticle, owningCharacter->GetRootComponent());
 
 	if (owningCharacter->HasAuthority())
 	{
@@ -121,10 +124,17 @@ void UStatsManager::EffectFinished(FString key)
 		}
 	}
 
+	if (IsValid(effect->currentEmitter))
+	{
+		effect->currentEmitter->DeactivateSystem();
+		effect->currentEmitter->DestroyComponent();
+	}
+		
+
 	effectsMap.Remove(key);
 	effectsList.Remove(effect);
 
-	effect->Destroy(true);
+	effect->SetLifeSpan(0.05f);
 
 	if (IsValid(owningCharacter) && (owningCharacter->GetWorld()->GetNetMode() == NM_Standalone || owningCharacter->GetWorld()->GetNetMode() == NM_ListenServer))
 		owningCharacter->EffectsUpdated();
@@ -214,20 +224,30 @@ void UStatsManager::OnRepUpdateEffects()
 	//check for removed effects
 	for (auto it = effectsMap.CreateIterator(); it; ++it)
 	{
-		bool bEffectFound = false;
+		AEffect* hashEffect = it.Value();
+
+		if (!IsValid(hashEffect))
+			continue;
+
+		bool bFoundEffect = false;
 		for (int32 i = 0; i < effectsList.Num(); i++)
 		{
-			if (!IsValid(effectsList[i]))
-				continue;
-
-			bEffectFound = effectsList[i]->GetName() == it.Key();
-
-			if (bEffectFound)
+			bFoundEffect = effectsList[i]->GetName() == hashEffect->GetName();
+			if (bFoundEffect)
 				break;
 		}
 
-		if (!bEffectFound)
+		if (!bFoundEffect)
+		{
+			if (IsValid(hashEffect->currentEmitter))
+			{
+				hashEffect->currentEmitter->DeactivateSystem();
+				hashEffect->currentEmitter->DestroyComponent();
+			}
+
+			hashEffect->Destroy(true);
 			effectsMap.Remove(it.Key());
+		}
 	}
 
 	//add new effects
@@ -237,12 +257,12 @@ void UStatsManager::OnRepUpdateEffects()
 		if (!IsValid(eff))
 			continue;
 
-		bool bEffectFound = false;
-		for (auto it = effectsMap.CreateIterator(); it; ++it)
-			bEffectFound = it.Key() == effectsList[i]->GetName();
-
-		if (!bEffectFound)
-			effectsMap.Add(effectsList[i]->GetName(), effectsList[i]);
+		if (!effectsMap.Contains(eff->GetName()))
+		{
+			if (IsValid(eff->effectParticle))
+				eff->currentEmitter = UGameplayStatics::SpawnEmitterAttached(eff->effectParticle, owningCharacter->GetRootComponent());
+			effectsMap.Add(eff->GetName(), eff);
+		}
 	}
 
 	if (IsValid(owningCharacter))

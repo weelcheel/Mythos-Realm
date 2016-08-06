@@ -44,4 +44,5 @@ void AEffect::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifeti
 	DOREPLIFETIME_CONDITION(AEffect, bStacking, COND_InitialOnly);
 	DOREPLIFETIME(AEffect, stackAmount);
 	DOREPLIFETIME(AEffect, bTimerReset);
+	DOREPLIFETIME(AEffect, effectParticle);
 }

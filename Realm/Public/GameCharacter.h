@@ -109,7 +109,7 @@ class AGameCharacter : public ARealmCharacter
 protected:
 
 	/* character data (so we can have variants of the same character, like different character skins for example) */
-	UPROPERTY(EditDefaultsOnly, Category = Stats)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Stats)
 	TSubclassOf<UGameCharacterData> characterData;
 
 	/* current target for this character */
@@ -451,7 +451,7 @@ public:
 
 	/* add buff/debuff to the player's stats */
 	UFUNCTION(BlueprintCallable, Category = Stat)
-	AEffect* AddEffect(const FText& effectName, const FText& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration = 0.f, FString const& keyName = "", bool bStacking = false, bool bMultipleInfliction = false, bool bPersistThroughDeath = false);
+	AEffect* AddEffect(const FText& effectName, const FText& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration = 0.f, FString const& keyName = "", bool bStacking = false, bool bMultipleInfliction = false, bool bPersistThroughDeath = false, UParticleSystem* effectParticle = nullptr);
 
 	UFUNCTION(BlueprintCallable, Category = Stat)
 	void AddEffectStacks( const FString& effectKey,  int32 stackAmount);
@@ -534,6 +534,10 @@ public:
 	/* removes a mod from character and updates stats */
 	UFUNCTION(BlueprintCallable, Category = Mods)
 	void RemoveMod(int32 index);
+
+	/* removes a mod from character and updates stats */
+	UFUNCTION(BlueprintCallable, Category = Mods)
+	void RemoveModInstance(AMod* mod);
 
 	/* get mod count */
 	UFUNCTION(BlueprintCallable, Category = Mods)
@@ -644,6 +648,10 @@ public:
 	UFUNCTION(BlueprintCallable, NetMulticast, reliable, Category = Action)
 	void ApplyCharacterAction(const FString& actionName, float actionDuration, bool bReverseProgressBar = false, bool bPreventCombat = false, bool bPreventMovement = false);
 
+	/* clears any action that this unit is currently performing */
+	UFUNCTION(BlueprintCallable, NetMulticast, reliable, Category = Action)
+	void ClearCurrentAction();
+
 	/* initiate the character's stats to the specified level */
 	void InitCharacterStatsForLevel(int32 level);
 
@@ -746,4 +754,8 @@ public:
 	/* whether or not this character is inflicted with the specified dot */
 	UFUNCTION(BlueprintCallable, Category = Damage)
 	bool HasSpecifiedDoT(FString dotKey);
+
+	/* static function to get this unit's portrait if it has one */
+	UFUNCTION(BlueprintCallable, Category = Portrait)
+	static UTexture2D* GetCharacterPortrait(TSubclassOf<AGameCharacter> characterClass);
 };

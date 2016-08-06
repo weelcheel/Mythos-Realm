@@ -190,4 +190,8 @@ public:
 	/* get the ground location beneath the specified point */
 	UFUNCTION(BlueprintCallable, Category = Skill)
 	FVector GetGroundLocationBeneathPoint(FVector point);
+
+	/* event that the player controller calls when the player is providing movement input while this skill is performing (useful for aiming, etc.) */
+	UFUNCTION(BlueprintImplementableEvent, Category = Skill)
+	void TargetInputReceivedWhilePerforming(const FHitResult& hitData);
 };

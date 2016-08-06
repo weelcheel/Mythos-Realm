@@ -42,6 +42,13 @@ public:
 	UPROPERTY()
 	UStatsManager* statsManager;
 
+	/* effect system that spawns attached to the effected character */
+	UPROPERTY(replicated)
+	UParticleSystem* effectParticle;
+
+	/* current emitter being used for this effect */
+	UParticleSystemComponent* currentEmitter;
+
 	/* does this effect persist through death? */
 	UPROPERTY(BlueprintReadWrite, Category = Effect)
 	bool bPersistThroughDeath = false;

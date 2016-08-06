@@ -136,6 +136,22 @@ void ARealmPlayerController::ServerMoveCommand_Implementation(FVector_NetQuantiz
 	}
 }
 
+bool ARealmPlayerController::ServerProcessSkillInputData_Validate(const FHitResult& targetData)
+{
+	return true;
+}
+
+void ARealmPlayerController::ServerProcessSkillInputData_Implementation(const FHitResult& targetData)
+{
+	TArray<ASkill*> skills;
+	playerCharacter->GetSkillManager()->GetSkills(skills);
+	for (ASkill* skill : skills)
+	{
+		if (skill->GetSkillState() == ESkillState::Performing)
+			skill->TargetInputReceivedWhilePerforming(targetData);
+	}
+}
+
 bool ARealmPlayerController::ServerStartAutoAttack_Validate(AGameCharacter* target)
 {
 	return true;
@@ -420,8 +436,7 @@ bool ARealmPlayerController::SelectUnitUnderMouse(ECollisionChannel TraceChannel
 	TArray<FHitResult> hits;
 	if (GetUnitsUnderMouse(ECC_Camera, true, hits))
 	{
-		//select order: 1) enemy units 2) friendly units 3)self
-		FHitResult selectedHit;
+		FHitResult friendlyUnit, otherUnit;
 
 		for (FHitResult testHit : hits)
 		{
@@ -434,44 +449,21 @@ bool ARealmPlayerController::SelectUnitUnderMouse(ECollisionChannel TraceChannel
 
 			if (gc->GetTeamIndex() != GetPlayerCharacter()->GetTeamIndex())
 			{
-				AGameCharacter* sel = Cast<AGameCharacter>(selectedHit.GetActor());
-				if (IsValid(sel))
-				{
-					if (sel->GetTeamIndex() == GetPlayerCharacter()->GetTeamIndex() || sel == GetPlayerCharacter())
-						selectedHit = testHit;
-				}
-				else
-					selectedHit = testHit;
-
-				continue;
+				chosenHit = testHit;
+				return true;
 			}
-
-			if (gc->GetTeamIndex() == GetPlayerCharacter()->GetTeamIndex())
-			{
-				AGameCharacter* sel = Cast<AGameCharacter>(selectedHit.GetActor());
-				if (IsValid(sel))
-				{
-					if (sel == GetPlayerCharacter())
-						selectedHit = testHit;
-				}
-				else
-					selectedHit = testHit;
-
-				continue;
-			}
-
-			if (gc == GetPlayerCharacter())
-			{
-				AGameCharacter* sel = Cast<AGameCharacter>(selectedHit.GetActor());
-				if (!IsValid(sel))
-					selectedHit = testHit;
-			}
+			else if (gc != GetPlayerCharacter())
+				friendlyUnit = testHit;
+			else
+				otherUnit = testHit;
 		}
 
-		if (!IsValid(selectedHit.GetActor()))
-			selectedHit = hits[hits.Num() - 1];
+		//select order: 1) enemy units 2) friendly units 3)self
+		if (IsValid(friendlyUnit.GetComponent()))
+			chosenHit = friendlyUnit;
+		else
+			chosenHit = hits[hits.Num() - 1];
 
-		chosenHit = selectedHit;
 		return true;
 	}
 

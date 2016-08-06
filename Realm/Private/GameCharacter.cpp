@@ -259,7 +259,7 @@ bool AGameCharacter::CanAutoAttack() const
 
 bool AGameCharacter::CanPerformSkills() const
 {
-	return currentAilment.newAilment != EAilment::AL_Stun && GetWorldTimerManager().GetTimerRemaining(actionTimer) <= 0.f && !bActionPreventingCombat;
+	return currentAilment.newAilment != EAilment::AL_Stun;
 }
 
 bool AGameCharacter::UseSkill_Validate(int32 index, FVector mouseHitLoc, AGameCharacter* unitTarget)
@@ -287,6 +287,9 @@ void AGameCharacter::UseSkill_Implementation(int32 index, FVector mouseHitLoc, A
 		skillManager->GetSkill(index)->InterruptSkill(ESkillInterruptReason::SIR_UserCancelled, mouseHitLoc);
 		return;
 	}
+
+	if (GetWorldTimerManager().GetTimerRemaining(actionTimer) > 0.f || bActionPreventingCombat)
+		return;
 
 	float curr = statsManager->GetFlare();
 	float diff = curr - skillManager->GetSkill(index)->GetCost();
@@ -700,10 +703,10 @@ float AGameCharacter::GetUnaffectedValueForStat(EStat stat) const
 		return -1.f;
 }
 
-AEffect* AGameCharacter::AddEffect(const FText& effectName, const FText& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration, FString const& keyName, bool bStacking, bool bMultipleInfliction, bool bPersistThroughDeath)
+AEffect* AGameCharacter::AddEffect(const FText& effectName, const FText& effectDescription, const TArray<TEnumAsByte<EStat> >& stats, const TArray<float>& amounts, float effectDuration, FString const& keyName, bool bStacking, bool bMultipleInfliction, bool bPersistThroughDeath, UParticleSystem* effectParticle)
 {
 	if (Role == ROLE_Authority && statsManager)
-		return statsManager->AddEffect(effectName, effectDescription, stats, amounts, effectDuration, keyName, bStacking, bMultipleInfliction, bPersistThroughDeath);
+		return statsManager->AddEffect(effectName, effectDescription, stats, amounts, effectDuration, keyName, bStacking, bMultipleInfliction, bPersistThroughDeath, effectParticle);
 	else
 		return nullptr;
 }
@@ -1341,6 +1344,12 @@ void AGameCharacter::RemoveMod(int32 index)
 	statsManager->UpdateModStats(mods);
 }
 
+void AGameCharacter::RemoveModInstance(AMod* mod)
+{
+	if (mods.Remove(mod) > 0)
+		statsManager->UpdateModStats(mods);
+}
+
 int32 AGameCharacter::GetModCount()
 {
 	return mods.Num();
@@ -1647,6 +1656,12 @@ void AGameCharacter::ApplyCharacterAction_Implementation(const FString& actionNa
 		GetWorldTimerManager().SetTimer(actionTimer, actionDuration, false);
 }
 
+void AGameCharacter::ClearCurrentAction_Implementation()
+{
+	GetWorldTimerManager().ClearTimer(actionTimer);
+	CharacterActionFinished();
+}
+
 void AGameCharacter::CharacterActionFinished()
 {
 	bActionPreventingCombat = false;
@@ -1799,6 +1814,19 @@ void AGameCharacter::SetGloabalAnimRate(float newAnimRate)
 bool AGameCharacter::HasSpecifiedDoT(FString dotKey)
 {
 	return dotEvents.Contains(dotKey);
+}
+
+UTexture2D* AGameCharacter::GetCharacterPortrait(TSubclassOf<AGameCharacter> characterClass)
+{
+	AGameCharacter* gc = characterClass->GetDefaultObject<AGameCharacter>();
+	UGameCharacterData* data = nullptr;
+
+	if (IsValid(gc))
+		data = gc->characterData->GetDefaultObject<UGameCharacterData>();
+	else
+		return nullptr;
+
+	return IsValid(data) ? data->portrait : nullptr;
 }
 
 //----------------------------------------------------------REPLICATION FUNCTIONS----------------------------------------------------------

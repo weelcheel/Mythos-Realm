@@ -9,7 +9,7 @@ ASkill::ASkill(const FObjectInitializer& objectInitializer)
 {
 	skillState = ESkillState::NoOwner;
 	bAutoPerform = true;
-	bAutoCooldownOnInterrupt = true;
+	bAutoCooldownOnInterrupt = false;
 
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.TickGroup = TG_PrePhysics;

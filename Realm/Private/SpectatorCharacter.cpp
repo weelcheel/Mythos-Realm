@@ -222,8 +222,9 @@ void ASpectatorCharacter::CalculateDirectedMove()
 
 	if (pc && pc->SelectUnitUnderMouse(ECC_Visibility, true, hit))
 	{
+		pc->ServerProcessSkillInputData(hit);
 		AGameCharacter* gc = Cast<AGameCharacter>(hit.GetActor());
-		if (IsValid(gc) && gc->IsAlive() && gc != pc->GetPlayerCharacter() && !gc->bHidden)
+		if (IsValid(gc) && gc->IsAlive() && !gc->bHidden)
 		{
 			int32 team1 = gc->GetTeamIndex();
 			int32 team2 = pc->GetPlayerCharacter()->GetTeamIndex();
@@ -233,8 +234,6 @@ void ASpectatorCharacter::CalculateDirectedMove()
 			else
 				pc->ServerMoveCommand(hit.ImpactPoint);
 		}
-		else if (gc == pc->GetPlayerCharacter())
-			return;
 		else
 			pc->ServerMoveCommand(hit.ImpactPoint);
 	}

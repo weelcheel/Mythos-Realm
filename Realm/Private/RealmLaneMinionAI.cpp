@@ -69,13 +69,28 @@ void ARealmLaneMinionAI::OnTargetEnterRadius(class APawn* pawn)
 	//check for objective reaching
 	if (gc->IsA(ARealmObjective::StaticClass()))
 	{
-		if (IsValid(objectiveTarget) && objectiveTarget == gc)
+		if (objectiveTarget == gc)
 		{
 			objectives.Dequeue(objectiveTarget);
-			if (!IsValid(minionCharacter->GetCurrentTarget()) && gc->GetTeamIndex() == minionCharacter->GetTeamIndex())
+			if (!IsValid(minionCharacter->GetCurrentTarget()) && gc->GetTeamIndex() != minionCharacter->GetTeamIndex())
+			{
+				ELaneMinionTargetPriority priority;
+
+				gc->IsA(APlayerCharacter::StaticClass()) ? priority = ELaneMinionTargetPriority::LMTP_ClosestMythos : priority = ELaneMinionTargetPriority::LMTP_ClosestMinion;
+				if (gc->IsA(ARealmObjective::StaticClass()))
+					priority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
+
+				SetNewTarget(gc, priority);
+				minionCharacter->StartAutoAttack();
+
+				GetWorldTimerManager().SetTimer(rangeTimer, this, &ARealmLaneMinionAI::ReevaluateTargets, 0.33f, true);
+
+				return;
+			}
+			else
 			{
 				MoveToActor(objectiveTarget);
-				return;
+				currentTargetPriority = ELaneMinionTargetPriority::LMTP_ObjectiveTarget;
 			}
 		}
 	}

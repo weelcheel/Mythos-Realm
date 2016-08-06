@@ -21,4 +21,8 @@ public:
 
 	/* called by the server every time a player character hurts another player character. give them aggro if they're in range */
 	virtual void CheckDamage(FTakeHitInfo& damage);
+
+	/* don't give objectives experience; it won't work */
+	UFUNCTION(BlueprintCallable, Category = Exp)
+	virtual void GiveCharacterExperience(int32 amount) override;
 };

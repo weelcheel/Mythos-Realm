@@ -5,6 +5,8 @@
 UCLASS(ABSTRACT, Blueprintable)
 class UGameCharacterData : public UObject
 {
+	friend class AGameCharacter;
+
 	GENERATED_UCLASS_BODY()
 
 protected:

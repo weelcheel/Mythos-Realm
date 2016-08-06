@@ -100,6 +100,10 @@ public:
 	UFUNCTION(reliable, server, WithValidation)
 	void ServerClearAttackCommands();
 
+	/* [SERVER] send the input data from the player to skills that are being performed in case they need the data */
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerProcessSkillInputData(const FHitResult& targetData);
+
 	/* [SERVER] called when the player wants to use a skill */
 	UFUNCTION(reliable, server, WithValidation)
 	void ServerUseSkill(int32 index, const FHitResult& hitInfo);
