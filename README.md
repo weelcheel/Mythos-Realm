@@ -14,3 +14,7 @@ https://drive.google.com/open?id=0B29Kfa27IE15ZXE5Rkg1NzdnN1E
 
 Aurora Character Skills:
 https://drive.google.com/open?id=0B29Kfa27IE15TFhxSGJ6QmMwdms
+
+Gameplay:
+https://youtu.be/iSFcZ6kWCW8
+https://youtu.be/qATcXPDYcSI (most recent)
